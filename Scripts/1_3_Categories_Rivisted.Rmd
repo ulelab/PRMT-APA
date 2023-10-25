@@ -10,6 +10,7 @@ library("vioplot")
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+bdhvbsh
 
 # FX:
 
@@ -182,6 +183,7 @@ df_all.1 <- data.frame(row.names=unique(merged_unfiltered_all$unique_featureID))
 #df_all.2 <- data.frame(row.names=unique(merged_unfiltered_all$unique_featureID)[8000:length(unique(merged_unfiltered_all$unique_featureID))])
 
 df_all <- df_all.1
+
 for (feature in rownames(df_all) ){
   
   names <- merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$sample
@@ -212,7 +214,8 @@ df_all_1 <-df_all
 
 
 
-write_csv(df_all,'../Data/Outputs/Unfiltered_Formatted_All_Data_Sets_complete.csv')
+#write_csv(df_all,'../Data/Outputs/Unfiltered_Formatted_All_Data_Sets_complete.csv')
+write_csv(df_all,'../Data/Outputs/Unfiltered_Formatted_All_Data_Sets_Final.csv')
 
 ```
 
@@ -225,7 +228,7 @@ df_all <- read_csv('../Data/Outputs/Unfiltered_Formatted_All_Data_Sets_complete.
 ```{r}
 rownames(df_all) <- df_all$unique_featureID
 
-df_all <- df
+#df_all <- df
 length(unique(df_all$gene_ID))
 ```
 
@@ -237,8 +240,7 @@ length(unique(df_all$gene_ID))
 
 ## 20% and sign at least 1 ds 
 
-just to check consistency with previous
-
+not useful
 ```{r}
 df_prmt_20_15_old <- df_prmt_15 %>% filter(
   ((mean_diff24>0.2 | mean_diff24< -0.2) & twostep_transcript_padj_24<0.05)|
@@ -383,7 +385,7 @@ df_prmt_20_15_70_PO <- df_prmt_20_15_70[df_prmt_20_15_70$unique_featureID %in% t
 length(unique(df_prmt_20_15_70_PO$gene_ID))
 nrow(df_prmt_20_15_70_PO)
 
-write_csv(df_prmt_20_15_70_PO,'../Data/Outputs/PRMT_reg')
+#write_csv(df_prmt_20_15_70_PO,'../Data/Outputs/PRMT_reg')
 ```
 
 
@@ -491,6 +493,7 @@ check for 70% similarity, again use abs to avoid opposite change problems.
 Again checked only in 72hrs ds for same reason
 If feature not present in PRMT 72hrs ds is discarded as we don't know the value :)
 
+might remove 70 check if low number
 ```{r}
 df_siRNA_20_75 <- df_siRNA_20 %>%
   filter(is.na(df_siRNA_20$mean_diff72)!=TRUE) %>% 
@@ -593,7 +596,7 @@ length(unique(Regulatable_sites_noPRMT$gene_ID))
 
 
 
-write_csv(Regulatable_sites_noPRMT,'../Data/Outputs/Regulatable_sites.csv')
+#write_csv(Regulatable_sites_noPRMT,'../Data/Outputs/Regulatable_sites.csv')
 ```
 
 #Control sites
@@ -740,7 +743,7 @@ for (gene in unique(df_15_5$gene_ID)) {
 ```
 
 
-## removed all genes found in orev 2 categories
+## removed all genes found in prev 2 categories
 
 ```{r}
 df_control_pairs <- df_15_5[df_15_5$unique_featureID %in% to_keep_control,]
@@ -758,7 +761,7 @@ df_control_final <-  df_control_noPRMT[!(df_control_noPRMT$gene_ID %in% Regulata
 nrow(df_control_final)
 length(unique(df_control_final$gene_ID))
 
-write_csv2(df_control_final,'../Data/Outputs/Control_sites')
+#write_csv(df_control_final,'../Data/Outputs/Control_sites')
 ```
 
 
@@ -776,11 +779,87 @@ df_prmt_20_15_70_PO$category <- 'PRMT_regulated'
 ```{r}
 df_all_categories <- rbind(df_control_final,Regulatable_sites_noPRMT,df_prmt_20_15_70_PO)
 
-write_csv(df_all_categories,'../Data/Outputs/All_categories_df.csv')
+#write_csv(df_all_categories,'../Data/Outputs/All_categories_df.csv')
 ```
 
 
+#gene lists for GO analysis
 
+```{r}
+BACKGROUND <- unlist(strsplit(unique(df_all$gene_ID),split = '_'))[seq(1,length(unique(df_all$gene_ID))*2,2)]
+Control_sites_genes <-unlist(strsplit(unique(df_control_final$gene_ID),split = '_'))[seq(1,length(unique(df_control_final$gene_ID))*2,2)]
+Regulatable_sites_genes <- unlist(strsplit(unique(Regulatable_sites_noPRMT$gene_ID),split = '_'))[seq(1,length(unique(Regulatable_sites_noPRMT$gene_ID))*2,2)]
+PRMT_regulated_genes <-unlist(strsplit(unique(df_prmt_20_15_70_PO$gene_ID),split = '_'))[seq(1,length(unique(df_prmt_20_15_70_PO$gene_ID))*2,2)]
+```
+
+```{r}
+df = data.frame(matrix(nrow = 5177, ncol =4))
+colnames(df) <- c('PRMT_regulated_genes','Regulatable_sites_genes','Control_sites_genes','BACKGROUND')
+
+
+df$Control_sites_genes <- append(Control_sites_genes, rep(NA,5177-length(Control_sites_genes)))
+df$'_BACKGROUND' <- BACKGROUND
+df$Regulatable_sites_genes <- append(Regulatable_sites_genes, rep(NA,5177-length(Regulatable_sites_genes)))
+df$PRMT_regulated_genes <- append(PRMT_regulated_genes, rep(NA,5177-length(PRMT_regulated_genes)))
+
+
+write_xlsx(df,'../Data/Outputs/gene_list.xlsx')
+
+
+table(is.na(df$Control_sites_genes))
+```
+
+##single gene lists
+
+PRMT
+
+```{r}
+PRMT_gl = data.frame(matrix(nrow = 5177, ncol =2))
+colnames(PRMT_gl) <- c('PRMT_regulated_genes','BACKGROUND')
+
+
+PRMT_gl$'_BACKGROUND' <- BACKGROUND
+PRMT_gl$PRMT_regulated_genes <- append(PRMT_regulated_genes, rep(NA,5177-length(PRMT_regulated_genes)))
+
+
+write_xlsx(PRMT_gl,'../Data/Outputs/PRMT_gl.xlsx')
+
+
+table(is.na(PRMT_gl$PRMT_regulated_genes))
+```
+
+```{r}
+regulatable_gl = data.frame(matrix(nrow = 5177, ncol =2))
+colnames(regulatable_gl) <- c('Regulatable_sites_genes','BACKGROUND')
+
+
+regulatable_gl$'_BACKGROUND' <- BACKGROUND
+regulatable_gl$Regulatable_sites_genes <- append(Regulatable_sites_genes, rep(NA,5177-length(Regulatable_sites_genes)))
+
+
+write_xlsx(regulatable_gl,'../Data/Outputs/regulatable_gl.xlsx')
+
+
+table(is.na(regulatable_gl$Regulatable_sites_genes))
+```
+
+
+```{r}
+
+ctrl_gl = data.frame(matrix(nrow = 5177, ncol =2))
+colnames(ctrl_gl) <- c('Control_sites_genes','BACKGROUND')
+
+
+ctrl_gl$'_BACKGROUND' <- BACKGROUND
+ctrl_gl$Control_sites_genes <- append(Control_sites_genes, rep(NA,5177-length(Control_sites_genes)))
+
+
+write_xlsx(ctrl_gl,'../Data/Outputs/Control_sites_genes.xlsx')
+
+
+table(is.na(ctrl_gl$Control_sites_genes))
+
+```
 
 
 
