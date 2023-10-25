@@ -703,6 +703,2601 @@ length(unique(df_15_5$gene_ID))
 ```
 
 
+---
+title: "1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggplot2)
+library("vioplot")
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+bdhvbsh
+
+# FX:
+
+
+Adds a column called 'unique_featureID':  a unique feature ID for each PAS based on gene, chr, start position and PAS sequence motif
+```{r}
+unique_featureID <- function(dataset){
+  dataset <- dataset %>%  mutate(unique_featureID=paste(
+  dataset$V8,
+  unlist(strsplit(dataset$feature_id, split='_'))[seq(2,nrow(dataset)*3,3)],
+                                 dataset$chr,'start',dataset$start,'end',dataset$end,
+                                 sep='_'))
+  
+  return(dataset)
+}
+
+```
+
+
+
+# Read Data
+'../Data/DrimSeq/single_vs_double_96hrs_drimseq_tables'
+
+
+```{r}
+#ADMA_96h <- read.csv('../Data/DrimSeq/single_vs_double_96hrs_drimseq_tables/ADMAi_96hrs_with_mean_diff_coords.csv')
+#SDMA_96h <- read.csv('../Data/DrimSeq/single_vs_double_96hrs_drimseq_tables/SDMAi_96hrs_with_mean_diff_coords.csv')
+ADMA_SDMA_96h <- read.csv('../Data/DrimSeq/single_vs_double_96hrs_drimseq_tables/SDMAi+ADMAi_96hr_with_mean_diff_coords.csv')
+```
+
+Rename:Change columns name of values so no time and then add anoher one based on time
+
+```{r,eval=FALSE}
+#ADMA_96h <- unique_featureID(ADMA_96h)
+#SDMA_96h <- unique_featureID(SDMA_96h)
+```
+
+Rename columns so that when merging all have the same name :)
+```{r}
+ADMA_SDMA_96h <-ADMA_SDMA_96h  %>% 
+  rename(ctrl_1=DMSO_96hrs_1,
+         ctrl_2=DMSO_96hrs_2,
+         ctrl_3=DMSO_96hrs_3,
+         condition_1=SDMAi_ADMAi_96hrs_1,
+         condition_2=SDMAi_ADMAi_96hrs_2,
+         condition_3=SDMAi_ADMAi_96hrs_3
+         )
+
+ADMA_SDMA_96h$sample <- '96hrs_prev'
+ADMA_SDMA_96h <- unique_featureID(ADMA_SDMA_96h)
+
+SDMA_ADMA_24h<- read.csv('../Data/DrimSeq/SDMAi+ADMAi_timecourse_drimseq_tables/two_step_24hrs_with_mean_diff_coords.csv')
+SDMA_ADMA_48h <- read.csv('../Data/DrimSeq/SDMAi+ADMAi_timecourse_drimseq_tables/two_step_48hrs_with_mean_diff_coords.csv')
+SDMA_ADMA_72h <- read.csv('../Data/DrimSeq/SDMAi+ADMAi_timecourse_drimseq_tables/two_step_72hrs_with_mean_diff_coords.csv')
+SDMA_ADMA_96h <- read.csv('../Data/DrimSeq/SDMAi+ADMAi_timecourse_drimseq_tables/two_step_96hrs_with_mean_diff_coords.csv')
+
+SDMA_ADMA_24h <-SDMA_ADMA_24h  %>% 
+  rename(ctrl_1=DMSO_24hrs_1,
+         ctrl_2=DMSO_24hrs_2,
+         ctrl_3=DMSO_24hrs_3,
+         condition_1=SDMAi_ADMAi_24hrs_1,
+         condition_2=SDMAi_ADMAi_24hrs_2,
+         condition_3=SDMAi_ADMAi_24hrs_3
+         )
+
+SDMA_ADMA_24h$sample <- '24'
+
+SDMA_ADMA_24h <- unique_featureID(SDMA_ADMA_24h)
+
+SDMA_ADMA_48h <-SDMA_ADMA_48h  %>% 
+  rename(ctrl_1=DMSO_48hrs_1,
+         ctrl_2=DMSO_48hrs_2,
+         ctrl_3=DMSO_48hrs_3,
+         condition_1=SDMAi_ADMAi_48hrs_1,
+         condition_2=SDMAi_ADMAi_48hrs_2,
+         condition_3=SDMAi_ADMAi_48hrs_3
+         )
+
+SDMA_ADMA_48h$sample <- '48'
+
+SDMA_ADMA_48h <- unique_featureID(SDMA_ADMA_48h)
+
+
+SDMA_ADMA_72h <-SDMA_ADMA_72h  %>% 
+  rename(ctrl_1=DMSO_72hrs_1,
+         ctrl_2=DMSO_72hrs_2,
+         ctrl_3=DMSO_72hrs_3,
+         condition_1=SDMAi_ADMAi_72hrs_1,
+         condition_2=SDMAi_ADMAi_72hrs_2,
+         condition_3=SDMAi_ADMAi_72hrs_3
+         )
+
+SDMA_ADMA_72h$sample <- '72'
+SDMA_ADMA_72h <- unique_featureID(SDMA_ADMA_72h)
+
+SDMA_ADMA_96h <-SDMA_ADMA_96h  %>% 
+  rename(ctrl_1=DMSO_96hrs_1,
+         ctrl_2=DMSO_96hrs_2,
+         ctrl_3=DMSO_96hrs_3,
+         condition_1=SDMAi_ADMAi_96hrs_1,
+         condition_2=SDMAi_ADMAi_96hrs_2,
+         condition_3=SDMAi_ADMAi_96hrs_3
+         )
+
+SDMA_ADMA_96h$sample <- '96'
+SDMA_ADMA_96h <- unique_featureID(SDMA_ADMA_96h)
+
+
+siCFIM25_DMSO<-read.csv('../Data/DrimSeq/SDMAi_ADMAi_+_siRNAs_drimseq_tables/siCtrl_DMSO_vs_siCFIM25_DMSO_with_mean_diff_coords.csv')
+siELAVL1_DMSO <- read.csv('../Data/DrimSeq/SDMAi_ADMAi_+_siRNAs_drimseq_tables/siCtrl_DMSO_vs_siELAVL1_DMSO_with_mean_diff_coords.csv')
+siSam68_DMSO <- read.csv('../Data/DrimSeq/SDMAi_ADMAi_+_siRNAs_drimseq_tables/sictrl_DMSO_vs_siSam68_DMSO_with_mean_diff_coords.csv')
+
+siCFIM25_DMSO$sample <- 'siCFIM25'
+siCFIM25_DMSO <- unique_featureID(siCFIM25_DMSO)
+
+
+siELAVL1_DMSO$sample <- 'siELAVL1'
+siELAVL1_DMSO <- unique_featureID(siELAVL1_DMSO)
+
+siSam68_DMSO$sample <- 'siSam68'
+siSam68_DMSO <- unique_featureID(siSam68_DMSO)
+
+siCFIM25_DMSO <-siCFIM25_DMSO  %>% 
+  rename(ctrl_1='ctrl_DMSO_1',
+         ctrl_2='ctrl_DMSO_2',
+         ctrl_3='ctrl_DMSO_3',
+         condition_1='CFIM25_DMSO_1',
+         condition_2='CFIM25_DMSO_2',
+         condition_3='CFIM25_DMSO_3',
+         )
+
+siSam68_DMSO <-siSam68_DMSO  %>% 
+  rename(ctrl_1='ctrl_DMSO_1',
+         ctrl_2='ctrl_DMSO_2',
+         ctrl_3='ctrl_DMSO_3',
+         condition_1='Sam68_DMSO_1',
+         condition_2='Sam68_DMSO_2',
+         condition_3='Sam68_DMSO_3',
+         )
+
+siELAVL1_DMSO <-siELAVL1_DMSO  %>% 
+  rename(ctrl_1='ctrl_DMSO_1',
+         ctrl_2='ctrl_DMSO_2',
+         ctrl_3='ctrl_DMSO_3',
+         condition_1='ELAVL1_DMSO_1',
+         condition_2='ELAVL1_DMSO_2',
+         condition_3='ELAVL1_DMSO_3',
+         )
+```
+
+# Merge Huge DF
+
+
+```{r}
+merged_unfiltered_all <- rbind(siELAVL1_DMSO,siSam68_DMSO,siCFIM25_DMSO,SDMA_ADMA_96h,SDMA_ADMA_72h,SDMA_ADMA_48h,SDMA_ADMA_24h,ADMA_SDMA_96h)
+length(unique(merged_unfiltered_all$gene_id))
+length(unique(merged_unfiltered_all$unique_featureID))
+
+```
+
+
+
+```{r}
+#This takes a long time :))
+library(zeallot)
+
+
+#df_all <- data.frame(row.names=unique(merged_unfiltered_all$unique_featureID))
+df_all.1 <- data.frame(row.names=unique(merged_unfiltered_all$unique_featureID))#[8001:length(unique(merged_unfiltered_all$unique_featureID))])#4001,8001
+#df_all.2 <- data.frame(row.names=unique(merged_unfiltered_all$unique_featureID)[8000:length(unique(merged_unfiltered_all$unique_featureID))])
+
+df_all <- df_all.1
+
+for (feature in rownames(df_all) ){
+  
+  names <- merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$sample
+  df_all[rownames(df_all)==feature,'unique_featureID'] <- unique(merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$unique_featureID)
+  df_all[rownames(df_all)==feature,'gene_ID'] <- unique(merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$gene_id)
+  df_all[rownames(df_all)==feature,'chr'] <- unique(merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$chr)
+  df_all[rownames(df_all)==feature,'start'] <- unique(merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$start)
+  df_all[rownames(df_all)==feature,'end'] <- unique(merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$end)
+  df_all[rownames(df_all)==feature,'strand'] <- unique(merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$strand)
+  
+  df_all[rownames(df_all)==feature,paste0('mean_diff',names)] %<-% merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$mean_diff
+  df_all[rownames(df_all)==feature,paste0('ctrl_',names)] %<-% merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$ctrl_1
+  df_all[rownames(df_all)==feature,paste0('condition_',names)] %<-% merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$condition_1
+  df_all[rownames(df_all)==feature,paste0('V5_',names)] %<-% merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$V5
+  df_all[rownames(df_all)==feature,paste0('twostep_gene_padj_',names)] %<-%   merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$twostep_gene_padj
+  df_all[rownames(df_all)==feature,paste0('twostep_transcript_padj_',names)] %<-% merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$twostep_transcript_padj
+  df_all[rownames(df_all)==feature,paste0('lr_',names)] %<-% merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$lr
+  df_all[rownames(df_all)==feature,paste0('df_',names)] %<-% merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$df
+  df_all[rownames(df_all)==feature,paste0('pvalue_',names)] %<-% merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$pvalue
+  df_all[rownames(df_all)==feature,paste0('adj_pvalue_',names)] %<-% merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$adj_pvalue
+
+}
+
+
+df_all_1 <-df_all 
+#write.csv(df_all,'../Data/Outputs/Unfiltered_Formatted_All_Data_Sets_3.csv')
+#write_csv2(df_all,'../Data/Outputs/Unfiltered_Formatted_All_Data_Sets_3_1.csv',)
+
+
+
+#write_csv(df_all,'../Data/Outputs/Unfiltered_Formatted_All_Data_Sets_complete.csv')
+write_csv(df_all,'../Data/Outputs/Unfiltered_Formatted_All_Data_Sets_Final.csv')
+
+```
+
+```{r}
+#I saved the df and I just read the output
+df_all <- read_csv('../Data/Outputs/Unfiltered_Formatted_All_Data_Sets_complete.csv')
+
+```
+
+```{r}
+rownames(df_all) <- df_all$unique_featureID
+
+#df_all <- df
+length(unique(df_all$gene_ID))
+```
+
+
+
+
+#PRMT regulated
+
+
+## 20% and sign at least 1 ds 
+
+not useful
+```{r}
+df_prmt_20_15_old <- df_prmt_15 %>% filter(
+  ((mean_diff24>0.2 | mean_diff24< -0.2) & twostep_transcript_padj_24<0.05)|
+  ((mean_diff48>0.2 | mean_diff48< -0.2) & twostep_transcript_padj_48<0.05)|              
+  ((mean_diff72>0.2 | mean_diff72< -0.2) & twostep_transcript_padj_72<0.05)| 
+  ((mean_diff96>0.2 | mean_diff96< -0.2) & twostep_transcript_padj_96<0.05)|
+  ((mean_diff96hrs_prev>0.2 | mean_diff96hrs_prev< -0.2) & twostep_transcript_padj_96hrs_prev<0.05)
+)
+```
+
+
+```{r}
+nrow(df_prmt_20_15_old)
+length(unique(df_prmt_20_15_old$gene_ID))
+
+```
+
+#20 at least 1 and 15 at least 1
+
+For each dataset, filter feature that has 20% + <0.05 and then check if in one other dataset (hence or = |) see 15% change
+Then filter the ds based on the feature that pass that for one of the datasets
+
+```{r}
+
+df_prmt_20_15_24 <- df_all%>% filter((
+  ((mean_diff24>0.2 | mean_diff24< -0.2)
+  & twostep_transcript_padj_24<0.05) &
+  ( (mean_diff48>0.15 | mean_diff48< -0.15) |              
+  (mean_diff72>0.15 | mean_diff72< -0.15) | 
+  (mean_diff96>0.15 | mean_diff96< -0.15) |
+  (mean_diff96hrs_prev>0.15 | mean_diff96hrs_prev< -0.15)) ))
+
+df_prmt_20_15_48 <- df_all %>% filter((
+  ((mean_diff48>0.2 | mean_diff48< -0.2)
+  & twostep_transcript_padj_48<0.05) &
+  ( (mean_diff24>0.15 | mean_diff24< -0.15) |              
+  (mean_diff72>0.15 | mean_diff72< -0.15) | 
+  (mean_diff96>0.15 | mean_diff96< -0.15) |
+  (mean_diff96hrs_prev>0.15 | mean_diff96hrs_prev< -0.15)) ))
+
+
+df_prmt_20_15_72 <- df_all%>% filter((
+  ((mean_diff72>0.2 | mean_diff72< -0.2)
+  & twostep_transcript_padj_72<0.05) &
+  ( (mean_diff48>0.15 | mean_diff48< -0.15) |              
+  (mean_diff24>0.15 | mean_diff24< -0.15) | 
+  (mean_diff96>0.15 | mean_diff96< -0.15) |
+  (mean_diff96hrs_prev>0.15 | mean_diff96hrs_prev< -0.15)) ))
+
+
+
+df_prmt_20_15_96 <- df_all%>% filter((
+  ((mean_diff96>0.2 | mean_diff96< -0.2)
+  & twostep_transcript_padj_96<0.05) &
+  ( (mean_diff48>0.15 | mean_diff48< -0.15) |              
+  (mean_diff72>0.15 | mean_diff72< -0.15) | 
+  (mean_diff24>0.15 | mean_diff24< -0.15) |
+  (mean_diff96hrs_prev>0.15 | mean_diff96hrs_prev< -0.15)) ))
+
+
+
+df_prmt_20_15_96_prev <- df_all%>% filter((
+  ((mean_diff96hrs_prev>0.2 | mean_diff96hrs_prev< -0.2)
+  & twostep_transcript_padj_96hrs_prev<0.05) &
+  ( (mean_diff48>0.15 | mean_diff48< -0.15) |              
+  (mean_diff72>0.15 | mean_diff72< -0.15) | 
+  (mean_diff96>0.15 | mean_diff96< -0.15) |
+  (mean_diff24>0.15 | mean_diff24< -0.15)) ))
+
+
+
+df_prmt_20_15_v <- rbind(df_prmt_20_15_24,df_prmt_20_15_48,df_prmt_20_15_72,df_prmt_20_15_96,df_prmt_20_15_96_prev)$unique_featureID
+df_prmt_20_15 <- df_all[df_all$unique_featureID %in%df_prmt_20_15_v, ]
+
+nrow(df_prmt_20_15)
+length(unique(df_prmt_20_15$gene_ID))
+```
+
+
+
+## 70% similarity
+
+check 70% similarity, use abs so we avoid PRMT=0.3, siRNA= -0.3 problems
+Used only 72hrs dataset as siRNA data was retrieved at that time so makes sense to compare just the 2
+If feature not present in siRNA ds is discarded as we dont know the value :)
+
+```{r}
+df_prmt_20_15_70 <- df_prmt_20_15 %>% 
+  filter((is.na(df_prmt_20_15$mean_diffsiCFIM25)!=TRUE)| (is.na(df_prmt_20_15$mean_diffsiELAVL1)!=TRUE)| (is.na(df_prmt_20_15$mean_diffsiSam68)!=TRUE))%>% 
+  filter((
+  (abs(mean_diff72) > 0.7*abs(mean_diffsiCFIM25) )& 
+  (abs(mean_diff72) >0.7*abs(mean_diffsiELAVL1)) &  
+  (abs(mean_diff72) >0.7*abs(mean_diffsiSam68) )))
+
+```
+
+##Keep only paired genes with opposite effect
+
+keep only paired genes, take pair of features that have max and min change based on mean of all observation in PRMT ds
+
+```{r}
+to_keep <- vector()
+for (gene in unique(df_prmt_20_15_70$gene_ID)) {
+ 
+  #for each gene 
+  #look at how many unique features
+    uniqueFG <- df_prmt_20_15_70[df_prmt_20_15_70$gene_ID==gene,]$unique_featureID
+    #if more than 2 features 
+    if (length(uniqueFG)>=2) {
+      lowest <- 0
+      biggest <- 0
+      f_ID_biggest <- character()
+      f_ID_smallest <- character()
+      #look at mean diff values of each feature and take smallest (mandatory less than 0)
+      #look at mean diff values of each feature and take biggest (mandatory bigger than 0)
+      #so we have opposite
+      for (feature in uniqueFG) {
+        mean_tmp <- mean(na.omit(as.vector(t(df_prmt_20_15_70[df_prmt_20_15_70$gene_ID==gene & df_prmt_20_15_70$unique_featureID==feature,][c('mean_diff24','mean_diff48','mean_diff72','mean_diff96','mean_diff96hrs_prev')]))))#na.omit()
+        #if (is.na(mean_tmp )==FALSE) {
+          if (mean_tmp<lowest) {
+          lowest <- mean_tmp 
+          f_ID_smallest <- feature}
+        if (mean_tmp>biggest) {
+          biggest <- mean_tmp 
+          f_ID_biggest <- feature}
+        #}
+        }
+        
+      if (lowest!=0 & biggest!=0 ) {
+        to_keep <- append(to_keep, c(f_ID_smallest,f_ID_biggest))
+      }
+      
+    }
+    
+}
+
+
+#as.vector(t(df_prmt_20_15_70[df_prmt_20_15_70$gene_ID==gene & df_prmt_20_15_70$unique_featureID==feature,][c('mean_diff24','mean_diff48','mean_diff72','mean_diff96','mean_diff96hrs_prev')]))
+#c('mean_diff24','mean_diff48','mean_diff72','mean_diff96','mean_diff96hrs_prev')
+
+df_prmt_20_15_70_PO <- df_prmt_20_15_70[df_prmt_20_15_70$unique_featureID %in% to_keep,]
+length(unique(df_prmt_20_15_70_PO$gene_ID))
+nrow(df_prmt_20_15_70_PO)
+
+#write_csv(df_prmt_20_15_70_PO,'../Data/Outputs/PRMT_reg')
+```
+
+
+## Old filtering
+
+This is just old way of categ, to check I had equal results to prev script
+
+```{r}
+df_prmt_2_old<- df_prmt %>% filter(
+  ((mean_diff24>0.2 | mean_diff24< -0.2) & twostep_transcript_padj_24<0.05)|
+  ((mean_diff48>0.2 | mean_diff48< -0.2) & twostep_transcript_padj_48<0.05)|              
+  ((mean_diff72>0.2 | mean_diff72< -0.2) & twostep_transcript_padj_72<0.05)| 
+  ((mean_diff96>0.2 | mean_diff96< -0.2) & twostep_transcript_padj_96<0.05)|
+  ((mean_diff96hrs_prev>0.2 | mean_diff96hrs_prev< -0.2) & twostep_transcript_padj_96hrs_prev<0.05)
+)
+
+
+nrow(df_prmt_2_old)
+length(unique(df_prmt_2_old$gene_ID))
+
+df_prmt_20_10_old <- df_prmt_2_old %>% filter(
+  ((mean_diff24>0.1 | mean_diff24< -0.1) & 
+  (mean_diff48>0.1 | mean_diff48< -0.1) &              
+  (mean_diff72>0.1 | mean_diff72< -0.1) & 
+  (mean_diff96>0.1 | mean_diff96< -0.1) & 
+  (mean_diff96hrs_prev>0.1 | mean_diff96hrs_prev< -0.1)
+))
+
+summary(df_prmt_20_10_old)
+
+nrow(df_prmt_20_10_old)
+length(unique(df_prmt_20_10_old$gene_ID))
+
+
+df_prmt_20_10_70_old <- df_prmt_20_10_old %>% filter((
+  (abs(mean_diff72) > 0.7*abs(mean_diffsiCFIM25) )& 
+  (abs(mean_diff72) >0.7*abs(mean_diffsiELAVL1)) &  
+  (abs(mean_diff72) >0.7*abs(mean_diffsiSam68) )))
+
+nrow(df_prmt_20_10_70_old)
+length(unique(df_prmt_20_10_70_old$gene_ID))
+
+to_keep_old <- vector()
+for (gene in unique(df_prmt_20_10_70_old$gene_ID)) {
+ 
+  #for each gene 
+  #look at how many unique features
+    uniqueFG <- df_prmt_20_10_70_old[df_prmt_20_10_70_old$gene_ID==gene,]$unique_featureID
+    #if more than 2 features 
+    if (length(uniqueFG)>=2) {
+      lowest <- 0
+      biggest <- 0
+      f_ID_biggest <- character()
+      f_ID_smallest <- character()
+      #look at mean diff values of each feature and take smallest (mandatory less than 0)
+      #look at mean diff values of each feature and take biggest (mandatory bigger than 0)
+      #so we have opposite
+      for (feature in uniqueFG) {
+        mean_tmp <- mean(na.omit(as.vector(t(df_prmt_20_10_70_old[df_prmt_20_10_70_old$gene_ID==gene & df_prmt_20_10_70_old$unique_featureID==feature,][c('mean_diff24','mean_diff48','mean_diff72','mean_diff96','mean_diff96hrs_prev')]))))#na.omit()
+        #if (is.na(mean_tmp )==FALSE) {
+          if (mean_tmp<lowest) {
+          lowest <- mean_tmp 
+          f_ID_smallest <- feature}
+        if (mean_tmp>biggest) {
+          biggest <- mean_tmp 
+          f_ID_biggest <- feature}
+        #}
+        }
+        
+      if (lowest!=0 & biggest!=0 ) {
+        to_keep_old <- append(to_keep_old, c(f_ID_smallest,f_ID_biggest))
+      }
+      
+    }
+    
+}
+
+df_prmtreg_old <-  df_prmt_20_10_70_old[df_prmt_20_10_70_old$unique_featureID %in% to_keep_old,]
+
+length(unique(df_prmtreg_old$gene_ID))
+nrow(df_prmtreg_old)
+```
+
+
+
+
+#Regulatable
+
+
+##20 %
+
+First filter feat that have 20% change + significance in at least 1 ds (hence or |)
+```{r}
+df_siRNA <- df_all 
+df_siRNA_20 <- df_siRNA %>% filter(
+  ((mean_diffsiCFIM25>0.2 | mean_diffsiCFIM25< -0.2) & twostep_transcript_padj_siCFIM25<0.05)|
+  ((mean_diffsiELAVL1>0.2 | mean_diffsiELAVL1< -0.2) & twostep_transcript_padj_siELAVL1<0.05)|              
+  ((mean_diffsiSam68>0.2 | mean_diffsiSam68< -0.2) & twostep_transcript_padj_siSam68<0.05) 
+)
+```
+
+## 70%
+
+check for 70% similarity, again use abs to avoid opposite change problems.
+Again checked only in 72hrs ds for same reason
+If feature not present in PRMT 72hrs ds is discarded as we don't know the value :)
+
+might remove 70 check if low number
+```{r}
+df_siRNA_20_75 <- df_siRNA_20 %>%
+  filter(is.na(df_siRNA_20$mean_diff72)!=TRUE) %>% 
+  filter( 
+  (abs(mean_diffsiCFIM25) > 0.7*abs(mean_diff72) )| 
+  (abs(mean_diffsiELAVL1) >0.7*abs(mean_diff72)) | 
+  (abs(mean_diffsiSam68) >0.7*abs(mean_diff72) ))
+  
+
+nrow(df_siRNA_20_75)
+length(unique(df_siRNA_20_75$gene_ID))
+```
+
+
+#PO
+
+Again keep pairs only, I did this with a fx for each siRNA separately as such the specific mean diff for ds is used.
+Still keeping the 2 with opposite sign and biggest value
+
+```{r}
+to_keep_siRNA_vector <- function(dataset, dataset_indicator){
+to_keep_siRNA <- vector()
+
+
+for (gene in unique(dataset$gene_ID)) {
+ 
+  #for each gene 
+  #look at how many unique features
+    uniqueFG <- dataset[dataset$gene_ID==gene,]$unique_featureID
+    #if more than 2 features 
+    if (length(uniqueFG)>=2) {
+      lowest <- 0
+      biggest <- 0
+      f_ID_biggest <- character()
+      f_ID_smallest <- character()
+      #look at mean diff values of each feature and take smallest (mandatory less than 0)
+      #look at mean diff values of each feature and take biggest (mandatory bigger than 0)
+      #so we have opposite
+      for (feature in uniqueFG) {
+        val <- dataset[dataset$gene_ID==gene & dataset$unique_featureID==feature,][dataset_indicator]
+        if (is.na(val)==TRUE) {
+          val <- 0
+        }
+        #if (is.na(mean_tmp )==FALSE) {
+          if (val<lowest) {
+          lowest <- val 
+          f_ID_smallest <- feature}
+        if (val>biggest) {
+          biggest <- val 
+          f_ID_biggest <- feature}
+        #}
+        }
+        
+      if (lowest!=0 & biggest!=0 ) {
+        to_keep_siRNA <- append(to_keep_siRNA, c(f_ID_smallest,f_ID_biggest))
+      }
+      
+    }
+    
+}
+return(to_keep_siRNA)
+}
+```
+
+
+```{r}
+to_keep_CF <- to_keep_siRNA_vector(filter(df_siRNA_20_75,(mean_diffsiCFIM25>0.2 | mean_diffsiCFIM25< -0.2) & twostep_transcript_padj_siCFIM25<0.05) ,'mean_diffsiCFIM25')
+to_keep_Sam <- to_keep_siRNA_vector(filter(df_siRNA_20_75,(mean_diffsiSam68>0.2 | mean_diffsiSam68< -0.2) & twostep_transcript_padj_siSam68<0.05) ,'mean_diffsiSam68')
+to_keep_EL <- to_keep_siRNA_vector(filter(df_siRNA_20_75,(mean_diffsiELAVL1>0.2 | mean_diffsiELAVL1< -0.2) & twostep_transcript_padj_siELAVL1<0.05) ,'mean_diffsiELAVL1')
+
+c <- unique(c(to_keep_CF,to_keep_Sam,to_keep_EL))
+
+Regulatable_sites_CF <-df_siRNA_20_75[df_siRNA_20_75$unique_featureID %in% to_keep_CF,] 
+nrow(Regulatable_sites_CF)
+length(unique(Regulatable_sites_CF$gene_ID))
+
+Regulatable_sites_Sam <-df_siRNA_20_75[df_siRNA_20_75$unique_featureID %in% to_keep_Sam,] 
+nrow(Regulatable_sites_Sam)
+length(unique(Regulatable_sites_Sam$gene_ID))
+
+Regulatable_sites_EL <-df_siRNA_20_75[df_siRNA_20_75$unique_featureID %in% to_keep_EL,] 
+nrow(Regulatable_sites_EL)
+length(unique(Regulatable_sites_EL$gene_ID))
+```
+
+merged features for diff siRNA ds, then removed genes present in PRMT category.
+IMP: there is one gene (SLC25A46_ENSG00000164209.17) that has 3 features. This is because I checked for most 'important' ones separately and 2 siRNA ds resulted in 1feat shared and 1 unique per siRNA selected.
+
+
+```{r}
+Regulatable_sites <-df_siRNA_20_75[df_siRNA_20_75$unique_featureID %in% c,] 
+nrow(Regulatable_sites)
+length(unique(Regulatable_sites$gene_ID))
+
+Regulatable_sites_noPRMT <- Regulatable_sites[!(Regulatable_sites$gene_ID %in% df_prmt_20_15_70_PO$gene_ID),]
+nrow(Regulatable_sites_noPRMT)
+length(unique(Regulatable_sites_noPRMT$gene_ID))
+
+# SLC25A46_ENSG00000164209.17   genes with more than 2 features
+
+
+
+#write_csv(Regulatable_sites_noPRMT,'../Data/Outputs/Regulatable_sites.csv')
+```
+
+#Control sites
+
+```{r}
+df_ctrl <- df_all
+```
+
+#Tried with mean both, but everything passed so useless 
+
+```{r}
+#with mean everything passes basically
+df_15_5 <- df_ctrl %>% 
+  filter((mean(na.omit(mean_diff24,mean_diff48,mean_diff72,mean_diff96,mean_diff96hrs_prev,mean_diffsiCFIM25,mean_diffsiELAVL1,mean_diffsiSam68)) >-0.15 &
+          mean(na.omit(mean_diff24,mean_diff48,mean_diff72,mean_diff96,mean_diff96hrs_prev,mean_diffsiCFIM25,mean_diffsiELAVL1,mean_diffsiSam68))< 0.15)) %>%
+  filter(mean(na.omit(ctrl_siELAVL1,ctrl_siSam68,ctrl_siCFIM25,ctrl_96hrs_prev,ctrl_96,ctrl_72,ctrl_48,ctrl_24))>0.05)
+
+nrow(df_15_5)
+length(unique(df_15_5$gene_ID))
+
+df_control_noPRMT <- df_15_5[!(df_15_5$gene_ID %in% df_prmt_20_15_70_PO$gene_ID), ]
+nrow(df_control_noPRMT)
+length(unique(df_control_noPRMT$gene_ID))
+
+
+df_control_final <-  df_control_noPRMT[!(df_control_noPRMT$gene_ID %in% Regulatable_sites_noPRMT$gene_ID), ]
+nrow(df_control_final)
+length(unique(df_control_final$gene_ID))
+```
+
+#old as well 
+
+```{r}
+#let's try with each
+df_15_5 <- df_ctrl %>% 
+  filter((mean_diff24  >-0.15& mean_diff24< 0.15)&
+         (mean_diff48  >-0.15& mean_diff48< 0.15)&
+         (mean_diff72  >-0.15& mean_diff72< 0.15)&
+         (mean_diff96  >-0.15& mean_diff96< 0.15)&
+         (mean_diff96hrs_prev  >-0.15& mean_diff96hrs_prev< 0.15)&
+         (mean_diffsiCFIM25  >-0.15& mean_diffsiCFIM25< 0.15)&
+         (mean_diffsiELAVL1  >-0.15& mean_diffsiELAVL1< 0.15)&
+         (mean_diffsiSam68  >-0.15& mean_diffsiSam68< 0.15)) %>% 
+  filter((ctrl_siELAVL1  >0.05)&
+           (ctrl_siSam68  >0.05)&
+           (ctrl_siCFIM25  >0.05)&
+           (ctrl_96hrs_prev  >0.05)&
+           (ctrl_96  >0.05)&
+           (ctrl_72  >0.05)&
+           (ctrl_48  >0.05)&
+           (ctrl_24  >0.05))
+```
+
+
+###mean
+
+Check for less 15% each + mean of DMSO usage >5%
+
+```{r}
+df_15_5<- df_ctrl %>% 
+  filter((mean_diff24  >-0.15& mean_diff24< 0.15)&
+         (mean_diff48  >-0.15& mean_diff48< 0.15)&
+         (mean_diff72  >-0.15& mean_diff72< 0.15)&
+         (mean_diff96  >-0.15& mean_diff96< 0.15)&
+         (mean_diff96hrs_prev  >-0.15& mean_diff96hrs_prev< 0.15)&
+         (mean_diffsiCFIM25  >-0.15& mean_diffsiCFIM25< 0.15)&
+         (mean_diffsiELAVL1  >-0.15& mean_diffsiELAVL1< 0.15)&
+         (mean_diffsiSam68  >-0.15& mean_diffsiSam68< 0.15)) %>% 
+filter(mean(na.omit(ctrl_siELAVL1,ctrl_siSam68,ctrl_siCFIM25,ctrl_96hrs_prev,ctrl_96,ctrl_72,ctrl_48,ctrl_24))>0.05)
+```
+
+
+
+# old filtering categories
+
+```{r}
+df_10_10 <- df_ctrl %>% 
+  filter((mean_diff24  >-0.1 & mean_diff24< 0.1)&
+         (mean_diff48  >-0.1  &  mean_diff48< 0.1)&
+         (mean_diff72  >-0.1 &  mean_diff72< 0.1)&
+         (mean_diff96  >-0.1 & mean_diff96< 0.1)&
+         (mean_diff96hrs_prev  >-0.1 &  mean_diff96hrs_prev< 0.1)&
+         (mean_diffsiCFIM25  >-0.1 &  mean_diffsiCFIM25< 0.1)&
+         (mean_diffsiELAVL1  >-0.1 &  mean_diffsiELAVL1< 0.1)&
+         (mean_diffsiSam68  >-0.1  &  mean_diffsiSam68< 0.1)) %>% 
+  filter((ctrl_siELAVL1  >0.1)&
+           (ctrl_siSam68  >0.1)&
+           (ctrl_siCFIM25  >0.1)&
+           (ctrl_96hrs_prev  >0.1)&
+           (ctrl_96  >0.1)&
+           (ctrl_72  >0.1)&
+           (ctrl_48  >0.1)&
+           (ctrl_24  >0.1))
+```
+
+
+
+
+
+```{r}
+
+nrow(df_15_5)
+length(unique(df_15_5$gene_ID))
+```
+
+
+#Keeping PO
+
+Keeping for each gene the 2 most used sites (calc as average across all ds)
+
+```{r}
+to_keep_control <- vector()
+for (gene in unique(df_15_5$gene_ID)) {
+ 
+  #for each gene 
+  #look at how many unique features
+    uniqueFG <- df_15_5[df_15_5$gene_ID==gene,]$unique_featureID
+    #if more than 2 features 
+    if (length(uniqueFG)>=2) {
+      biggest <- -100
+      Sec_biggest <- -100
+      f_ID_biggest <- character()
+      f_ID_Sec_biggest <- character()
+      for (feature in uniqueFG) {
+        mean_tmp <- mean(na.omit(as.vector(t(df_15_5[df_15_5$gene_ID==gene & df_15_5$unique_featureID==feature,][c('ctrl_siELAVL1','ctrl_siSam68','ctrl_siCFIM25','ctrl_96hrs_prev','ctrl_96','ctrl_72','ctrl_48','ctrl_24')]))))#na.omit()
+        #if (is.na(mean_tmp )==FALSE) {
+          if (mean_tmp>biggest) {
+            Sec_biggest<-biggest
+            biggest <- mean_tmp 
+            f_ID_Sec_biggest<-f_ID_biggest
+            f_ID_biggest <- feature}
+        else {
+        if (mean_tmp>Sec_biggest) {
+          Sec_biggest <- mean_tmp 
+          f_ID_Sec_biggest <- feature}
+        }
+      }
+      
+        to_keep_control <- append(to_keep_control, c(f_ID_Sec_biggest,f_ID_biggest))
+      }
+      
+    }
+    
+```
+
+
+## removed all genes found in prev 2 categories
+
+```{r}
+df_control_pairs <- df_15_5[df_15_5$unique_featureID %in% to_keep_control,]
+
+
+nrow(df_control_pairs)
+length(unique(df_control_pairs$gene_ID))
+
+df_control_noPRMT <- df_control_pairs[!(df_control_pairs$gene_ID %in% df_prmt_20_15_70_PO$gene_ID), ]
+nrow(df_control_noPRMT)
+length(unique(df_control_noPRMT$gene_ID))
+
+
+df_control_final <-  df_control_noPRMT[!(df_control_noPRMT$gene_ID %in% Regulatable_sites_noPRMT$gene_ID), ]
+nrow(df_control_final)
+length(unique(df_control_final$gene_ID))
+
+#write_csv(df_control_final,'../Data/Outputs/Control_sites')
+```
+
+
+
+
+#Merge data categories to use for clustering 
+```{r}
+df_control_final$category <- 'Control_sites'
+Regulatable_sites_noPRMT$category <- 'Regulatable_sites'
+df_prmt_20_15_70_PO$category <- 'PRMT_regulated'
+
+```
+
+
+```{r}
+df_all_categories <- rbind(df_control_final,Regulatable_sites_noPRMT,df_prmt_20_15_70_PO)
+
+#write_csv(df_all_categories,'../Data/Outputs/All_categories_df.csv')
+```
+
+
+#gene lists for GO analysis
+
+```{r}
+BACKGROUND <- unlist(strsplit(unique(df_all$gene_ID),split = '_'))[seq(1,length(unique(df_all$gene_ID))*2,2)]
+Control_sites_genes <-unlist(strsplit(unique(df_control_final$gene_ID),split = '_'))[seq(1,length(unique(df_control_final$gene_ID))*2,2)]
+Regulatable_sites_genes <- unlist(strsplit(unique(Regulatable_sites_noPRMT$gene_ID),split = '_'))[seq(1,length(unique(Regulatable_sites_noPRMT$gene_ID))*2,2)]
+PRMT_regulated_genes <-unlist(strsplit(unique(df_prmt_20_15_70_PO$gene_ID),split = '_'))[seq(1,length(unique(df_prmt_20_15_70_PO$gene_ID))*2,2)]
+```
+
+```{r}
+df = data.frame(matrix(nrow = 5177, ncol =4))
+colnames(df) <- c('PRMT_regulated_genes','Regulatable_sites_genes','Control_sites_genes','BACKGROUND')
+
+
+df$Control_sites_genes <- append(Control_sites_genes, rep(NA,5177-length(Control_sites_genes)))
+df$'_BACKGROUND' <- BACKGROUND
+df$Regulatable_sites_genes <- append(Regulatable_sites_genes, rep(NA,5177-length(Regulatable_sites_genes)))
+df$PRMT_regulated_genes <- append(PRMT_regulated_genes, rep(NA,5177-length(PRMT_regulated_genes)))
+
+
+write_xlsx(df,'../Data/Outputs/gene_list.xlsx')
+
+
+table(is.na(df$Control_sites_genes))
+```
+
+##single gene lists
+
+PRMT
+
+```{r}
+PRMT_gl = data.frame(matrix(nrow = 5177, ncol =2))
+colnames(PRMT_gl) <- c('PRMT_regulated_genes','BACKGROUND')
+
+
+PRMT_gl$'_BACKGROUND' <- BACKGROUND
+PRMT_gl$PRMT_regulated_genes <- append(PRMT_regulated_genes, rep(NA,5177-length(PRMT_regulated_genes)))
+
+
+write_xlsx(PRMT_gl,'../Data/Outputs/PRMT_gl.xlsx')
+
+
+table(is.na(PRMT_gl$PRMT_regulated_genes))
+```
+
+```{r}
+regulatable_gl = data.frame(matrix(nrow = 5177, ncol =2))
+colnames(regulatable_gl) <- c('Regulatable_sites_genes','BACKGROUND')
+
+
+regulatable_gl$'_BACKGROUND' <- BACKGROUND
+regulatable_gl$Regulatable_sites_genes <- append(Regulatable_sites_genes, rep(NA,5177-length(Regulatable_sites_genes)))
+
+
+write_xlsx(regulatable_gl,'../Data/Outputs/regulatable_gl.xlsx')
+
+
+table(is.na(regulatable_gl$Regulatable_sites_genes))
+```
+
+
+```{r}
+
+ctrl_gl = data.frame(matrix(nrow = 5177, ncol =2))
+colnames(ctrl_gl) <- c('Control_sites_genes','BACKGROUND')
+
+
+ctrl_gl$'_BACKGROUND' <- BACKGROUND
+ctrl_gl$Control_sites_genes <- append(Control_sites_genes, rep(NA,5177-length(Control_sites_genes)))
+
+
+write_xlsx(ctrl_gl,'../Data/Outputs/Control_sites_genes.xlsx')
+
+
+table(is.na(ctrl_gl$Control_sites_genes))
+
+```
+
+
+
+---
+title: "1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggplot2)
+library("vioplot")
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+bdhvbsh
+
+# FX:
+
+
+Adds a column called 'unique_featureID':  a unique feature ID for each PAS based on gene, chr, start position and PAS sequence motif
+```{r}
+unique_featureID <- function(dataset){
+  dataset <- dataset %>%  mutate(unique_featureID=paste(
+  dataset$V8,
+  unlist(strsplit(dataset$feature_id, split='_'))[seq(2,nrow(dataset)*3,3)],
+                                 dataset$chr,'start',dataset$start,'end',dataset$end,
+                                 sep='_'))
+  
+  return(dataset)
+}
+
+```
+
+
+
+# Read Data
+'../Data/DrimSeq/single_vs_double_96hrs_drimseq_tables'
+
+
+```{r}
+#ADMA_96h <- read.csv('../Data/DrimSeq/single_vs_double_96hrs_drimseq_tables/ADMAi_96hrs_with_mean_diff_coords.csv')
+#SDMA_96h <- read.csv('../Data/DrimSeq/single_vs_double_96hrs_drimseq_tables/SDMAi_96hrs_with_mean_diff_coords.csv')
+ADMA_SDMA_96h <- read.csv('../Data/DrimSeq/single_vs_double_96hrs_drimseq_tables/SDMAi+ADMAi_96hr_with_mean_diff_coords.csv')
+```
+
+Rename:Change columns name of values so no time and then add anoher one based on time
+
+```{r,eval=FALSE}
+#ADMA_96h <- unique_featureID(ADMA_96h)
+#SDMA_96h <- unique_featureID(SDMA_96h)
+```
+
+Rename columns so that when merging all have the same name :)
+```{r}
+ADMA_SDMA_96h <-ADMA_SDMA_96h  %>% 
+  rename(ctrl_1=DMSO_96hrs_1,
+         ctrl_2=DMSO_96hrs_2,
+         ctrl_3=DMSO_96hrs_3,
+         condition_1=SDMAi_ADMAi_96hrs_1,
+         condition_2=SDMAi_ADMAi_96hrs_2,
+         condition_3=SDMAi_ADMAi_96hrs_3
+         )
+
+ADMA_SDMA_96h$sample <- '96hrs_prev'
+ADMA_SDMA_96h <- unique_featureID(ADMA_SDMA_96h)
+
+SDMA_ADMA_24h<- read.csv('../Data/DrimSeq/SDMAi+ADMAi_timecourse_drimseq_tables/two_step_24hrs_with_mean_diff_coords.csv')
+SDMA_ADMA_48h <- read.csv('../Data/DrimSeq/SDMAi+ADMAi_timecourse_drimseq_tables/two_step_48hrs_with_mean_diff_coords.csv')
+SDMA_ADMA_72h <- read.csv('../Data/DrimSeq/SDMAi+ADMAi_timecourse_drimseq_tables/two_step_72hrs_with_mean_diff_coords.csv')
+SDMA_ADMA_96h <- read.csv('../Data/DrimSeq/SDMAi+ADMAi_timecourse_drimseq_tables/two_step_96hrs_with_mean_diff_coords.csv')
+
+SDMA_ADMA_24h <-SDMA_ADMA_24h  %>% 
+  rename(ctrl_1=DMSO_24hrs_1,
+         ctrl_2=DMSO_24hrs_2,
+         ctrl_3=DMSO_24hrs_3,
+         condition_1=SDMAi_ADMAi_24hrs_1,
+         condition_2=SDMAi_ADMAi_24hrs_2,
+         condition_3=SDMAi_ADMAi_24hrs_3
+         )
+
+SDMA_ADMA_24h$sample <- '24'
+
+SDMA_ADMA_24h <- unique_featureID(SDMA_ADMA_24h)
+
+SDMA_ADMA_48h <-SDMA_ADMA_48h  %>% 
+  rename(ctrl_1=DMSO_48hrs_1,
+         ctrl_2=DMSO_48hrs_2,
+         ctrl_3=DMSO_48hrs_3,
+         condition_1=SDMAi_ADMAi_48hrs_1,
+         condition_2=SDMAi_ADMAi_48hrs_2,
+         condition_3=SDMAi_ADMAi_48hrs_3
+         )
+
+SDMA_ADMA_48h$sample <- '48'
+
+SDMA_ADMA_48h <- unique_featureID(SDMA_ADMA_48h)
+
+
+SDMA_ADMA_72h <-SDMA_ADMA_72h  %>% 
+  rename(ctrl_1=DMSO_72hrs_1,
+         ctrl_2=DMSO_72hrs_2,
+         ctrl_3=DMSO_72hrs_3,
+         condition_1=SDMAi_ADMAi_72hrs_1,
+         condition_2=SDMAi_ADMAi_72hrs_2,
+         condition_3=SDMAi_ADMAi_72hrs_3
+         )
+
+SDMA_ADMA_72h$sample <- '72'
+SDMA_ADMA_72h <- unique_featureID(SDMA_ADMA_72h)
+
+SDMA_ADMA_96h <-SDMA_ADMA_96h  %>% 
+  rename(ctrl_1=DMSO_96hrs_1,
+         ctrl_2=DMSO_96hrs_2,
+         ctrl_3=DMSO_96hrs_3,
+         condition_1=SDMAi_ADMAi_96hrs_1,
+         condition_2=SDMAi_ADMAi_96hrs_2,
+         condition_3=SDMAi_ADMAi_96hrs_3
+         )
+
+SDMA_ADMA_96h$sample <- '96'
+SDMA_ADMA_96h <- unique_featureID(SDMA_ADMA_96h)
+
+
+siCFIM25_DMSO<-read.csv('../Data/DrimSeq/SDMAi_ADMAi_+_siRNAs_drimseq_tables/siCtrl_DMSO_vs_siCFIM25_DMSO_with_mean_diff_coords.csv')
+siELAVL1_DMSO <- read.csv('../Data/DrimSeq/SDMAi_ADMAi_+_siRNAs_drimseq_tables/siCtrl_DMSO_vs_siELAVL1_DMSO_with_mean_diff_coords.csv')
+siSam68_DMSO <- read.csv('../Data/DrimSeq/SDMAi_ADMAi_+_siRNAs_drimseq_tables/sictrl_DMSO_vs_siSam68_DMSO_with_mean_diff_coords.csv')
+
+siCFIM25_DMSO$sample <- 'siCFIM25'
+siCFIM25_DMSO <- unique_featureID(siCFIM25_DMSO)
+
+
+siELAVL1_DMSO$sample <- 'siELAVL1'
+siELAVL1_DMSO <- unique_featureID(siELAVL1_DMSO)
+
+siSam68_DMSO$sample <- 'siSam68'
+siSam68_DMSO <- unique_featureID(siSam68_DMSO)
+
+siCFIM25_DMSO <-siCFIM25_DMSO  %>% 
+  rename(ctrl_1='ctrl_DMSO_1',
+         ctrl_2='ctrl_DMSO_2',
+         ctrl_3='ctrl_DMSO_3',
+         condition_1='CFIM25_DMSO_1',
+         condition_2='CFIM25_DMSO_2',
+         condition_3='CFIM25_DMSO_3',
+         )
+
+siSam68_DMSO <-siSam68_DMSO  %>% 
+  rename(ctrl_1='ctrl_DMSO_1',
+         ctrl_2='ctrl_DMSO_2',
+         ctrl_3='ctrl_DMSO_3',
+         condition_1='Sam68_DMSO_1',
+         condition_2='Sam68_DMSO_2',
+         condition_3='Sam68_DMSO_3',
+         )
+
+siELAVL1_DMSO <-siELAVL1_DMSO  %>% 
+  rename(ctrl_1='ctrl_DMSO_1',
+         ctrl_2='ctrl_DMSO_2',
+         ctrl_3='ctrl_DMSO_3',
+         condition_1='ELAVL1_DMSO_1',
+         condition_2='ELAVL1_DMSO_2',
+         condition_3='ELAVL1_DMSO_3',
+         )
+```
+
+# Merge Huge DF
+
+
+```{r}
+merged_unfiltered_all <- rbind(siELAVL1_DMSO,siSam68_DMSO,siCFIM25_DMSO,SDMA_ADMA_96h,SDMA_ADMA_72h,SDMA_ADMA_48h,SDMA_ADMA_24h,ADMA_SDMA_96h)
+length(unique(merged_unfiltered_all$gene_id))
+length(unique(merged_unfiltered_all$unique_featureID))
+
+```
+
+
+
+```{r}
+#This takes a long time :))
+library(zeallot)
+
+
+#df_all <- data.frame(row.names=unique(merged_unfiltered_all$unique_featureID))
+df_all.1 <- data.frame(row.names=unique(merged_unfiltered_all$unique_featureID))#[8001:length(unique(merged_unfiltered_all$unique_featureID))])#4001,8001
+#df_all.2 <- data.frame(row.names=unique(merged_unfiltered_all$unique_featureID)[8000:length(unique(merged_unfiltered_all$unique_featureID))])
+
+df_all <- df_all.1
+
+for (feature in rownames(df_all) ){
+  
+  names <- merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$sample
+  df_all[rownames(df_all)==feature,'unique_featureID'] <- unique(merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$unique_featureID)
+  df_all[rownames(df_all)==feature,'gene_ID'] <- unique(merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$gene_id)
+  df_all[rownames(df_all)==feature,'chr'] <- unique(merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$chr)
+  df_all[rownames(df_all)==feature,'start'] <- unique(merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$start)
+  df_all[rownames(df_all)==feature,'end'] <- unique(merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$end)
+  df_all[rownames(df_all)==feature,'strand'] <- unique(merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$strand)
+  
+  df_all[rownames(df_all)==feature,paste0('mean_diff',names)] %<-% merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$mean_diff
+  df_all[rownames(df_all)==feature,paste0('ctrl_',names)] %<-% merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$ctrl_1
+  df_all[rownames(df_all)==feature,paste0('condition_',names)] %<-% merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$condition_1
+  df_all[rownames(df_all)==feature,paste0('V5_',names)] %<-% merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$V5
+  df_all[rownames(df_all)==feature,paste0('twostep_gene_padj_',names)] %<-%   merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$twostep_gene_padj
+  df_all[rownames(df_all)==feature,paste0('twostep_transcript_padj_',names)] %<-% merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$twostep_transcript_padj
+  df_all[rownames(df_all)==feature,paste0('lr_',names)] %<-% merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$lr
+  df_all[rownames(df_all)==feature,paste0('df_',names)] %<-% merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$df
+  df_all[rownames(df_all)==feature,paste0('pvalue_',names)] %<-% merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$pvalue
+  df_all[rownames(df_all)==feature,paste0('adj_pvalue_',names)] %<-% merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$adj_pvalue
+
+}
+
+
+df_all_1 <-df_all 
+#write.csv(df_all,'../Data/Outputs/Unfiltered_Formatted_All_Data_Sets_3.csv')
+#write_csv2(df_all,'../Data/Outputs/Unfiltered_Formatted_All_Data_Sets_3_1.csv',)
+
+
+
+#write_csv(df_all,'../Data/Outputs/Unfiltered_Formatted_All_Data_Sets_complete.csv')
+write_csv(df_all,'../Data/Outputs/Unfiltered_Formatted_All_Data_Sets_Final.csv')
+
+```
+
+```{r}
+#I saved the df and I just read the output
+df_all <- read_csv('../Data/Outputs/Unfiltered_Formatted_All_Data_Sets_complete.csv')
+
+```
+
+```{r}
+rownames(df_all) <- df_all$unique_featureID
+
+#df_all <- df
+length(unique(df_all$gene_ID))
+```
+
+
+
+
+#PRMT regulated
+
+
+## 20% and sign at least 1 ds 
+
+not useful
+```{r}
+df_prmt_20_15_old <- df_prmt_15 %>% filter(
+  ((mean_diff24>0.2 | mean_diff24< -0.2) & twostep_transcript_padj_24<0.05)|
+  ((mean_diff48>0.2 | mean_diff48< -0.2) & twostep_transcript_padj_48<0.05)|              
+  ((mean_diff72>0.2 | mean_diff72< -0.2) & twostep_transcript_padj_72<0.05)| 
+  ((mean_diff96>0.2 | mean_diff96< -0.2) & twostep_transcript_padj_96<0.05)|
+  ((mean_diff96hrs_prev>0.2 | mean_diff96hrs_prev< -0.2) & twostep_transcript_padj_96hrs_prev<0.05)
+)
+```
+
+
+```{r}
+nrow(df_prmt_20_15_old)
+length(unique(df_prmt_20_15_old$gene_ID))
+
+```
+
+#20 at least 1 and 15 at least 1
+
+For each dataset, filter feature that has 20% + <0.05 and then check if in one other dataset (hence or = |) see 15% change
+Then filter the ds based on the feature that pass that for one of the datasets
+
+```{r}
+
+df_prmt_20_15_24 <- df_all%>% filter((
+  ((mean_diff24>0.2 | mean_diff24< -0.2)
+  & twostep_transcript_padj_24<0.05) &
+  ( (mean_diff48>0.15 | mean_diff48< -0.15) |              
+  (mean_diff72>0.15 | mean_diff72< -0.15) | 
+  (mean_diff96>0.15 | mean_diff96< -0.15) |
+  (mean_diff96hrs_prev>0.15 | mean_diff96hrs_prev< -0.15)) ))
+
+df_prmt_20_15_48 <- df_all %>% filter((
+  ((mean_diff48>0.2 | mean_diff48< -0.2)
+  & twostep_transcript_padj_48<0.05) &
+  ( (mean_diff24>0.15 | mean_diff24< -0.15) |              
+  (mean_diff72>0.15 | mean_diff72< -0.15) | 
+  (mean_diff96>0.15 | mean_diff96< -0.15) |
+  (mean_diff96hrs_prev>0.15 | mean_diff96hrs_prev< -0.15)) ))
+
+
+df_prmt_20_15_72 <- df_all%>% filter((
+  ((mean_diff72>0.2 | mean_diff72< -0.2)
+  & twostep_transcript_padj_72<0.05) &
+  ( (mean_diff48>0.15 | mean_diff48< -0.15) |              
+  (mean_diff24>0.15 | mean_diff24< -0.15) | 
+  (mean_diff96>0.15 | mean_diff96< -0.15) |
+  (mean_diff96hrs_prev>0.15 | mean_diff96hrs_prev< -0.15)) ))
+
+
+
+df_prmt_20_15_96 <- df_all%>% filter((
+  ((mean_diff96>0.2 | mean_diff96< -0.2)
+  & twostep_transcript_padj_96<0.05) &
+  ( (mean_diff48>0.15 | mean_diff48< -0.15) |              
+  (mean_diff72>0.15 | mean_diff72< -0.15) | 
+  (mean_diff24>0.15 | mean_diff24< -0.15) |
+  (mean_diff96hrs_prev>0.15 | mean_diff96hrs_prev< -0.15)) ))
+
+
+
+df_prmt_20_15_96_prev <- df_all%>% filter((
+  ((mean_diff96hrs_prev>0.2 | mean_diff96hrs_prev< -0.2)
+  & twostep_transcript_padj_96hrs_prev<0.05) &
+  ( (mean_diff48>0.15 | mean_diff48< -0.15) |              
+  (mean_diff72>0.15 | mean_diff72< -0.15) | 
+  (mean_diff96>0.15 | mean_diff96< -0.15) |
+  (mean_diff24>0.15 | mean_diff24< -0.15)) ))
+
+
+
+df_prmt_20_15_v <- rbind(df_prmt_20_15_24,df_prmt_20_15_48,df_prmt_20_15_72,df_prmt_20_15_96,df_prmt_20_15_96_prev)$unique_featureID
+df_prmt_20_15 <- df_all[df_all$unique_featureID %in%df_prmt_20_15_v, ]
+
+nrow(df_prmt_20_15)
+length(unique(df_prmt_20_15$gene_ID))
+```
+
+
+
+## 70% similarity
+
+check 70% similarity, use abs so we avoid PRMT=0.3, siRNA= -0.3 problems
+Used only 72hrs dataset as siRNA data was retrieved at that time so makes sense to compare just the 2
+If feature not present in siRNA ds is discarded as we dont know the value :)
+
+```{r}
+df_prmt_20_15_70 <- df_prmt_20_15 %>% 
+  filter((is.na(df_prmt_20_15$mean_diffsiCFIM25)!=TRUE)| (is.na(df_prmt_20_15$mean_diffsiELAVL1)!=TRUE)| (is.na(df_prmt_20_15$mean_diffsiSam68)!=TRUE))%>% 
+  filter((
+  (abs(mean_diff72) > 0.7*abs(mean_diffsiCFIM25) )& 
+  (abs(mean_diff72) >0.7*abs(mean_diffsiELAVL1)) &  
+  (abs(mean_diff72) >0.7*abs(mean_diffsiSam68) )))
+
+```
+
+##Keep only paired genes with opposite effect
+
+keep only paired genes, take pair of features that have max and min change based on mean of all observation in PRMT ds
+
+```{r}
+to_keep <- vector()
+for (gene in unique(df_prmt_20_15_70$gene_ID)) {
+ 
+  #for each gene 
+  #look at how many unique features
+    uniqueFG <- df_prmt_20_15_70[df_prmt_20_15_70$gene_ID==gene,]$unique_featureID
+    #if more than 2 features 
+    if (length(uniqueFG)>=2) {
+      lowest <- 0
+      biggest <- 0
+      f_ID_biggest <- character()
+      f_ID_smallest <- character()
+      #look at mean diff values of each feature and take smallest (mandatory less than 0)
+      #look at mean diff values of each feature and take biggest (mandatory bigger than 0)
+      #so we have opposite
+      for (feature in uniqueFG) {
+        mean_tmp <- mean(na.omit(as.vector(t(df_prmt_20_15_70[df_prmt_20_15_70$gene_ID==gene & df_prmt_20_15_70$unique_featureID==feature,][c('mean_diff24','mean_diff48','mean_diff72','mean_diff96','mean_diff96hrs_prev')]))))#na.omit()
+        #if (is.na(mean_tmp )==FALSE) {
+          if (mean_tmp<lowest) {
+          lowest <- mean_tmp 
+          f_ID_smallest <- feature}
+        if (mean_tmp>biggest) {
+          biggest <- mean_tmp 
+          f_ID_biggest <- feature}
+        #}
+        }
+        
+      if (lowest!=0 & biggest!=0 ) {
+        to_keep <- append(to_keep, c(f_ID_smallest,f_ID_biggest))
+      }
+      
+    }
+    
+}
+
+
+#as.vector(t(df_prmt_20_15_70[df_prmt_20_15_70$gene_ID==gene & df_prmt_20_15_70$unique_featureID==feature,][c('mean_diff24','mean_diff48','mean_diff72','mean_diff96','mean_diff96hrs_prev')]))
+#c('mean_diff24','mean_diff48','mean_diff72','mean_diff96','mean_diff96hrs_prev')
+
+df_prmt_20_15_70_PO <- df_prmt_20_15_70[df_prmt_20_15_70$unique_featureID %in% to_keep,]
+length(unique(df_prmt_20_15_70_PO$gene_ID))
+nrow(df_prmt_20_15_70_PO)
+
+#write_csv(df_prmt_20_15_70_PO,'../Data/Outputs/PRMT_reg')
+```
+
+
+## Old filtering
+
+This is just old way of categ, to check I had equal results to prev script
+
+```{r}
+df_prmt_2_old<- df_prmt %>% filter(
+  ((mean_diff24>0.2 | mean_diff24< -0.2) & twostep_transcript_padj_24<0.05)|
+  ((mean_diff48>0.2 | mean_diff48< -0.2) & twostep_transcript_padj_48<0.05)|              
+  ((mean_diff72>0.2 | mean_diff72< -0.2) & twostep_transcript_padj_72<0.05)| 
+  ((mean_diff96>0.2 | mean_diff96< -0.2) & twostep_transcript_padj_96<0.05)|
+  ((mean_diff96hrs_prev>0.2 | mean_diff96hrs_prev< -0.2) & twostep_transcript_padj_96hrs_prev<0.05)
+)
+
+
+nrow(df_prmt_2_old)
+length(unique(df_prmt_2_old$gene_ID))
+
+df_prmt_20_10_old <- df_prmt_2_old %>% filter(
+  ((mean_diff24>0.1 | mean_diff24< -0.1) & 
+  (mean_diff48>0.1 | mean_diff48< -0.1) &              
+  (mean_diff72>0.1 | mean_diff72< -0.1) & 
+  (mean_diff96>0.1 | mean_diff96< -0.1) & 
+  (mean_diff96hrs_prev>0.1 | mean_diff96hrs_prev< -0.1)
+))
+
+summary(df_prmt_20_10_old)
+
+nrow(df_prmt_20_10_old)
+length(unique(df_prmt_20_10_old$gene_ID))
+
+
+df_prmt_20_10_70_old <- df_prmt_20_10_old %>% filter((
+  (abs(mean_diff72) > 0.7*abs(mean_diffsiCFIM25) )& 
+  (abs(mean_diff72) >0.7*abs(mean_diffsiELAVL1)) &  
+  (abs(mean_diff72) >0.7*abs(mean_diffsiSam68) )))
+
+nrow(df_prmt_20_10_70_old)
+length(unique(df_prmt_20_10_70_old$gene_ID))
+
+to_keep_old <- vector()
+for (gene in unique(df_prmt_20_10_70_old$gene_ID)) {
+ 
+  #for each gene 
+  #look at how many unique features
+    uniqueFG <- df_prmt_20_10_70_old[df_prmt_20_10_70_old$gene_ID==gene,]$unique_featureID
+    #if more than 2 features 
+    if (length(uniqueFG)>=2) {
+      lowest <- 0
+      biggest <- 0
+      f_ID_biggest <- character()
+      f_ID_smallest <- character()
+      #look at mean diff values of each feature and take smallest (mandatory less than 0)
+      #look at mean diff values of each feature and take biggest (mandatory bigger than 0)
+      #so we have opposite
+      for (feature in uniqueFG) {
+        mean_tmp <- mean(na.omit(as.vector(t(df_prmt_20_10_70_old[df_prmt_20_10_70_old$gene_ID==gene & df_prmt_20_10_70_old$unique_featureID==feature,][c('mean_diff24','mean_diff48','mean_diff72','mean_diff96','mean_diff96hrs_prev')]))))#na.omit()
+        #if (is.na(mean_tmp )==FALSE) {
+          if (mean_tmp<lowest) {
+          lowest <- mean_tmp 
+          f_ID_smallest <- feature}
+        if (mean_tmp>biggest) {
+          biggest <- mean_tmp 
+          f_ID_biggest <- feature}
+        #}
+        }
+        
+      if (lowest!=0 & biggest!=0 ) {
+        to_keep_old <- append(to_keep_old, c(f_ID_smallest,f_ID_biggest))
+      }
+      
+    }
+    
+}
+
+df_prmtreg_old <-  df_prmt_20_10_70_old[df_prmt_20_10_70_old$unique_featureID %in% to_keep_old,]
+
+length(unique(df_prmtreg_old$gene_ID))
+nrow(df_prmtreg_old)
+```
+
+
+
+
+#Regulatable
+
+
+##20 %
+
+First filter feat that have 20% change + significance in at least 1 ds (hence or |)
+```{r}
+df_siRNA <- df_all 
+df_siRNA_20 <- df_siRNA %>% filter(
+  ((mean_diffsiCFIM25>0.2 | mean_diffsiCFIM25< -0.2) & twostep_transcript_padj_siCFIM25<0.05)|
+  ((mean_diffsiELAVL1>0.2 | mean_diffsiELAVL1< -0.2) & twostep_transcript_padj_siELAVL1<0.05)|              
+  ((mean_diffsiSam68>0.2 | mean_diffsiSam68< -0.2) & twostep_transcript_padj_siSam68<0.05) 
+)
+```
+
+## 70%
+
+check for 70% similarity, again use abs to avoid opposite change problems.
+Again checked only in 72hrs ds for same reason
+If feature not present in PRMT 72hrs ds is discarded as we don't know the value :)
+
+might remove 70 check if low number
+```{r}
+df_siRNA_20_75 <- df_siRNA_20 %>%
+  filter(is.na(df_siRNA_20$mean_diff72)!=TRUE) %>% 
+  filter( 
+  (abs(mean_diffsiCFIM25) > 0.7*abs(mean_diff72) )| 
+  (abs(mean_diffsiELAVL1) >0.7*abs(mean_diff72)) | 
+  (abs(mean_diffsiSam68) >0.7*abs(mean_diff72) ))
+  
+
+nrow(df_siRNA_20_75)
+length(unique(df_siRNA_20_75$gene_ID))
+```
+
+
+#PO
+
+Again keep pairs only, I did this with a fx for each siRNA separately as such the specific mean diff for ds is used.
+Still keeping the 2 with opposite sign and biggest value
+
+```{r}
+to_keep_siRNA_vector <- function(dataset, dataset_indicator){
+to_keep_siRNA <- vector()
+
+
+for (gene in unique(dataset$gene_ID)) {
+ 
+  #for each gene 
+  #look at how many unique features
+    uniqueFG <- dataset[dataset$gene_ID==gene,]$unique_featureID
+    #if more than 2 features 
+    if (length(uniqueFG)>=2) {
+      lowest <- 0
+      biggest <- 0
+      f_ID_biggest <- character()
+      f_ID_smallest <- character()
+      #look at mean diff values of each feature and take smallest (mandatory less than 0)
+      #look at mean diff values of each feature and take biggest (mandatory bigger than 0)
+      #so we have opposite
+      for (feature in uniqueFG) {
+        val <- dataset[dataset$gene_ID==gene & dataset$unique_featureID==feature,][dataset_indicator]
+        if (is.na(val)==TRUE) {
+          val <- 0
+        }
+        #if (is.na(mean_tmp )==FALSE) {
+          if (val<lowest) {
+          lowest <- val 
+          f_ID_smallest <- feature}
+        if (val>biggest) {
+          biggest <- val 
+          f_ID_biggest <- feature}
+        #}
+        }
+        
+      if (lowest!=0 & biggest!=0 ) {
+        to_keep_siRNA <- append(to_keep_siRNA, c(f_ID_smallest,f_ID_biggest))
+      }
+      
+    }
+    
+}
+return(to_keep_siRNA)
+}
+```
+
+
+```{r}
+to_keep_CF <- to_keep_siRNA_vector(filter(df_siRNA_20_75,(mean_diffsiCFIM25>0.2 | mean_diffsiCFIM25< -0.2) & twostep_transcript_padj_siCFIM25<0.05) ,'mean_diffsiCFIM25')
+to_keep_Sam <- to_keep_siRNA_vector(filter(df_siRNA_20_75,(mean_diffsiSam68>0.2 | mean_diffsiSam68< -0.2) & twostep_transcript_padj_siSam68<0.05) ,'mean_diffsiSam68')
+to_keep_EL <- to_keep_siRNA_vector(filter(df_siRNA_20_75,(mean_diffsiELAVL1>0.2 | mean_diffsiELAVL1< -0.2) & twostep_transcript_padj_siELAVL1<0.05) ,'mean_diffsiELAVL1')
+
+c <- unique(c(to_keep_CF,to_keep_Sam,to_keep_EL))
+
+Regulatable_sites_CF <-df_siRNA_20_75[df_siRNA_20_75$unique_featureID %in% to_keep_CF,] 
+nrow(Regulatable_sites_CF)
+length(unique(Regulatable_sites_CF$gene_ID))
+
+Regulatable_sites_Sam <-df_siRNA_20_75[df_siRNA_20_75$unique_featureID %in% to_keep_Sam,] 
+nrow(Regulatable_sites_Sam)
+length(unique(Regulatable_sites_Sam$gene_ID))
+
+Regulatable_sites_EL <-df_siRNA_20_75[df_siRNA_20_75$unique_featureID %in% to_keep_EL,] 
+nrow(Regulatable_sites_EL)
+length(unique(Regulatable_sites_EL$gene_ID))
+```
+
+merged features for diff siRNA ds, then removed genes present in PRMT category.
+IMP: there is one gene (SLC25A46_ENSG00000164209.17) that has 3 features. This is because I checked for most 'important' ones separately and 2 siRNA ds resulted in 1feat shared and 1 unique per siRNA selected.
+
+
+```{r}
+Regulatable_sites <-df_siRNA_20_75[df_siRNA_20_75$unique_featureID %in% c,] 
+nrow(Regulatable_sites)
+length(unique(Regulatable_sites$gene_ID))
+
+Regulatable_sites_noPRMT <- Regulatable_sites[!(Regulatable_sites$gene_ID %in% df_prmt_20_15_70_PO$gene_ID),]
+nrow(Regulatable_sites_noPRMT)
+length(unique(Regulatable_sites_noPRMT$gene_ID))
+
+# SLC25A46_ENSG00000164209.17   genes with more than 2 features
+
+
+
+#write_csv(Regulatable_sites_noPRMT,'../Data/Outputs/Regulatable_sites.csv')
+```
+
+#Control sites
+
+```{r}
+df_ctrl <- df_all
+```
+
+#Tried with mean both, but everything passed so useless 
+
+```{r}
+#with mean everything passes basically
+df_15_5 <- df_ctrl %>% 
+  filter((mean(na.omit(mean_diff24,mean_diff48,mean_diff72,mean_diff96,mean_diff96hrs_prev,mean_diffsiCFIM25,mean_diffsiELAVL1,mean_diffsiSam68)) >-0.15 &
+          mean(na.omit(mean_diff24,mean_diff48,mean_diff72,mean_diff96,mean_diff96hrs_prev,mean_diffsiCFIM25,mean_diffsiELAVL1,mean_diffsiSam68))< 0.15)) %>%
+  filter(mean(na.omit(ctrl_siELAVL1,ctrl_siSam68,ctrl_siCFIM25,ctrl_96hrs_prev,ctrl_96,ctrl_72,ctrl_48,ctrl_24))>0.05)
+
+nrow(df_15_5)
+length(unique(df_15_5$gene_ID))
+
+df_control_noPRMT <- df_15_5[!(df_15_5$gene_ID %in% df_prmt_20_15_70_PO$gene_ID), ]
+nrow(df_control_noPRMT)
+length(unique(df_control_noPRMT$gene_ID))
+
+
+df_control_final <-  df_control_noPRMT[!(df_control_noPRMT$gene_ID %in% Regulatable_sites_noPRMT$gene_ID), ]
+nrow(df_control_final)
+length(unique(df_control_final$gene_ID))
+```
+
+#old as well 
+
+```{r}
+#let's try with each
+df_15_5 <- df_ctrl %>% 
+  filter((mean_diff24  >-0.15& mean_diff24< 0.15)&
+         (mean_diff48  >-0.15& mean_diff48< 0.15)&
+         (mean_diff72  >-0.15& mean_diff72< 0.15)&
+         (mean_diff96  >-0.15& mean_diff96< 0.15)&
+         (mean_diff96hrs_prev  >-0.15& mean_diff96hrs_prev< 0.15)&
+         (mean_diffsiCFIM25  >-0.15& mean_diffsiCFIM25< 0.15)&
+         (mean_diffsiELAVL1  >-0.15& mean_diffsiELAVL1< 0.15)&
+         (mean_diffsiSam68  >-0.15& mean_diffsiSam68< 0.15)) %>% 
+  filter((ctrl_siELAVL1  >0.05)&
+           (ctrl_siSam68  >0.05)&
+           (ctrl_siCFIM25  >0.05)&
+           (ctrl_96hrs_prev  >0.05)&
+           (ctrl_96  >0.05)&
+           (ctrl_72  >0.05)&
+           (ctrl_48  >0.05)&
+           (ctrl_24  >0.05))
+```
+
+
+###mean
+
+Check for less 15% each + mean of DMSO usage >5%
+
+```{r}
+df_15_5<- df_ctrl %>% 
+  filter((mean_diff24  >-0.15& mean_diff24< 0.15)&
+         (mean_diff48  >-0.15& mean_diff48< 0.15)&
+         (mean_diff72  >-0.15& mean_diff72< 0.15)&
+         (mean_diff96  >-0.15& mean_diff96< 0.15)&
+         (mean_diff96hrs_prev  >-0.15& mean_diff96hrs_prev< 0.15)&
+         (mean_diffsiCFIM25  >-0.15& mean_diffsiCFIM25< 0.15)&
+         (mean_diffsiELAVL1  >-0.15& mean_diffsiELAVL1< 0.15)&
+         (mean_diffsiSam68  >-0.15& mean_diffsiSam68< 0.15)) %>% 
+filter(mean(na.omit(ctrl_siELAVL1,ctrl_siSam68,ctrl_siCFIM25,ctrl_96hrs_prev,ctrl_96,ctrl_72,ctrl_48,ctrl_24))>0.05)
+```
+
+
+
+# old filtering categories
+
+```{r}
+df_10_10 <- df_ctrl %>% 
+  filter((mean_diff24  >-0.1 & mean_diff24< 0.1)&
+         (mean_diff48  >-0.1  &  mean_diff48< 0.1)&
+         (mean_diff72  >-0.1 &  mean_diff72< 0.1)&
+         (mean_diff96  >-0.1 & mean_diff96< 0.1)&
+         (mean_diff96hrs_prev  >-0.1 &  mean_diff96hrs_prev< 0.1)&
+         (mean_diffsiCFIM25  >-0.1 &  mean_diffsiCFIM25< 0.1)&
+         (mean_diffsiELAVL1  >-0.1 &  mean_diffsiELAVL1< 0.1)&
+         (mean_diffsiSam68  >-0.1  &  mean_diffsiSam68< 0.1)) %>% 
+  filter((ctrl_siELAVL1  >0.1)&
+           (ctrl_siSam68  >0.1)&
+           (ctrl_siCFIM25  >0.1)&
+           (ctrl_96hrs_prev  >0.1)&
+           (ctrl_96  >0.1)&
+           (ctrl_72  >0.1)&
+           (ctrl_48  >0.1)&
+           (ctrl_24  >0.1))
+```
+
+
+
+
+
+```{r}
+
+nrow(df_15_5)
+length(unique(df_15_5$gene_ID))
+```
+
+
+#Keeping PO
+
+Keeping for each gene the 2 most used sites (calc as average across all ds)
+
+```{r}
+to_keep_control <- vector()
+for (gene in unique(df_15_5$gene_ID)) {
+ 
+  #for each gene 
+  #look at how many unique features
+    uniqueFG <- df_15_5[df_15_5$gene_ID==gene,]$unique_featureID
+    #if more than 2 features 
+    if (length(uniqueFG)>=2) {
+      biggest <- -100
+      Sec_biggest <- -100
+      f_ID_biggest <- character()
+      f_ID_Sec_biggest <- character()
+      for (feature in uniqueFG) {
+        mean_tmp <- mean(na.omit(as.vector(t(df_15_5[df_15_5$gene_ID==gene & df_15_5$unique_featureID==feature,][c('ctrl_siELAVL1','ctrl_siSam68','ctrl_siCFIM25','ctrl_96hrs_prev','ctrl_96','ctrl_72','ctrl_48','ctrl_24')]))))#na.omit()
+        #if (is.na(mean_tmp )==FALSE) {
+          if (mean_tmp>biggest) {
+            Sec_biggest<-biggest
+            biggest <- mean_tmp 
+            f_ID_Sec_biggest<-f_ID_biggest
+            f_ID_biggest <- feature}
+        else {
+        if (mean_tmp>Sec_biggest) {
+          Sec_biggest <- mean_tmp 
+          f_ID_Sec_biggest <- feature}
+        }
+      }
+      
+        to_keep_control <- append(to_keep_control, c(f_ID_Sec_biggest,f_ID_biggest))
+      }
+      
+    }
+    
+```
+
+
+## removed all genes found in prev 2 categories
+
+```{r}
+df_control_pairs <- df_15_5[df_15_5$unique_featureID %in% to_keep_control,]
+
+
+nrow(df_control_pairs)
+length(unique(df_control_pairs$gene_ID))
+
+df_control_noPRMT <- df_control_pairs[!(df_control_pairs$gene_ID %in% df_prmt_20_15_70_PO$gene_ID), ]
+nrow(df_control_noPRMT)
+length(unique(df_control_noPRMT$gene_ID))
+
+
+df_control_final <-  df_control_noPRMT[!(df_control_noPRMT$gene_ID %in% Regulatable_sites_noPRMT$gene_ID), ]
+nrow(df_control_final)
+length(unique(df_control_final$gene_ID))
+
+#write_csv(df_control_final,'../Data/Outputs/Control_sites')
+```
+
+
+
+
+#Merge data categories to use for clustering 
+```{r}
+df_control_final$category <- 'Control_sites'
+Regulatable_sites_noPRMT$category <- 'Regulatable_sites'
+df_prmt_20_15_70_PO$category <- 'PRMT_regulated'
+
+```
+
+
+```{r}
+df_all_categories <- rbind(df_control_final,Regulatable_sites_noPRMT,df_prmt_20_15_70_PO)
+
+#write_csv(df_all_categories,'../Data/Outputs/All_categories_df.csv')
+```
+
+
+#gene lists for GO analysis
+
+```{r}
+BACKGROUND <- unlist(strsplit(unique(df_all$gene_ID),split = '_'))[seq(1,length(unique(df_all$gene_ID))*2,2)]
+Control_sites_genes <-unlist(strsplit(unique(df_control_final$gene_ID),split = '_'))[seq(1,length(unique(df_control_final$gene_ID))*2,2)]
+Regulatable_sites_genes <- unlist(strsplit(unique(Regulatable_sites_noPRMT$gene_ID),split = '_'))[seq(1,length(unique(Regulatable_sites_noPRMT$gene_ID))*2,2)]
+PRMT_regulated_genes <-unlist(strsplit(unique(df_prmt_20_15_70_PO$gene_ID),split = '_'))[seq(1,length(unique(df_prmt_20_15_70_PO$gene_ID))*2,2)]
+```
+
+```{r}
+df = data.frame(matrix(nrow = 5177, ncol =4))
+colnames(df) <- c('PRMT_regulated_genes','Regulatable_sites_genes','Control_sites_genes','BACKGROUND')
+
+
+df$Control_sites_genes <- append(Control_sites_genes, rep(NA,5177-length(Control_sites_genes)))
+df$'_BACKGROUND' <- BACKGROUND
+df$Regulatable_sites_genes <- append(Regulatable_sites_genes, rep(NA,5177-length(Regulatable_sites_genes)))
+df$PRMT_regulated_genes <- append(PRMT_regulated_genes, rep(NA,5177-length(PRMT_regulated_genes)))
+
+
+write_xlsx(df,'../Data/Outputs/gene_list.xlsx')
+
+
+table(is.na(df$Control_sites_genes))
+```
+
+##single gene lists
+
+PRMT
+
+```{r}
+PRMT_gl = data.frame(matrix(nrow = 5177, ncol =2))
+colnames(PRMT_gl) <- c('PRMT_regulated_genes','BACKGROUND')
+
+
+PRMT_gl$'_BACKGROUND' <- BACKGROUND
+PRMT_gl$PRMT_regulated_genes <- append(PRMT_regulated_genes, rep(NA,5177-length(PRMT_regulated_genes)))
+
+
+write_xlsx(PRMT_gl,'../Data/Outputs/PRMT_gl.xlsx')
+
+
+table(is.na(PRMT_gl$PRMT_regulated_genes))
+```
+
+```{r}
+regulatable_gl = data.frame(matrix(nrow = 5177, ncol =2))
+colnames(regulatable_gl) <- c('Regulatable_sites_genes','BACKGROUND')
+
+
+regulatable_gl$'_BACKGROUND' <- BACKGROUND
+regulatable_gl$Regulatable_sites_genes <- append(Regulatable_sites_genes, rep(NA,5177-length(Regulatable_sites_genes)))
+
+
+write_xlsx(regulatable_gl,'../Data/Outputs/regulatable_gl.xlsx')
+
+
+table(is.na(regulatable_gl$Regulatable_sites_genes))
+```
+
+
+```{r}
+
+ctrl_gl = data.frame(matrix(nrow = 5177, ncol =2))
+colnames(ctrl_gl) <- c('Control_sites_genes','BACKGROUND')
+
+
+ctrl_gl$'_BACKGROUND' <- BACKGROUND
+ctrl_gl$Control_sites_genes <- append(Control_sites_genes, rep(NA,5177-length(Control_sites_genes)))
+
+
+write_xlsx(ctrl_gl,'../Data/Outputs/Control_sites_genes.xlsx')
+
+
+table(is.na(ctrl_gl$Control_sites_genes))
+
+```
+
+
+
+---
+title: "1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggplot2)
+library("vioplot")
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+bdhvbsh
+
+# FX:
+
+
+Adds a column called 'unique_featureID':  a unique feature ID for each PAS based on gene, chr, start position and PAS sequence motif
+```{r}
+unique_featureID <- function(dataset){
+  dataset <- dataset %>%  mutate(unique_featureID=paste(
+  dataset$V8,
+  unlist(strsplit(dataset$feature_id, split='_'))[seq(2,nrow(dataset)*3,3)],
+                                 dataset$chr,'start',dataset$start,'end',dataset$end,
+                                 sep='_'))
+  
+  return(dataset)
+}
+
+```
+
+
+
+# Read Data
+'../Data/DrimSeq/single_vs_double_96hrs_drimseq_tables'
+
+
+```{r}
+#ADMA_96h <- read.csv('../Data/DrimSeq/single_vs_double_96hrs_drimseq_tables/ADMAi_96hrs_with_mean_diff_coords.csv')
+#SDMA_96h <- read.csv('../Data/DrimSeq/single_vs_double_96hrs_drimseq_tables/SDMAi_96hrs_with_mean_diff_coords.csv')
+ADMA_SDMA_96h <- read.csv('../Data/DrimSeq/single_vs_double_96hrs_drimseq_tables/SDMAi+ADMAi_96hr_with_mean_diff_coords.csv')
+```
+
+Rename:Change columns name of values so no time and then add anoher one based on time
+
+```{r,eval=FALSE}
+#ADMA_96h <- unique_featureID(ADMA_96h)
+#SDMA_96h <- unique_featureID(SDMA_96h)
+```
+
+Rename columns so that when merging all have the same name :)
+```{r}
+ADMA_SDMA_96h <-ADMA_SDMA_96h  %>% 
+  rename(ctrl_1=DMSO_96hrs_1,
+         ctrl_2=DMSO_96hrs_2,
+         ctrl_3=DMSO_96hrs_3,
+         condition_1=SDMAi_ADMAi_96hrs_1,
+         condition_2=SDMAi_ADMAi_96hrs_2,
+         condition_3=SDMAi_ADMAi_96hrs_3
+         )
+
+ADMA_SDMA_96h$sample <- '96hrs_prev'
+ADMA_SDMA_96h <- unique_featureID(ADMA_SDMA_96h)
+
+SDMA_ADMA_24h<- read.csv('../Data/DrimSeq/SDMAi+ADMAi_timecourse_drimseq_tables/two_step_24hrs_with_mean_diff_coords.csv')
+SDMA_ADMA_48h <- read.csv('../Data/DrimSeq/SDMAi+ADMAi_timecourse_drimseq_tables/two_step_48hrs_with_mean_diff_coords.csv')
+SDMA_ADMA_72h <- read.csv('../Data/DrimSeq/SDMAi+ADMAi_timecourse_drimseq_tables/two_step_72hrs_with_mean_diff_coords.csv')
+SDMA_ADMA_96h <- read.csv('../Data/DrimSeq/SDMAi+ADMAi_timecourse_drimseq_tables/two_step_96hrs_with_mean_diff_coords.csv')
+
+SDMA_ADMA_24h <-SDMA_ADMA_24h  %>% 
+  rename(ctrl_1=DMSO_24hrs_1,
+         ctrl_2=DMSO_24hrs_2,
+         ctrl_3=DMSO_24hrs_3,
+         condition_1=SDMAi_ADMAi_24hrs_1,
+         condition_2=SDMAi_ADMAi_24hrs_2,
+         condition_3=SDMAi_ADMAi_24hrs_3
+         )
+
+SDMA_ADMA_24h$sample <- '24'
+
+SDMA_ADMA_24h <- unique_featureID(SDMA_ADMA_24h)
+
+SDMA_ADMA_48h <-SDMA_ADMA_48h  %>% 
+  rename(ctrl_1=DMSO_48hrs_1,
+         ctrl_2=DMSO_48hrs_2,
+         ctrl_3=DMSO_48hrs_3,
+         condition_1=SDMAi_ADMAi_48hrs_1,
+         condition_2=SDMAi_ADMAi_48hrs_2,
+         condition_3=SDMAi_ADMAi_48hrs_3
+         )
+
+SDMA_ADMA_48h$sample <- '48'
+
+SDMA_ADMA_48h <- unique_featureID(SDMA_ADMA_48h)
+
+
+SDMA_ADMA_72h <-SDMA_ADMA_72h  %>% 
+  rename(ctrl_1=DMSO_72hrs_1,
+         ctrl_2=DMSO_72hrs_2,
+         ctrl_3=DMSO_72hrs_3,
+         condition_1=SDMAi_ADMAi_72hrs_1,
+         condition_2=SDMAi_ADMAi_72hrs_2,
+         condition_3=SDMAi_ADMAi_72hrs_3
+         )
+
+SDMA_ADMA_72h$sample <- '72'
+SDMA_ADMA_72h <- unique_featureID(SDMA_ADMA_72h)
+
+SDMA_ADMA_96h <-SDMA_ADMA_96h  %>% 
+  rename(ctrl_1=DMSO_96hrs_1,
+         ctrl_2=DMSO_96hrs_2,
+         ctrl_3=DMSO_96hrs_3,
+         condition_1=SDMAi_ADMAi_96hrs_1,
+         condition_2=SDMAi_ADMAi_96hrs_2,
+         condition_3=SDMAi_ADMAi_96hrs_3
+         )
+
+SDMA_ADMA_96h$sample <- '96'
+SDMA_ADMA_96h <- unique_featureID(SDMA_ADMA_96h)
+
+
+siCFIM25_DMSO<-read.csv('../Data/DrimSeq/SDMAi_ADMAi_+_siRNAs_drimseq_tables/siCtrl_DMSO_vs_siCFIM25_DMSO_with_mean_diff_coords.csv')
+siELAVL1_DMSO <- read.csv('../Data/DrimSeq/SDMAi_ADMAi_+_siRNAs_drimseq_tables/siCtrl_DMSO_vs_siELAVL1_DMSO_with_mean_diff_coords.csv')
+siSam68_DMSO <- read.csv('../Data/DrimSeq/SDMAi_ADMAi_+_siRNAs_drimseq_tables/sictrl_DMSO_vs_siSam68_DMSO_with_mean_diff_coords.csv')
+
+siCFIM25_DMSO$sample <- 'siCFIM25'
+siCFIM25_DMSO <- unique_featureID(siCFIM25_DMSO)
+
+
+siELAVL1_DMSO$sample <- 'siELAVL1'
+siELAVL1_DMSO <- unique_featureID(siELAVL1_DMSO)
+
+siSam68_DMSO$sample <- 'siSam68'
+siSam68_DMSO <- unique_featureID(siSam68_DMSO)
+
+siCFIM25_DMSO <-siCFIM25_DMSO  %>% 
+  rename(ctrl_1='ctrl_DMSO_1',
+         ctrl_2='ctrl_DMSO_2',
+         ctrl_3='ctrl_DMSO_3',
+         condition_1='CFIM25_DMSO_1',
+         condition_2='CFIM25_DMSO_2',
+         condition_3='CFIM25_DMSO_3',
+         )
+
+siSam68_DMSO <-siSam68_DMSO  %>% 
+  rename(ctrl_1='ctrl_DMSO_1',
+         ctrl_2='ctrl_DMSO_2',
+         ctrl_3='ctrl_DMSO_3',
+         condition_1='Sam68_DMSO_1',
+         condition_2='Sam68_DMSO_2',
+         condition_3='Sam68_DMSO_3',
+         )
+
+siELAVL1_DMSO <-siELAVL1_DMSO  %>% 
+  rename(ctrl_1='ctrl_DMSO_1',
+         ctrl_2='ctrl_DMSO_2',
+         ctrl_3='ctrl_DMSO_3',
+         condition_1='ELAVL1_DMSO_1',
+         condition_2='ELAVL1_DMSO_2',
+         condition_3='ELAVL1_DMSO_3',
+         )
+```
+
+# Merge Huge DF
+
+
+```{r}
+merged_unfiltered_all <- rbind(siELAVL1_DMSO,siSam68_DMSO,siCFIM25_DMSO,SDMA_ADMA_96h,SDMA_ADMA_72h,SDMA_ADMA_48h,SDMA_ADMA_24h,ADMA_SDMA_96h)
+length(unique(merged_unfiltered_all$gene_id))
+length(unique(merged_unfiltered_all$unique_featureID))
+
+```
+
+
+
+```{r}
+#This takes a long time :))
+library(zeallot)
+
+
+#df_all <- data.frame(row.names=unique(merged_unfiltered_all$unique_featureID))
+df_all.1 <- data.frame(row.names=unique(merged_unfiltered_all$unique_featureID))#[8001:length(unique(merged_unfiltered_all$unique_featureID))])#4001,8001
+#df_all.2 <- data.frame(row.names=unique(merged_unfiltered_all$unique_featureID)[8000:length(unique(merged_unfiltered_all$unique_featureID))])
+
+df_all <- df_all.1
+
+for (feature in rownames(df_all) ){
+  
+  names <- merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$sample
+  df_all[rownames(df_all)==feature,'unique_featureID'] <- unique(merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$unique_featureID)
+  df_all[rownames(df_all)==feature,'gene_ID'] <- unique(merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$gene_id)
+  df_all[rownames(df_all)==feature,'chr'] <- unique(merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$chr)
+  df_all[rownames(df_all)==feature,'start'] <- unique(merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$start)
+  df_all[rownames(df_all)==feature,'end'] <- unique(merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$end)
+  df_all[rownames(df_all)==feature,'strand'] <- unique(merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$strand)
+  
+  df_all[rownames(df_all)==feature,paste0('mean_diff',names)] %<-% merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$mean_diff
+  df_all[rownames(df_all)==feature,paste0('ctrl_',names)] %<-% merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$ctrl_1
+  df_all[rownames(df_all)==feature,paste0('condition_',names)] %<-% merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$condition_1
+  df_all[rownames(df_all)==feature,paste0('V5_',names)] %<-% merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$V5
+  df_all[rownames(df_all)==feature,paste0('twostep_gene_padj_',names)] %<-%   merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$twostep_gene_padj
+  df_all[rownames(df_all)==feature,paste0('twostep_transcript_padj_',names)] %<-% merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$twostep_transcript_padj
+  df_all[rownames(df_all)==feature,paste0('lr_',names)] %<-% merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$lr
+  df_all[rownames(df_all)==feature,paste0('df_',names)] %<-% merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$df
+  df_all[rownames(df_all)==feature,paste0('pvalue_',names)] %<-% merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$pvalue
+  df_all[rownames(df_all)==feature,paste0('adj_pvalue_',names)] %<-% merged_unfiltered_all[merged_unfiltered_all$unique_featureID==feature,]$adj_pvalue
+
+}
+
+
+df_all_1 <-df_all 
+#write.csv(df_all,'../Data/Outputs/Unfiltered_Formatted_All_Data_Sets_3.csv')
+#write_csv2(df_all,'../Data/Outputs/Unfiltered_Formatted_All_Data_Sets_3_1.csv',)
+
+
+
+#write_csv(df_all,'../Data/Outputs/Unfiltered_Formatted_All_Data_Sets_complete.csv')
+write_csv(df_all,'../Data/Outputs/Unfiltered_Formatted_All_Data_Sets_Final.csv')
+
+```
+
+```{r}
+#I saved the df and I just read the output
+df_all <- read_csv('../Data/Outputs/Unfiltered_Formatted_All_Data_Sets_complete.csv')
+
+```
+
+```{r}
+rownames(df_all) <- df_all$unique_featureID
+
+#df_all <- df
+length(unique(df_all$gene_ID))
+```
+
+
+
+
+#PRMT regulated
+
+
+## 20% and sign at least 1 ds 
+
+not useful
+```{r}
+df_prmt_20_15_old <- df_prmt_15 %>% filter(
+  ((mean_diff24>0.2 | mean_diff24< -0.2) & twostep_transcript_padj_24<0.05)|
+  ((mean_diff48>0.2 | mean_diff48< -0.2) & twostep_transcript_padj_48<0.05)|              
+  ((mean_diff72>0.2 | mean_diff72< -0.2) & twostep_transcript_padj_72<0.05)| 
+  ((mean_diff96>0.2 | mean_diff96< -0.2) & twostep_transcript_padj_96<0.05)|
+  ((mean_diff96hrs_prev>0.2 | mean_diff96hrs_prev< -0.2) & twostep_transcript_padj_96hrs_prev<0.05)
+)
+```
+
+
+```{r}
+nrow(df_prmt_20_15_old)
+length(unique(df_prmt_20_15_old$gene_ID))
+
+```
+
+#20 at least 1 and 15 at least 1
+
+For each dataset, filter feature that has 20% + <0.05 and then check if in one other dataset (hence or = |) see 15% change
+Then filter the ds based on the feature that pass that for one of the datasets
+
+```{r}
+
+df_prmt_20_15_24 <- df_all%>% filter((
+  ((mean_diff24>0.2 | mean_diff24< -0.2)
+  & twostep_transcript_padj_24<0.05) &
+  ( (mean_diff48>0.15 | mean_diff48< -0.15) |              
+  (mean_diff72>0.15 | mean_diff72< -0.15) | 
+  (mean_diff96>0.15 | mean_diff96< -0.15) |
+  (mean_diff96hrs_prev>0.15 | mean_diff96hrs_prev< -0.15)) ))
+
+df_prmt_20_15_48 <- df_all %>% filter((
+  ((mean_diff48>0.2 | mean_diff48< -0.2)
+  & twostep_transcript_padj_48<0.05) &
+  ( (mean_diff24>0.15 | mean_diff24< -0.15) |              
+  (mean_diff72>0.15 | mean_diff72< -0.15) | 
+  (mean_diff96>0.15 | mean_diff96< -0.15) |
+  (mean_diff96hrs_prev>0.15 | mean_diff96hrs_prev< -0.15)) ))
+
+
+df_prmt_20_15_72 <- df_all%>% filter((
+  ((mean_diff72>0.2 | mean_diff72< -0.2)
+  & twostep_transcript_padj_72<0.05) &
+  ( (mean_diff48>0.15 | mean_diff48< -0.15) |              
+  (mean_diff24>0.15 | mean_diff24< -0.15) | 
+  (mean_diff96>0.15 | mean_diff96< -0.15) |
+  (mean_diff96hrs_prev>0.15 | mean_diff96hrs_prev< -0.15)) ))
+
+
+
+df_prmt_20_15_96 <- df_all%>% filter((
+  ((mean_diff96>0.2 | mean_diff96< -0.2)
+  & twostep_transcript_padj_96<0.05) &
+  ( (mean_diff48>0.15 | mean_diff48< -0.15) |              
+  (mean_diff72>0.15 | mean_diff72< -0.15) | 
+  (mean_diff24>0.15 | mean_diff24< -0.15) |
+  (mean_diff96hrs_prev>0.15 | mean_diff96hrs_prev< -0.15)) ))
+
+
+
+df_prmt_20_15_96_prev <- df_all%>% filter((
+  ((mean_diff96hrs_prev>0.2 | mean_diff96hrs_prev< -0.2)
+  & twostep_transcript_padj_96hrs_prev<0.05) &
+  ( (mean_diff48>0.15 | mean_diff48< -0.15) |              
+  (mean_diff72>0.15 | mean_diff72< -0.15) | 
+  (mean_diff96>0.15 | mean_diff96< -0.15) |
+  (mean_diff24>0.15 | mean_diff24< -0.15)) ))
+
+
+
+df_prmt_20_15_v <- rbind(df_prmt_20_15_24,df_prmt_20_15_48,df_prmt_20_15_72,df_prmt_20_15_96,df_prmt_20_15_96_prev)$unique_featureID
+df_prmt_20_15 <- df_all[df_all$unique_featureID %in%df_prmt_20_15_v, ]
+
+nrow(df_prmt_20_15)
+length(unique(df_prmt_20_15$gene_ID))
+```
+
+
+
+## 70% similarity
+
+check 70% similarity, use abs so we avoid PRMT=0.3, siRNA= -0.3 problems
+Used only 72hrs dataset as siRNA data was retrieved at that time so makes sense to compare just the 2
+If feature not present in siRNA ds is discarded as we dont know the value :)
+
+```{r}
+df_prmt_20_15_70 <- df_prmt_20_15 %>% 
+  filter((is.na(df_prmt_20_15$mean_diffsiCFIM25)!=TRUE)| (is.na(df_prmt_20_15$mean_diffsiELAVL1)!=TRUE)| (is.na(df_prmt_20_15$mean_diffsiSam68)!=TRUE))%>% 
+  filter((
+  (abs(mean_diff72) > 0.7*abs(mean_diffsiCFIM25) )& 
+  (abs(mean_diff72) >0.7*abs(mean_diffsiELAVL1)) &  
+  (abs(mean_diff72) >0.7*abs(mean_diffsiSam68) )))
+
+```
+
+##Keep only paired genes with opposite effect
+
+keep only paired genes, take pair of features that have max and min change based on mean of all observation in PRMT ds
+
+```{r}
+to_keep <- vector()
+for (gene in unique(df_prmt_20_15_70$gene_ID)) {
+ 
+  #for each gene 
+  #look at how many unique features
+    uniqueFG <- df_prmt_20_15_70[df_prmt_20_15_70$gene_ID==gene,]$unique_featureID
+    #if more than 2 features 
+    if (length(uniqueFG)>=2) {
+      lowest <- 0
+      biggest <- 0
+      f_ID_biggest <- character()
+      f_ID_smallest <- character()
+      #look at mean diff values of each feature and take smallest (mandatory less than 0)
+      #look at mean diff values of each feature and take biggest (mandatory bigger than 0)
+      #so we have opposite
+      for (feature in uniqueFG) {
+        mean_tmp <- mean(na.omit(as.vector(t(df_prmt_20_15_70[df_prmt_20_15_70$gene_ID==gene & df_prmt_20_15_70$unique_featureID==feature,][c('mean_diff24','mean_diff48','mean_diff72','mean_diff96','mean_diff96hrs_prev')]))))#na.omit()
+        #if (is.na(mean_tmp )==FALSE) {
+          if (mean_tmp<lowest) {
+          lowest <- mean_tmp 
+          f_ID_smallest <- feature}
+        if (mean_tmp>biggest) {
+          biggest <- mean_tmp 
+          f_ID_biggest <- feature}
+        #}
+        }
+        
+      if (lowest!=0 & biggest!=0 ) {
+        to_keep <- append(to_keep, c(f_ID_smallest,f_ID_biggest))
+      }
+      
+    }
+    
+}
+
+
+#as.vector(t(df_prmt_20_15_70[df_prmt_20_15_70$gene_ID==gene & df_prmt_20_15_70$unique_featureID==feature,][c('mean_diff24','mean_diff48','mean_diff72','mean_diff96','mean_diff96hrs_prev')]))
+#c('mean_diff24','mean_diff48','mean_diff72','mean_diff96','mean_diff96hrs_prev')
+
+df_prmt_20_15_70_PO <- df_prmt_20_15_70[df_prmt_20_15_70$unique_featureID %in% to_keep,]
+length(unique(df_prmt_20_15_70_PO$gene_ID))
+nrow(df_prmt_20_15_70_PO)
+
+#write_csv(df_prmt_20_15_70_PO,'../Data/Outputs/PRMT_reg')
+```
+
+
+## Old filtering
+
+This is just old way of categ, to check I had equal results to prev script
+
+```{r}
+df_prmt_2_old<- df_prmt %>% filter(
+  ((mean_diff24>0.2 | mean_diff24< -0.2) & twostep_transcript_padj_24<0.05)|
+  ((mean_diff48>0.2 | mean_diff48< -0.2) & twostep_transcript_padj_48<0.05)|              
+  ((mean_diff72>0.2 | mean_diff72< -0.2) & twostep_transcript_padj_72<0.05)| 
+  ((mean_diff96>0.2 | mean_diff96< -0.2) & twostep_transcript_padj_96<0.05)|
+  ((mean_diff96hrs_prev>0.2 | mean_diff96hrs_prev< -0.2) & twostep_transcript_padj_96hrs_prev<0.05)
+)
+
+
+nrow(df_prmt_2_old)
+length(unique(df_prmt_2_old$gene_ID))
+
+df_prmt_20_10_old <- df_prmt_2_old %>% filter(
+  ((mean_diff24>0.1 | mean_diff24< -0.1) & 
+  (mean_diff48>0.1 | mean_diff48< -0.1) &              
+  (mean_diff72>0.1 | mean_diff72< -0.1) & 
+  (mean_diff96>0.1 | mean_diff96< -0.1) & 
+  (mean_diff96hrs_prev>0.1 | mean_diff96hrs_prev< -0.1)
+))
+
+summary(df_prmt_20_10_old)
+
+nrow(df_prmt_20_10_old)
+length(unique(df_prmt_20_10_old$gene_ID))
+
+
+df_prmt_20_10_70_old <- df_prmt_20_10_old %>% filter((
+  (abs(mean_diff72) > 0.7*abs(mean_diffsiCFIM25) )& 
+  (abs(mean_diff72) >0.7*abs(mean_diffsiELAVL1)) &  
+  (abs(mean_diff72) >0.7*abs(mean_diffsiSam68) )))
+
+nrow(df_prmt_20_10_70_old)
+length(unique(df_prmt_20_10_70_old$gene_ID))
+
+to_keep_old <- vector()
+for (gene in unique(df_prmt_20_10_70_old$gene_ID)) {
+ 
+  #for each gene 
+  #look at how many unique features
+    uniqueFG <- df_prmt_20_10_70_old[df_prmt_20_10_70_old$gene_ID==gene,]$unique_featureID
+    #if more than 2 features 
+    if (length(uniqueFG)>=2) {
+      lowest <- 0
+      biggest <- 0
+      f_ID_biggest <- character()
+      f_ID_smallest <- character()
+      #look at mean diff values of each feature and take smallest (mandatory less than 0)
+      #look at mean diff values of each feature and take biggest (mandatory bigger than 0)
+      #so we have opposite
+      for (feature in uniqueFG) {
+        mean_tmp <- mean(na.omit(as.vector(t(df_prmt_20_10_70_old[df_prmt_20_10_70_old$gene_ID==gene & df_prmt_20_10_70_old$unique_featureID==feature,][c('mean_diff24','mean_diff48','mean_diff72','mean_diff96','mean_diff96hrs_prev')]))))#na.omit()
+        #if (is.na(mean_tmp )==FALSE) {
+          if (mean_tmp<lowest) {
+          lowest <- mean_tmp 
+          f_ID_smallest <- feature}
+        if (mean_tmp>biggest) {
+          biggest <- mean_tmp 
+          f_ID_biggest <- feature}
+        #}
+        }
+        
+      if (lowest!=0 & biggest!=0 ) {
+        to_keep_old <- append(to_keep_old, c(f_ID_smallest,f_ID_biggest))
+      }
+      
+    }
+    
+}
+
+df_prmtreg_old <-  df_prmt_20_10_70_old[df_prmt_20_10_70_old$unique_featureID %in% to_keep_old,]
+
+length(unique(df_prmtreg_old$gene_ID))
+nrow(df_prmtreg_old)
+```
+
+
+
+
+#Regulatable
+
+
+##20 %
+
+First filter feat that have 20% change + significance in at least 1 ds (hence or |)
+```{r}
+df_siRNA <- df_all 
+df_siRNA_20 <- df_siRNA %>% filter(
+  ((mean_diffsiCFIM25>0.2 | mean_diffsiCFIM25< -0.2) & twostep_transcript_padj_siCFIM25<0.05)|
+  ((mean_diffsiELAVL1>0.2 | mean_diffsiELAVL1< -0.2) & twostep_transcript_padj_siELAVL1<0.05)|              
+  ((mean_diffsiSam68>0.2 | mean_diffsiSam68< -0.2) & twostep_transcript_padj_siSam68<0.05) 
+)
+```
+
+## 70%
+
+check for 70% similarity, again use abs to avoid opposite change problems.
+Again checked only in 72hrs ds for same reason
+If feature not present in PRMT 72hrs ds is discarded as we don't know the value :)
+
+might remove 70 check if low number
+```{r}
+df_siRNA_20_75 <- df_siRNA_20 %>%
+  filter(is.na(df_siRNA_20$mean_diff72)!=TRUE) %>% 
+  filter( 
+  (abs(mean_diffsiCFIM25) > 0.7*abs(mean_diff72) )| 
+  (abs(mean_diffsiELAVL1) >0.7*abs(mean_diff72)) | 
+  (abs(mean_diffsiSam68) >0.7*abs(mean_diff72) ))
+  
+
+nrow(df_siRNA_20_75)
+length(unique(df_siRNA_20_75$gene_ID))
+```
+
+
+#PO
+
+Again keep pairs only, I did this with a fx for each siRNA separately as such the specific mean diff for ds is used.
+Still keeping the 2 with opposite sign and biggest value
+
+```{r}
+to_keep_siRNA_vector <- function(dataset, dataset_indicator){
+to_keep_siRNA <- vector()
+
+
+for (gene in unique(dataset$gene_ID)) {
+ 
+  #for each gene 
+  #look at how many unique features
+    uniqueFG <- dataset[dataset$gene_ID==gene,]$unique_featureID
+    #if more than 2 features 
+    if (length(uniqueFG)>=2) {
+      lowest <- 0
+      biggest <- 0
+      f_ID_biggest <- character()
+      f_ID_smallest <- character()
+      #look at mean diff values of each feature and take smallest (mandatory less than 0)
+      #look at mean diff values of each feature and take biggest (mandatory bigger than 0)
+      #so we have opposite
+      for (feature in uniqueFG) {
+        val <- dataset[dataset$gene_ID==gene & dataset$unique_featureID==feature,][dataset_indicator]
+        if (is.na(val)==TRUE) {
+          val <- 0
+        }
+        #if (is.na(mean_tmp )==FALSE) {
+          if (val<lowest) {
+          lowest <- val 
+          f_ID_smallest <- feature}
+        if (val>biggest) {
+          biggest <- val 
+          f_ID_biggest <- feature}
+        #}
+        }
+        
+      if (lowest!=0 & biggest!=0 ) {
+        to_keep_siRNA <- append(to_keep_siRNA, c(f_ID_smallest,f_ID_biggest))
+      }
+      
+    }
+    
+}
+return(to_keep_siRNA)
+}
+```
+
+
+```{r}
+to_keep_CF <- to_keep_siRNA_vector(filter(df_siRNA_20_75,(mean_diffsiCFIM25>0.2 | mean_diffsiCFIM25< -0.2) & twostep_transcript_padj_siCFIM25<0.05) ,'mean_diffsiCFIM25')
+to_keep_Sam <- to_keep_siRNA_vector(filter(df_siRNA_20_75,(mean_diffsiSam68>0.2 | mean_diffsiSam68< -0.2) & twostep_transcript_padj_siSam68<0.05) ,'mean_diffsiSam68')
+to_keep_EL <- to_keep_siRNA_vector(filter(df_siRNA_20_75,(mean_diffsiELAVL1>0.2 | mean_diffsiELAVL1< -0.2) & twostep_transcript_padj_siELAVL1<0.05) ,'mean_diffsiELAVL1')
+
+c <- unique(c(to_keep_CF,to_keep_Sam,to_keep_EL))
+
+Regulatable_sites_CF <-df_siRNA_20_75[df_siRNA_20_75$unique_featureID %in% to_keep_CF,] 
+nrow(Regulatable_sites_CF)
+length(unique(Regulatable_sites_CF$gene_ID))
+
+Regulatable_sites_Sam <-df_siRNA_20_75[df_siRNA_20_75$unique_featureID %in% to_keep_Sam,] 
+nrow(Regulatable_sites_Sam)
+length(unique(Regulatable_sites_Sam$gene_ID))
+
+Regulatable_sites_EL <-df_siRNA_20_75[df_siRNA_20_75$unique_featureID %in% to_keep_EL,] 
+nrow(Regulatable_sites_EL)
+length(unique(Regulatable_sites_EL$gene_ID))
+```
+
+merged features for diff siRNA ds, then removed genes present in PRMT category.
+IMP: there is one gene (SLC25A46_ENSG00000164209.17) that has 3 features. This is because I checked for most 'important' ones separately and 2 siRNA ds resulted in 1feat shared and 1 unique per siRNA selected.
+
+
+```{r}
+Regulatable_sites <-df_siRNA_20_75[df_siRNA_20_75$unique_featureID %in% c,] 
+nrow(Regulatable_sites)
+length(unique(Regulatable_sites$gene_ID))
+
+Regulatable_sites_noPRMT <- Regulatable_sites[!(Regulatable_sites$gene_ID %in% df_prmt_20_15_70_PO$gene_ID),]
+nrow(Regulatable_sites_noPRMT)
+length(unique(Regulatable_sites_noPRMT$gene_ID))
+
+# SLC25A46_ENSG00000164209.17   genes with more than 2 features
+
+
+
+#write_csv(Regulatable_sites_noPRMT,'../Data/Outputs/Regulatable_sites.csv')
+```
+
+#Control sites
+
+```{r}
+df_ctrl <- df_all
+```
+
+#Tried with mean both, but everything passed so useless 
+
+```{r}
+#with mean everything passes basically
+df_15_5 <- df_ctrl %>% 
+  filter((mean(na.omit(mean_diff24,mean_diff48,mean_diff72,mean_diff96,mean_diff96hrs_prev,mean_diffsiCFIM25,mean_diffsiELAVL1,mean_diffsiSam68)) >-0.15 &
+          mean(na.omit(mean_diff24,mean_diff48,mean_diff72,mean_diff96,mean_diff96hrs_prev,mean_diffsiCFIM25,mean_diffsiELAVL1,mean_diffsiSam68))< 0.15)) %>%
+  filter(mean(na.omit(ctrl_siELAVL1,ctrl_siSam68,ctrl_siCFIM25,ctrl_96hrs_prev,ctrl_96,ctrl_72,ctrl_48,ctrl_24))>0.05)
+
+nrow(df_15_5)
+length(unique(df_15_5$gene_ID))
+
+df_control_noPRMT <- df_15_5[!(df_15_5$gene_ID %in% df_prmt_20_15_70_PO$gene_ID), ]
+nrow(df_control_noPRMT)
+length(unique(df_control_noPRMT$gene_ID))
+
+
+df_control_final <-  df_control_noPRMT[!(df_control_noPRMT$gene_ID %in% Regulatable_sites_noPRMT$gene_ID), ]
+nrow(df_control_final)
+length(unique(df_control_final$gene_ID))
+```
+
+#old as well 
+
+```{r}
+#let's try with each
+df_15_5 <- df_ctrl %>% 
+  filter((mean_diff24  >-0.15& mean_diff24< 0.15)&
+         (mean_diff48  >-0.15& mean_diff48< 0.15)&
+         (mean_diff72  >-0.15& mean_diff72< 0.15)&
+         (mean_diff96  >-0.15& mean_diff96< 0.15)&
+         (mean_diff96hrs_prev  >-0.15& mean_diff96hrs_prev< 0.15)&
+         (mean_diffsiCFIM25  >-0.15& mean_diffsiCFIM25< 0.15)&
+         (mean_diffsiELAVL1  >-0.15& mean_diffsiELAVL1< 0.15)&
+         (mean_diffsiSam68  >-0.15& mean_diffsiSam68< 0.15)) %>% 
+  filter((ctrl_siELAVL1  >0.05)&
+           (ctrl_siSam68  >0.05)&
+           (ctrl_siCFIM25  >0.05)&
+           (ctrl_96hrs_prev  >0.05)&
+           (ctrl_96  >0.05)&
+           (ctrl_72  >0.05)&
+           (ctrl_48  >0.05)&
+           (ctrl_24  >0.05))
+```
+
+
+###mean
+
+Check for less 15% each + mean of DMSO usage >5%
+
+```{r}
+df_15_5<- df_ctrl %>% 
+  filter((mean_diff24  >-0.15& mean_diff24< 0.15)&
+         (mean_diff48  >-0.15& mean_diff48< 0.15)&
+         (mean_diff72  >-0.15& mean_diff72< 0.15)&
+         (mean_diff96  >-0.15& mean_diff96< 0.15)&
+         (mean_diff96hrs_prev  >-0.15& mean_diff96hrs_prev< 0.15)&
+         (mean_diffsiCFIM25  >-0.15& mean_diffsiCFIM25< 0.15)&
+         (mean_diffsiELAVL1  >-0.15& mean_diffsiELAVL1< 0.15)&
+         (mean_diffsiSam68  >-0.15& mean_diffsiSam68< 0.15)) %>% 
+filter(mean(na.omit(ctrl_siELAVL1,ctrl_siSam68,ctrl_siCFIM25,ctrl_96hrs_prev,ctrl_96,ctrl_72,ctrl_48,ctrl_24))>0.05)
+```
+
+
+
+# old filtering categories
+
+```{r}
+df_10_10 <- df_ctrl %>% 
+  filter((mean_diff24  >-0.1 & mean_diff24< 0.1)&
+         (mean_diff48  >-0.1  &  mean_diff48< 0.1)&
+         (mean_diff72  >-0.1 &  mean_diff72< 0.1)&
+         (mean_diff96  >-0.1 & mean_diff96< 0.1)&
+         (mean_diff96hrs_prev  >-0.1 &  mean_diff96hrs_prev< 0.1)&
+         (mean_diffsiCFIM25  >-0.1 &  mean_diffsiCFIM25< 0.1)&
+         (mean_diffsiELAVL1  >-0.1 &  mean_diffsiELAVL1< 0.1)&
+         (mean_diffsiSam68  >-0.1  &  mean_diffsiSam68< 0.1)) %>% 
+  filter((ctrl_siELAVL1  >0.1)&
+           (ctrl_siSam68  >0.1)&
+           (ctrl_siCFIM25  >0.1)&
+           (ctrl_96hrs_prev  >0.1)&
+           (ctrl_96  >0.1)&
+           (ctrl_72  >0.1)&
+           (ctrl_48  >0.1)&
+           (ctrl_24  >0.1))
+```
+
+
+
+
+
+```{r}
+
+nrow(df_15_5)
+length(unique(df_15_5$gene_ID))
+```
+
+
+#Keeping PO
+
+Keeping for each gene the 2 most used sites (calc as average across all ds)
+
+```{r}
+to_keep_control <- vector()
+for (gene in unique(df_15_5$gene_ID)) {
+ 
+  #for each gene 
+  #look at how many unique features
+    uniqueFG <- df_15_5[df_15_5$gene_ID==gene,]$unique_featureID
+    #if more than 2 features 
+    if (length(uniqueFG)>=2) {
+      biggest <- -100
+      Sec_biggest <- -100
+      f_ID_biggest <- character()
+      f_ID_Sec_biggest <- character()
+      for (feature in uniqueFG) {
+        mean_tmp <- mean(na.omit(as.vector(t(df_15_5[df_15_5$gene_ID==gene & df_15_5$unique_featureID==feature,][c('ctrl_siELAVL1','ctrl_siSam68','ctrl_siCFIM25','ctrl_96hrs_prev','ctrl_96','ctrl_72','ctrl_48','ctrl_24')]))))#na.omit()
+        #if (is.na(mean_tmp )==FALSE) {
+          if (mean_tmp>biggest) {
+            Sec_biggest<-biggest
+            biggest <- mean_tmp 
+            f_ID_Sec_biggest<-f_ID_biggest
+            f_ID_biggest <- feature}
+        else {
+        if (mean_tmp>Sec_biggest) {
+          Sec_biggest <- mean_tmp 
+          f_ID_Sec_biggest <- feature}
+        }
+      }
+      
+        to_keep_control <- append(to_keep_control, c(f_ID_Sec_biggest,f_ID_biggest))
+      }
+      
+    }
+    
+```
+
+
+## removed all genes found in prev 2 categories
+
+```{r}
+df_control_pairs <- df_15_5[df_15_5$unique_featureID %in% to_keep_control,]
+
+
+nrow(df_control_pairs)
+length(unique(df_control_pairs$gene_ID))
+
+df_control_noPRMT <- df_control_pairs[!(df_control_pairs$gene_ID %in% df_prmt_20_15_70_PO$gene_ID), ]
+nrow(df_control_noPRMT)
+length(unique(df_control_noPRMT$gene_ID))
+
+
+df_control_final <-  df_control_noPRMT[!(df_control_noPRMT$gene_ID %in% Regulatable_sites_noPRMT$gene_ID), ]
+nrow(df_control_final)
+length(unique(df_control_final$gene_ID))
+
+#write_csv(df_control_final,'../Data/Outputs/Control_sites')
+```
+
+
+
+
+#Merge data categories to use for clustering 
+```{r}
+df_control_final$category <- 'Control_sites'
+Regulatable_sites_noPRMT$category <- 'Regulatable_sites'
+df_prmt_20_15_70_PO$category <- 'PRMT_regulated'
+
+```
+
+
+```{r}
+df_all_categories <- rbind(df_control_final,Regulatable_sites_noPRMT,df_prmt_20_15_70_PO)
+
+#write_csv(df_all_categories,'../Data/Outputs/All_categories_df.csv')
+```
+
+
+#gene lists for GO analysis
+
+```{r}
+BACKGROUND <- unlist(strsplit(unique(df_all$gene_ID),split = '_'))[seq(1,length(unique(df_all$gene_ID))*2,2)]
+Control_sites_genes <-unlist(strsplit(unique(df_control_final$gene_ID),split = '_'))[seq(1,length(unique(df_control_final$gene_ID))*2,2)]
+Regulatable_sites_genes <- unlist(strsplit(unique(Regulatable_sites_noPRMT$gene_ID),split = '_'))[seq(1,length(unique(Regulatable_sites_noPRMT$gene_ID))*2,2)]
+PRMT_regulated_genes <-unlist(strsplit(unique(df_prmt_20_15_70_PO$gene_ID),split = '_'))[seq(1,length(unique(df_prmt_20_15_70_PO$gene_ID))*2,2)]
+```
+
+```{r}
+df = data.frame(matrix(nrow = 5177, ncol =4))
+colnames(df) <- c('PRMT_regulated_genes','Regulatable_sites_genes','Control_sites_genes','BACKGROUND')
+
+
+df$Control_sites_genes <- append(Control_sites_genes, rep(NA,5177-length(Control_sites_genes)))
+df$'_BACKGROUND' <- BACKGROUND
+df$Regulatable_sites_genes <- append(Regulatable_sites_genes, rep(NA,5177-length(Regulatable_sites_genes)))
+df$PRMT_regulated_genes <- append(PRMT_regulated_genes, rep(NA,5177-length(PRMT_regulated_genes)))
+
+
+write_xlsx(df,'../Data/Outputs/gene_list.xlsx')
+
+
+table(is.na(df$Control_sites_genes))
+```
+
+##single gene lists
+
+PRMT
+
+```{r}
+PRMT_gl = data.frame(matrix(nrow = 5177, ncol =2))
+colnames(PRMT_gl) <- c('PRMT_regulated_genes','BACKGROUND')
+
+
+PRMT_gl$'_BACKGROUND' <- BACKGROUND
+PRMT_gl$PRMT_regulated_genes <- append(PRMT_regulated_genes, rep(NA,5177-length(PRMT_regulated_genes)))
+
+
+write_xlsx(PRMT_gl,'../Data/Outputs/PRMT_gl.xlsx')
+
+
+table(is.na(PRMT_gl$PRMT_regulated_genes))
+```
+
+```{r}
+regulatable_gl = data.frame(matrix(nrow = 5177, ncol =2))
+colnames(regulatable_gl) <- c('Regulatable_sites_genes','BACKGROUND')
+
+
+regulatable_gl$'_BACKGROUND' <- BACKGROUND
+regulatable_gl$Regulatable_sites_genes <- append(Regulatable_sites_genes, rep(NA,5177-length(Regulatable_sites_genes)))
+
+
+write_xlsx(regulatable_gl,'../Data/Outputs/regulatable_gl.xlsx')
+
+
+table(is.na(regulatable_gl$Regulatable_sites_genes))
+```
+
+
+```{r}
+
+ctrl_gl = data.frame(matrix(nrow = 5177, ncol =2))
+colnames(ctrl_gl) <- c('Control_sites_genes','BACKGROUND')
+
+
+ctrl_gl$'_BACKGROUND' <- BACKGROUND
+ctrl_gl$Control_sites_genes <- append(Control_sites_genes, rep(NA,5177-length(Control_sites_genes)))
+
+
+write_xlsx(ctrl_gl,'../Data/Outputs/Control_sites_genes.xlsx')
+
+
+table(is.na(ctrl_gl$Control_sites_genes))
+
+```
+
+
+
 #Keeping PO
 
 Keeping for each gene the 2 most used sites (calc as average across all ds)
