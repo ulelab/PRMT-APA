@@ -1,0 +1,149 @@
+---
+title: "hiererchical_clustering"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#hierarchical clustering 
+
+Hierarchical clustering is an alternative clustering approach which does not require a choice of K beforehand.
+The bottom-up or agglomerative clustering is the most common type of hierarchical clustering, and refers to the fact that a dendrogram is built starting from the leaves and combining clusters up to the trunk.
+
+We make a horizontal cut across the dendrogram.
+
+
+We begin by defining some sort of dissimilarity measure between each pair of observations.
+The algorithm proceeds iteratively:
+• Starting out at the bottom of the dendrogram, each of the n observations is treated as its own cluster.
+• The two clusters that are most similar to each other are then fused so that there now are n − 1 clusters.
+• Next the two clusters that are most similar to each other are fused again, so that there now are n − 2 clusters.
+• The algorithm proceeds in this fashion until all of the observations belong to one single cluster, and the dendrogram is complete.
+
+The concept of dissimilarity between a pair of observations needs to be extended to a pair of groups of observations.
+⇒ Concept of linkage: it defines the dissimilarity between two groups of observations.
+
+Average
+Mean intercluster dissimilarity.
+Compute all pairwise dissimilarities between the observations in cluster A and the observations in cluster B, and record the average of these dissimilarities. Together with the complete linkage, it usually returns more balanced dendrograms.
+
+Complete
+(or furthest-neighbor): it is the maximal intercluster dissimilarity.
+Compute all pairwise dissimilarities between the observations in cluster A and the observations in cluster B, and record the largest of these dissimilarities.
+
+See both!
+```{r}
+library(stats)
+library(tidyr)
+library(readr)
+ds <- read_csv('../Data/Outputs/All_categories_df.csv')
+#ALL_data_categories_new <- ALL_data_categories
+set.seed(1234)
+```
+
+```{r}
+rownames(ds) <- ds$unique_featureID
+```
+
+
+```{r}
+length(unique(ds$gene_ID))
+colnames(ds)
+ALL_data_categories_numerical <- ds[,-c(1,2,3,6,63:70,87)]
+
+#ALL_data_categories_numerical <- scale(ALL_data_categories_numerical)
+
+dist_selected_columns <- dist(ALL_data_categories_numerical)
+```
+
+##hierarchical clustering on non cat variables
+
+```{r}
+hier_compl <- hclust(dist_selected_columns,method = 'complete')
+hier_aver <- hclust(dist_selected_columns,method = 'average')
+hier_single <- hclust(dist_selected_columns,method = 'single')
+```
+
+```{r}
+#hier_compl$merge #illustrates the merging that have been performed
+#hier_compl$height #height at merge  (dissimilarity measure)
+
+par(mfrow=c(1,3))
+plot(hier_compl, main = 'Complete linkage') # think this is best but let's check
+plot(hier_aver, main = 'Average linkage')
+plot(hier_single, main = 'Single linkage') #quite bad eheheh
+
+```
+
+```{r}
+cut.complete <- cutree(hier_compl,k=3)
+cut.average <- cutree(hier_aver,k=3)
+```
+
+
+Let's see after normalization:
+
+```{r}
+ds.std <- scale(ALL_data_categories_numerical)
+hc.average.std <- hclust(dist(ds.std),method = 'average')
+hc.complete.std <- hclust(dist(ds.std),method = 'complete')
+
+plot(hc.average.std)
+plot(hc.complete.std)
+
+```
+Really shitty clusters!!!!!
+
+
+
+
+Let's evaluate cluster quality
+
+```{r}
+library(fpc)
+quality.hc <- cluster.stats(dist_selected_columns,cut.complete)
+quality.ha <- cluster.stats(dist_selected_columns,cut.average)
+```
+
+
+
+
+```{r}
+quality_matrix <- matrix(NA,2,3, dimnames = list(c('HC-comp','Hc-aver'),
+                                                 c('ASW','PG','CH')))
+
+quality_matrix[1,] <- c(quality.hc$avg.silwidth,quality.hc$pearsongamma,quality.hc$ch)
+quality_matrix[2,] <- c(quality.ha$avg.silwidth,quality.ha$pearsongamma,quality.ha$ch)
+
+
+quality_matrix
+
+```
+both good i'd go for complete tho 
+
+#pheatmap 
+
+```{r}
+library(pheatmap)
+library(RColorBrewer)
+library(viridis)
+
+```
+
+```{r}
+pheatmap(ALL_data_categories_numerical, cutree_rows = 3)
+
+```
+
+
+```{r}
+
+pheatmap(ALL_data_categories_numerical[,-c(1,2)], cutree_rows = 3)
+
+```
+
+
+
+
