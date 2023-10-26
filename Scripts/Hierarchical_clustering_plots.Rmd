@@ -38,7 +38,7 @@ See both!
 library(stats)
 library(tidyr)
 library(readr)
-ds <- read_csv('../Data/Outputs/All_categories_df.csv')
+ds <- read_csv('../Outputs/All_categories_df.csv')
 #ALL_data_categories_new <- ALL_data_categories
 set.seed(1234)
 ```
@@ -51,11 +51,18 @@ rownames(ds) <- ds$unique_featureID
 ```{r}
 length(unique(ds$gene_ID))
 colnames(ds)
-ALL_data_categories_numerical <- ds[,-c(1,2,3,6,63:70,87)]
+All_data <- ds[complete.cases(ds[,7:14]),]
 
+
+rownames(All_data) <-ds[complete.cases(ds[,7:14]),]$unique_featureID
+
+
+All_data_short_names <- All_data[,c(7:14)]
+rownames(All_data_short_names) <- rownames(All_data)
 #ALL_data_categories_numerical <- scale(ALL_data_categories_numerical)
 
-dist_selected_columns <- dist(ALL_data_categories_numerical)
+dist_selected_columns <- dist(All_data_short_names)
+table()
 ```
 
 ##hierarchical clustering on non cat variables
@@ -65,6 +72,20 @@ hier_compl <- hclust(dist_selected_columns,method = 'complete')
 hier_aver <- hclust(dist_selected_columns,method = 'average')
 hier_single <- hclust(dist_selected_columns,method = 'single')
 ```
+
+
+```{r}
+library(dendextend)
+par(mar = c(2,1,0,8)) #make sure the whole plot is on the page
+dend <- as.dendrogram(hier_compl) #use dendextend to create dendrogram
+
+dend2 <- color_branches(dend, col=as.factor(All_data[labels(dend),]$category))
+
+plot (dend2, horiz = TRUE) #plot dendrogram
+```
+
+
+
 
 ```{r}
 #hier_compl$merge #illustrates the merging that have been performed
@@ -123,18 +144,21 @@ quality_matrix
 ```
 both good i'd go for complete tho 
 
-#pheatmap 
+#Complex Heatmaps 
 
+libraries loading
 ```{r}
-library(pheatmap)
+library(ComplexHeatmap)
 library(RColorBrewer)
 library(viridis)
 
 ```
 
+There are quite a lot of NAs (tried and doesnt cluster)
+So unfortunately only kept complete cases
+cat: mean differences 7:14, 87 category features belong 
 ```{r}
-pheatmap(ALL_data_categories_numerical, cutree_rows = 3)
-
+ds.1 <- ds[complete.cases(ds[,7:14]),c(7:14,87)]
 ```
 
 
@@ -145,5 +169,103 @@ pheatmap(ALL_data_categories_numerical[,-c(1,2)], cutree_rows = 3)
 ```
 
 
+##
+```{r}
+library(ComplexHeatmap)
 
+
+complete_cases <- ds[complete.cases(ds[,7:14]),7:14]
+complete_cases <- as.matrix(complete_cases)
+
+Heatmap(complete_cases)
+
+library(circlize)
+col_fun = colorRamp2(c(-1, 0, 1), c("green", "white", "red"))
+#col_fun(seq(-3, 3))
+
+Heatmap(complete_cases,col = col_fun)
+
+
+
+
+Heatmap(complete_cases, name = "mat", col = rev(rainbow(5)), 
+    column_title = "set a color vector for a continuous matrix")
+```
+
+```{r}
+f1 = colorRamp2(seq(min(complete_cases), max(complete_cases), length = 3), c("blue", "#EEEEEE", "red"))
+
+Heatmap(complete_cases, name = "mat",col=f1,rect_gp = gpar(col = "black", lwd = 0.1),
+    column_title = "a matrix with NA values")
+
+```
+```{r}
+Heatmap(complete_cases, name = "mat",col=f1,show_column_dend = FALSE,
+    column_title = "Mean diff")
+```
+
+
+```{r}
+f1 = colorRamp2(seq(min(complete_cases), max(complete_cases), length = 3), c("blue", "#EEEEEE", "red"))
+
+#rowAnnotation(foo2 = 18:1, bar2 = anno_barplot(runif(18)) 
+Heatmap(complete_cases, name = "mat",col=f1,row_km  = 3,
+    column_title = " Mean diff",right_annotation =rowAnnotation(foo2 = ds.1$category ))
+
+```
+
+Let's do with abs value
+
+
+
+```{r}
+complete_cases_abs <- as.matrix(abs(complete_cases))
+
+f2_all = colorRamp2(c(0, 0.4, 0.8),c("Dark blue", "magenta", "pink"))
+
+
+Heatmap(complete_cases_abs, name = "mat",col=f2_all,row_km = 3,
+    column_title = " Mean diff",right_annotation =rowAnnotation(foo2 = ds.1$category ))
+
+```
+
+
+```{r}
+big_0 <- complete_cases[rowMeans(complete_cases)>0,]
+
+f2_big0 = colorRamp2(c(0, 0.4, 0.8), c("Dark blue", "magenta", "pink"))
+
+
+Heatmap(big_0, name = "mat",col=f2_big0,row_km = 3,
+    column_title = " Mean diff",right_annotation =rowAnnotation(category = ds.1[rowMeans(ds.1[,-9])>0,]$category ))
+
+
+
+
+
+```
+
+
+```{r}
+less_0 <- complete_cases[rowMeans(complete_cases)<0,]
+
+f2_small0 = colorRamp2(c(0, -0.4, -0.8), c("Dark blue", "magenta", "pink"))
+
+
+Heatmap(less_0, name = "mat",col=f2_small0,row_km = 3,
+    column_title = " Mean diff",right_annotation =rowAnnotation(category = ds.1[rowMeans(ds.1[,-9])<0,]$category ))
+
+```
+```{r}
+
+f2_all = colorRamp2(c(0, 0.4, 0.8), c("Dark blue", "magenta", "pink"))
+
+
+Heatmap(complete_cases_abs, name = "mat",col=f2_all,row_km = 3,
+    column_title = " Mean diff",right_annotation =rowAnnotation(category = ds.1$category ))
+
+
+
+#col_fun = circlize::colorRamp2(c(0, 10), c("white", "red")),
+```
 
