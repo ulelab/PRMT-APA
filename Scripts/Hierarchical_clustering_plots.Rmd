@@ -108,69 +108,6 @@ plot(dend2,horiz = T ); legend(x='topleft', legend=c("Control_sites", "Regulatab
        col=c("red", "blue",'yellow'),lty=1, cex=0.8)
 ```
 
-## let's try with abslute values
-
-```{r}
-
-ds.2 <- ds[complete.cases(ds[,7:14]),]
-ds.2.2 <- abs(ds.2[,7:14])
-
-ds.2 <- mutate(ds.2, color = ifelse(ds.2$category=='Control_sites','red' ,  ifelse(ds.2$category=='Regulatable_sites','blue' , "yellow")))
-
-ds.2 <- as.matrix(ds.2[,c(7:14,1,87,88)])
-ds.2.2 <- as.matrix(ds.2.2)
-
-
-rownames(ds.2) <-ds.2[,'unique_featureID']
-rownames(ds.2.2) <-ds.2[,'unique_featureID']
-
-```
-
-Compute distance (without the columns with categorical data: unique feature, the category and the color assigned)
-Then do clustering with hclust method complete should be best
-```{r}
-distSamples <- dist(ds.2.2)
-hc <- hclust(distSamples,method = 'average')
-hc
-```
-
-Convert to a dendogram object +
-color branches based on the category
-```{r}
-dend <- as.dendrogram(hc)
-
-dend2 <- color_branches(dend, col=ds.1[labels(dend),'color'])
-```
-
-function to remove labels as there are too many and won't be able to read them anyway
-
-```{r}
-noLabel <- function(x) {
-  if (stats::is.leaf(x)) {
-    attr(x, "label") <- NULL }
-  return(x)
-}
-
-dend2 <- dendrapply(dend2, noLabel)
-```
-
-
-```{r}
-plot(dend2 ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Control_sites", "Regulatable_sites",'PRMT_regulated'),
-       col=c("red", "blue",'yellow'),lty=1, cex=0.8) 
-
-```
-
-```{r}
-plot(dend2,horiz = T ); legend(x='topleft', legend=c("Control_sites", "Regulatable_sites",'PRMT_regulated'),
-       col=c("red", "blue",'yellow'),lty=1, cex=0.8)
-```
-
-
-
-
-
-
 
 #Complex Heatmaps 
 
