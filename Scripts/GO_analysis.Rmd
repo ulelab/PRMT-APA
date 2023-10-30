@@ -7,3 +7,28 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+
+BiocManager::install("clusterProfiler")
+BiocManager::install("pathview")
+BiocManager::install("enrichplot")
+library(clusterProfiler)
+library(enrichplot)
+# we use ggplot2 to add x axis labels (ex: ridgeplot)
+library(ggplot2)
+```
+
+1. Data preparation: List of genes identi􏰂ers, gene scores, list of di􏰁erentially expressed genes or a criteria for selecting genes based on their scores, as well as gene-to-GO annotations are all collected and stored in a single R object.
+2. Running the enrichment tests: Using the object created in the 􏰂rst step the user can perform enrichment analysis using any feasible mixture of statistical tests and methods that deal with the GO topology.
+3. Analysis of the results: The results obtained in the second step are analysed using summary functions and visualisation tools.
+
+
+# 1 Data preparation
+
+```{r}
+library(topGO)
+
+
+
+```
+
