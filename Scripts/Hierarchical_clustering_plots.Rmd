@@ -62,7 +62,6 @@ ds[ds$category=='PRMT_regulated',]$RowMEAN <- rowMeans(ds[ds$category=='PRMT_reg
 Added column called location where inserted if PAS was proximal or distal
 
 ```{r}
-
 ds$Location <- 'distal'
 for (gene in ds$gene_ID) {
   if (nrow(ds[ds$gene_ID==gene,])>2) {
@@ -84,8 +83,10 @@ for (gene in ds$gene_ID) {
 }
 
 table(complete.cases(ds$Location ))
+```
 
-
+Looked at sign of mean diff to pick if len or short
+```{r}
 ds <- ds %>% group_by(gene_ID) %>% mutate(Effect= 
                                       ifelse(category!='Control_sites'
                                              ,ifelse((Location=='distal' & RowMEAN>0)
@@ -98,7 +99,7 @@ ds <- ds %>% group_by(gene_ID) %>% mutate(Effect=
                                              )
 
 
-a <- ds[,c(1:14,85:90)]
+#a <- ds[,c(1:14,85:90)]
 
 ```
 
@@ -112,14 +113,10 @@ ds <- ds %>% mutate(Effect_dummy = ifelse(Effect=='shortening',1,
 
 ```
 
-### plot shortening lenghtening
+### shortening lenghtening summary
 
 
 ```{r}
-library(ggplot2)
-barplot(table(ds$category))
-barplot(table(ds$Effect),group_by=ds$category,col = rainbow(3))
-
 table(ds$Effect,ds$category)
 ```
 
