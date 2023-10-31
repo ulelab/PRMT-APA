@@ -1,6 +1,9 @@
 ---
 title: "GO_analysis"
 output: html_document
+editor_options: 
+  markdown: 
+    wrap: sentence
 ---
 
 ```{r setup, include=FALSE}
@@ -8,27 +11,109 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-
-BiocManager::install("clusterProfiler")
-BiocManager::install("pathview")
-BiocManager::install("enrichplot")
-library(clusterProfiler)
-library(enrichplot)
-# we use ggplot2 to add x axis labels (ex: ridgeplot)
-library(ggplot2)
+library(topGO)
+#organism = "hsapiens"
 ```
 
-1. Data preparation: List of genes identi􏰂ers, gene scores, list of di􏰁erentially expressed genes or a criteria for selecting genes based on their scores, as well as gene-to-GO annotations are all collected and stored in a single R object.
-2. Running the enrichment tests: Using the object created in the 􏰂rst step the user can perform enrichment analysis using any feasible mixture of statistical tests and methods that deal with the GO topology.
-3. Analysis of the results: The results obtained in the second step are analysed using summary functions and visualisation tools.
-
+<https://bioconductor.org/packages/devel/bioc/vignettes/topGO/inst/doc/topGO.pdf>
 
 # 1 Data preparation
 
+##PRMT
+
 ```{r}
-library(topGO)
+df <- read.csv('../Outputs/All_categories_df.csv')
+gene_universe_df <- read.csv('../Outputs/Unfiltered_Formatted_All_Data_Sets_Final.csv')
+```
 
+```{r}
+PRMT_genes <- unique(df[df$category=='PRMT_regulated',]$gene_ID) # interesting genes
+gene_universe <- unique(gene_universe_df$gene_ID) #gene universe 
+```
 
+Only symbol
 
+```{r}
+PRMT_genes_symbol <- unlist(strsplit(PRMT_genes,'_'))[seq(1,length(PRMT_genes)*2,2)]
+gene_universe_symbol <- unlist(strsplit(gene_universe,'_'))[seq(1,length(gene_universe)*2,2)]
+```
+
+input of top go is a named factor vector.
+if 0 gene is not interesting but part of universe, id 1 gene is interesting and part of universe
+
+```{r}
+geneList <- factor(as.integer(gene_universe_symbol %in% PRMT_genes_symbol ))
+names(geneList) <- gene_universe_symbol
+```
+
+```{r}
+table(names(geneList[geneList==1]) %in% PRMT_genes_symbol) #Check that everything is correct up to now
+```
+
+### GO DATA
+
+We further describe the arguments of the initialize function (new) used to construct an instance of this data container object.
+
+**ontology**: character string specifying the ontology of interest: used BP0biological process (others: MF,CC)
+
+**description**: character string containing a short description of the study [optional].
+
+**allGenes**: named vector of type numeric or **factor (0,1:interesting genes)**.
+The names attribute contains the genes identifiers.
+The genes listed in this object are the gene universe.
+
+**(geneSelectionFun**: function to specify which genes are interesting based on the gene scores. It should be present if the allGenes object is of type numeric.)
+
+( nodeSize: an integer larger or equal to 1. This parameter is used to prune the GO hierarchy from the terms which have less than nodeSize annotated genes (after the true path rule is applied).)
+
+[**annotationFun**]{.ul}: function which maps genes identifers to GO terms.
+There are a couple of annotation function included in the package trying to address the user's needs.
+The annotation functions take three arguments.
+One of those arguments is specifying where the mappings can be found, and needs to be provided by the user.
+Here we give a short description of each:
+
+can be: [**annotationFun=**]{.ul}annFUN.db, specify other param OR [**annotationFun=**]{.ul}annFUN.db(specify param)
+
+annFUN.db this function is intended to be used as long as the chip used by the user has an annotation package available in Bioconductor.
+**annFUN.org** this function is using the mappings from the "org.XX.XX" annotation packages.
+Cur- rently, the function supports the following gene identi􏰂ers: Entrez, GenBank, Alias, Ensembl, Gene Symbol, GeneName and UniGene.
+annFUN.gene2GO this function is used when the annotations are provided as a gene-to-GOs mapping.
+annFUN.GO2gene this function is used when the annotations are provided as a GO-to-genes mapping.
+annFUN.file this function will read the annotationsof the type gene2GO or GO2genes from a text 􏰂le.
+...: list of arguments to be passed to the annotationFun
+
+**mapping:** character string specifieng the name of the Bioconductor package containing the gene mappings for a specific organism.
+For example: mapping = "org.Hs.eg.db".
+
+**ID**\
+character string specifing the gene identifier to use.
+Currently only the following identifiers can be used: c("entrez", "genbank", "alias", "ensembl", "symbol", "genename", "unigene")
+
+```{r}
+ GOdata <- new("topGOdata", ontology = "BP", allGenes = geneList,annotationFun = annFUN.org, ID="symbol",mapping= 'org.Hs.eg.db')
+```
+
+```{r}
+GOdata
+```
+
+One important point to notice is that not all the genes that are provided by geneList, the initial gene universe, can be annotated to the GO. (4794 unverse, 593 signific genes)
+This can be seen by comparing the number of all available genes, the genes present in geneList, with the number of feasible genes.
+We are therefore forced at this point to restrict the gene universe to the set of feasible genes for the rest of the analysis.
+The summary on the GO graph shows the number of GO terms and the relations between them of the speci􏰂ed GO ontology.
+This graph contains only GO terms which have at least one gene annotated to them!
+
+### Useful fx to retrieve data info
+```{r}
+head(genes(GOdata))
+head(sigGenes(GOdata))
+```
+
+```{r}
+plot(graph(GOdata))
+```
+
+```{r}
+head(usedGO(GOdata))
 ```
 

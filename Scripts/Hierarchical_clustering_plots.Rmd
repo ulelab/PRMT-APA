@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 For each feature do dist vs proximal and then put feaure of gene as lengthening or shortening
 
 ```{r}
+library(readr)
 ds <- read_csv('../Outputs/All_categories_df.csv')
 rownames(ds) <- ds$unique_featureID
 ```
@@ -19,7 +20,7 @@ rownames(ds) <- ds$unique_featureID
 
 ```{r}
 library(tidyr)
-
+library(dplyr)
 ```
 
 To add lengthening or shortening I need to decide on wich mean diff to use.
