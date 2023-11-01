@@ -12,10 +12,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(topGO)
-#organism = "hsapiens"
 ```
 
 <https://bioconductor.org/packages/devel/bioc/vignettes/topGO/inst/doc/topGO.pdf>
+https://advaitabio.com/faq-items/understanding-gene-ontology/
 
 # 1 Data preparation
 
@@ -29,6 +29,9 @@ gene_universe_df <- read.csv('../Outputs/Unfiltered_Formatted_All_Data_Sets_Fina
 ```{r}
 PRMT_genes <- unique(df[df$category=='PRMT_regulated',]$gene_ID) # interesting genes
 gene_universe <- unique(gene_universe_df$gene_ID) #gene universe 
+Ctrl_genes <- unique(df[df$category=='Regulatable_sites',]$gene_ID) # interesting genes
+Regulatable_genes <- unique(df[df$category=='Control_sites',]$gene_ID) # interesting genes
+#Control_sites"     "Regulatable_sites" "PRMT_regulate
 ```
 
 Only symbol
@@ -36,7 +39,28 @@ Only symbol
 ```{r}
 PRMT_genes_symbol <- unlist(strsplit(PRMT_genes,'_'))[seq(1,length(PRMT_genes)*2,2)]
 gene_universe_symbol <- unlist(strsplit(gene_universe,'_'))[seq(1,length(gene_universe)*2,2)]
+Ctrl_genes_symbol <- unlist(strsplit(Ctrl_genes,'_'))[seq(1,length(Ctrl_genes)*2,2)]
+Regulatable_genes_symbol <- unlist(strsplit(Regulatable_genes,'_'))[seq(1,length(Regulatable_genes)*2,2)]
 ```
+
+####
+```{r}
+ds = data.frame(matrix(nrow = 5177, ncol =2))
+colnames(ds) <- c('_BACKGROUND','PRMT_reg','Regulatable_sites','Control_sites')
+ds$'_BACKGROUND' <- gene_universe_symbol
+
+ds$PRMT_reg <- append(PRMT_genes_symbol, rep(NA,5177-length(PRMT_genes_symbol)))
+ds$Regulatable_sites <- append(Regulatable_genes_symbol, rep(NA,5177-length(Regulatable_genes_symbol)))
+ds$Control_sites <- append(Ctrl_genes_symbol, rep(NA,5177-length(Ctrl_genes_symbol)))
+
+library(writexl)
+write_xlsx(ds,'~/Desktop/PRMT_reg.xlsx')
+
+
+PRMT_genes_symbol
+gene_universe_symbol
+```
+
 
 input of top go is a named factor vector.
 if 0 gene is not interesting but part of universe, id 1 gene is interesting and part of universe
@@ -116,4 +140,130 @@ plot(graph(GOdata))
 ```{r}
 head(usedGO(GOdata))
 ```
+
+Select genes: if not parsed does all terms
+```{r}
+selected_terms <- head(usedGO(GOdata))
+```
+
+retrieve the number of annotated genes
+```{r}
+number_annot_genes <- countGenesInTerm(GOdata, selected_terms) 
+number_annot_genes
+```
+
+```{r}
+annotated_genes <- genesInTerm(GOdata, selected_terms) # get the annotations
+annotated_genes
+```
+get some stats
+
+```{r}
+termStat(GOdata, selected_terms)
+```
+
+# 2 Running the enrichment tests
+
+
+topGO package was designed to work with various test statistics and various algorithms which take the GO dependencies into account. At the base of this design stands a S4 class mechanism which facilitates defining and executing a (new) group test. Three types of enrichment tests can be distinguish if we look at the data used by the each test.
+􏰅 Tests based on gene counts. This is the most popular family of tests, given that it only requires the presence of a list of interesting genes and nothing more. Tests like Fisher's exact test, Hypegeometric test and binomial test belong to this family. Draghici et al. (2006)
+􏰅 Tests based on gene scores or gene ranks. It includes Kolmogorov-Smirnov like tests (also known as GSEA), Gentleman's Category, t-test, etc. Ackermann and Strimmer (2009)
+􏰅 Tests based on gene expression. Tests like Goeman's globaltest or GlobalAncova separates from the others since they work directly on the expression matrix. Goeman and Bühlmann (2007)
+
+fx to see what tests/algo you can do: whichTests() and whichAlgorithms()
+
+
+decided to use fihser and weight 01:
+
+fisher:  determine if there are nonrandom associations between two categorical variables
+weight01: mix between weight and elim made to avoid problem:
+When a gene is annotated with a term, all inferences that can be inferred from the structure of the GO must also hold true. This property is known as the “True Path Rule.” But, because of this, if the GO analysis is done independently, for each term, each gene will be counted multiple times, once for every term from the lowest term it is annotated with, all the way up to the root. This has two consequences. First, it injects a great deal of redundancy in the process and second, it tends to report as significant lots of general terms which are really not very informative with respect to the phenotype studies.
+
+
+Two methods by Alexa et al (2006). Elim starts at the lowest level of GO, with the most specific terms and calculates their enrichment p-value. If that is not significant, the approach moves up in the hierarchy and calculates the p-value as usual. If “induction of apoptosis by extracellular signals” is not significant, all DE genes associated with it will also be counted for its parent, “induction of apoptosis”, as if the two terms were independent. However, if the more specific term is indeed significant, elim will eliminate all genes associated with it from all its ancestors, thus eliminating the redundancy and giving a chance to the more specific terms to be reported as significant.
+
+Second method is called weight. The idea behind this approach is that if many very specific terms are significant, and there is a term slightly more general that would encompass all those terms, it may be useful to identify this more general term
+
+```{r}
+resultFis <- runTest(GOdata, algorithm = "weight01", statistic = "fisher")
+resultClassic <- runTest(GOdata, algorithm = "classic", statistic = "fisher")
+resultElim <- runTest(GOdata, algorithm = "elim", statistic = "fisher")
+
+```
+```{r}
+resultFis
+```
+
+
+```{r}
+showSigOfNodes(GOdata, score(resultFis), useInfo = "none", sigForAll=FALSE, firstSigNodes=2,.NO.CHAR=50)
+```
+
+
+
+###multiple comparisons adjustment yes/no?
+
+The p-values return by the getSigGroups function are row p-values. There is no multiple testing correction applied to them, unless the test statistic directly incorporate such a correction. Of course, the researcher can perform an adjustment of the p-values if he considers it is important for the analysis. The reason for not automatically correcting for multiple testing are:
+􏰅 In many cases the row p-values return by an enrichment analysis are not that extreme. A FDR/FWER adjustment procedure can in this case produce very conservative p-values and declare no, or very few, terms as significant. This is not necessary a bad thing, but it can happen that there are interesting GO terms which didn't make it over the cutoff but they are omitted and thus valuable information lost. In this case the researcher might be interested in the ranking of the GO terms even though no top term is significant at a specify FDR level.
+􏰅 One should keep in mind that an enrichment analysis consist of many steps and there are many assumptions done before applying, for example, Fisher's exact test on a set of GO terms. Performing a multiple testing procedure accounting only on the number of GO terms is far from being enough to control the error rate.
+􏰅 For the methods that account for the GO topology like elim and weight, the problem of multiple testing is even more complicated. Here one computes the p-value of a GO term conditioned on the neighbouring terms. The tests are therefore not independent and the multiple testing theory does not directly apply. We like to interpret the p-values returned by these methods as corrected or not a􏰁ected by multiple testing.
+
+
+-> talk to charlotte 
+
+-> metascape used the BH correction so used that as well for a start
+
+```{r}
+ pvalFis <- score(resultFis)
+hist(pvalFis)
+p.adjust(sort(pvalFis,decreasing = T), 'BH')#nothing is significant now 
+```
+
+
+
+
+
+
+```{r}
+set.seed(1234)
+library(multtest)
+allRes <- GenTable(GOdata, weight = resultFis, topNodes = 20)
+#allRes$weight
+allRes$weight <- as.numeric(allRes$weight)
+allRes$adj <- p.adjust(allRes$weight,'BH')
+```
+
+```{r}
+library(ggplot2)
+ggplot(allRes[1:20,], aes(x=weight, y=reorder(paste(GO.ID,Term),-weight),color=weight,size=Significant) )+scale_color_gradient(low = "magenta",high='blue')+
+  xlab('') +
+ylab("GO")+
+    geom_point()+theme_bw()+labs(colour='weight')+ggtitle('GO results PRMT-reg')
+
+
+```
+```{r}
+ggplot(allRes[1:20,], aes(x=adj, y=reorder(paste(GO.ID,Term),-adj),color=adj,size=Significant) )+scale_color_gradient(low = "magenta",high='blue')+
+  xlab('') +
+ylab("GO")+
+    geom_point()+theme_bw()+labs(colour='weight')+ggtitle('GO results PRMT-reg')
+
+```
+```{r}
+set.seed(1234)
+allRes.1 <- GenTable(GOdata, weight = resultClassic, topNodes = 300)
+allRes$weight
+allRes.1$weight <- as.numeric(allRes.1$weight)
+allRes.1$adj <- p.adjust(allRes.1$weight,'BH')
+
+```
+
+```{r}
+ggplot(allRes.1[1:20,], aes(x=adj, y=reorder(paste(GO.ID,Term),-adj),color=adj,size=Significant) )+scale_color_gradient(low = "magenta",high='blue')+
+  xlab('') +
+ylab("GO")+
+    geom_point()+theme_bw()+labs(colour='weight')+ggtitle('GO results PRMT-reg')
+
+```
+
 
