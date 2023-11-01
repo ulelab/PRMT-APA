@@ -45,16 +45,15 @@ Regulatable_genes_symbol <- unlist(strsplit(Regulatable_genes,'_'))[seq(1,length
 
 ####
 ```{r}
-ds = data.frame(matrix(nrow = 5177, ncol =2))
+ds <-  data.frame(matrix(nrow = 5177, ncol =4))
 colnames(ds) <- c('_BACKGROUND','PRMT_reg','Regulatable_sites','Control_sites')
 ds$'_BACKGROUND' <- gene_universe_symbol
-
 ds$PRMT_reg <- append(PRMT_genes_symbol, rep(NA,5177-length(PRMT_genes_symbol)))
 ds$Regulatable_sites <- append(Regulatable_genes_symbol, rep(NA,5177-length(Regulatable_genes_symbol)))
 ds$Control_sites <- append(Ctrl_genes_symbol, rep(NA,5177-length(Ctrl_genes_symbol)))
 
 library(writexl)
-write_xlsx(ds,'~/Desktop/PRMT_reg.xlsx')
+write_xlsx(ds,'~/Desktop/GO_list.xlsx')
 
 
 PRMT_genes_symbol
@@ -66,8 +65,23 @@ input of top go is a named factor vector.
 if 0 gene is not interesting but part of universe, id 1 gene is interesting and part of universe
 
 ```{r}
-geneList <- factor(as.integer(gene_universe_symbol %in% PRMT_genes_symbol ))
-names(geneList) <- gene_universe_symbol
+geneList <- factor(as.integer(gene_universe_symbol %in% PRMT_genes_symbol ),levels = c(0,1))
+geneList <- as.vector(x=rep(1,length(PRMT_genes_symbol)))
+names(geneList) <- PRMT_genes_symbol
+
+geneList.1 <- as.vector(x=rep(2,length(Regulatable_genes_symbol)))
+names(geneList.1) <- Regulatable_genes_symbol
+
+geneList.2 <- as.vector(x=rep(3,length(Ctrl_genes_symbol)))
+names(geneList.2) <- Ctrl_genes_symbol
+
+geneList.3 <-gene_universe_symbol[ gene_universe_symbol %in% c(Ctrl_genes_symbol,PRMT_genes_symbol,Regulatable_genes_symbol) ]
+geneList.univ <- as.vector(x=rep(0,length(geneList.3)))
+names(geneList.univ) <- geneList.3
+
+table(as.factor(c(geneList,geneList.1,geneList.2,geneList.univ)))
+
+genes <- as.factor(c(geneList,geneList.1,geneList.2,geneList.univ))
 ```
 
 ```{r}
