@@ -300,6 +300,18 @@ ylab("GO")+
 plot_prmt
 ```
 
+```{r}
+library(recolorize)
+
+# define image path - we're using an image that comes with the package
+img_path <- system.file("../../Metscape/Multi_list/Enrichment_heatmap/HeatmapSelectedGO.png", package = "recolorize")
+
+# load image
+img <- readImage(img_path, resize = NULL, rotate = NULL)
+
+```
+
+
 ##PRMT
 
 ```{r}
