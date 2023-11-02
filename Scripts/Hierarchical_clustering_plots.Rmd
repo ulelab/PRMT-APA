@@ -189,7 +189,7 @@ Add a column that assigns a color to the 3 categories
 ```{r}
 ds.1 <- ds[complete.cases(ds[,7:14]),]
 
-ds.1 <-ds.1 %>%  mutate(, color = ifelse(category=='Control_sites','red' ,  ifelse(category=='Regulatable_sites','blue' , "yellow")))
+ds.1 <-ds.1 %>%  mutate( color = ifelse(category=='Control_sites','red' ,  ifelse(category=='Regulatable_sites','blue' , "yellow")))
 ```
 
 
@@ -241,7 +241,7 @@ plot(dend2,horiz = T ,main='Clustering normal' ); legend(x='topleft', legend=c("
        col=c("red", "blue",'yellow'),lty=1, cex=0.8)
 ```
 
-### try to get out labels cate and plot
+### try to get out labels category and plot
 
 ```{r}
 tree_labels.3 <- cutree(hc,3)
@@ -348,7 +348,69 @@ plot(dend2, main='Clustering shortening' ) ;  rect.hclust(hc,k = 3); legend(x='t
 ```
 
 
+####Try using dummy variable for hierarchical clustering
 
+
+```{r}
+ds.2 <- ds[complete.cases(ds[,7:14]),]
+
+ds.2 <-ds.2 %>%  mutate(color_categ = ifelse(category=='Control_sites','red' ,  ifelse(category=='Regulatable_sites','blue' , "yellow")))
+
+ds.2 <-ds.2 %>%  mutate(color_effect = ifelse(Effect=='lengthening','red' ,  ifelse(Effect=='shortening','blue' , "yellow")))
+
+ds.2 <- ds.2 %>% mutate(Lengthening=ifelse(Effect=='lengthening',1,0))
+ds.2 <- ds.2 %>% mutate(Control=ifelse(Effect=='Control',1,0))
+ds.2 <- ds.2 %>% mutate(shortening=ifelse(Effect=='shortening',1,0))
+
+
+ds.2 <- as.matrix(ds.2[,c(7:14,1,87,93,94,95,96,97)])
+
+rownames(ds.2) <-ds.2[,'unique_featureID']
+```
+
+Compute distance (without the columns with categorical data: unique feature, the category and the color assigned)
+Then do clustering with hclust method complete should be best
+```{r}
+distSamples <- dist(ds.2[,-c(9,10,10,11,12)])
+hc <- hclust(distSamples,method = 'complete')
+hc
+```
+
+```{r}
+dend <- as.dendrogram(hc)
+
+dend2 <- color_branches(dend, col=ds.2[labels(dend),'color_categ'])
+dend2.2 <- color_branches(dend, col=ds.2[labels(dend),'color_effect'])
+
+```
+
+function to remove labels as there are too many and won't be able to read them anyway
+
+```{r}
+noLabel <- function(x) {
+  if (stats::is.leaf(x)) {
+    attr(x, "label") <- NULL }
+  return(x)
+}
+
+dend2 <- dendrapply(dend2, noLabel)
+dend2.2 <- dendrapply(dend2.2, noLabel)
+
+```
+
+
+```{r}
+plot(dend2.2,,main='Dummy variable for effect, colored by effect' ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Lengthening", "Shortening",'Control'),
+       col=c("red", "blue",'yellow'),lty=1, cex=0.8) 
+
+```
+
+
+```{r}
+plot(dend2,main='Dummy variable for effect, colored by category' ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Control_sites", "Regulatable_sites",'PRMT_regulated'),
+       col=c("red", "blue",'yellow'),lty=1, cex=0.8) 
+
+```
 #Complex Heatmaps 
 
 libraries loading
@@ -364,7 +426,7 @@ There are quite a lot of NAs (tried and doesnt cluster)
 So unfortunately only kept complete cases
 cat: mean differences 7:14, 87 category features belong 
 ```{r}
-ds.1 <- ds[complete.cases(ds[,7:14]),c(7:14,87)]
+ds.1 <- ds[complete.cases(ds[,7:14]),c(7:14,87,90)]
 ```
 
 ```{r}
@@ -374,14 +436,13 @@ complete_cases <- as.matrix(complete_cases)
 
 ## Normal
 
-Tried doing heatmap with values from -1 to 1 but a lot of mis-categorization btween prmt and regulatable 
 
 ```{r}
 f1 = colorRamp2(seq(min(complete_cases), max(complete_cases), length = 3), c("red", "white", "dark blue"))
 
 #rowAnnotation(foo2 = 18:1, bar2 = anno_barplot(runif(18)) 
 Heatmap(complete_cases, name = "Complete cases heatmap",col=f1,row_km  = 3,
-    column_title = " Mean difference values",right_annotation =rowAnnotation(category = ds.1$category ))
+    column_title = " Mean difference values",right_annotation =rowAnnotation(category = ds.1$category, effect=ds.1$Effect))
 
 ```
 
@@ -389,25 +450,12 @@ Heatmap(complete_cases, name = "Complete cases heatmap",col=f1,row_km  = 3,
 ## shorteing /lengthening and distal proximal
 
 
-```{r}
-complete_cases <- ds[complete.cases(ds[,7:14]),c(7:14,90)]
-complete_cases <- as.matrix(complete_cases[,-9])
 
-f1 = colorRamp2(seq(-1,1, length = 3), c("red", "white", "dark blue"))
-
-
-#rowAnnotation(foo2 = 18:1, bar2 = anno_barplot(runif(18)) 
-Heatmap(complete_cases, name = "Complete cases heatmap",col=f1,row_km  = 3,
-    column_title = " Mean difference values",right_annotation =rowAnnotation(category = ds.1$category, effect=ds.1$Effect ))
-
-```
 ```{r}
 ds_L <- ds %>% filter(Effect!='shortening')
 ds_L <- ds_L[complete.cases(ds_L[,7:14]),]
 
-ds.l <-ds_L %>%  mutate(color_categ = ifelse(category=='Control_sites','red' ,  ifelse(category=='Regulatable_sites','blue' , "yellow")))
-
-ds.l <- as.matrix(ds.l[,c(7:14)])
+ds.l <- as.matrix(ds_L[,c(7:14)])
 
 f1 = colorRamp2(seq(-1,1, length = 3), c("red", "white", "dark blue"))
 
@@ -419,15 +467,30 @@ Heatmap(ds.l, name = "Lengthening heatmap",col=f1,row_km  = 3,
 ds_S <- ds %>% filter(Effect!='lengthening')
 ds_S <- ds_S[complete.cases(ds_S[,7:14]),]
 
-ds.s <-ds_S %>%  mutate(color_categ = ifelse(category=='Control_sites','red' ,  ifelse(category=='Regulatable_sites','blue' , "yellow")))
-
-ds.s <- as.matrix(ds.s[,c(7:14)])
+ds.s <- as.matrix(ds_S[,c(7:14)])
 
 f1 = colorRamp2(seq(-1,1, length = 3), c("red", "white", "dark blue"))
 
 #rowAnnotation(foo2 = 18:1, bar2 = anno_barplot(runif(18)) 
 Heatmap(ds.s, name = "Shortening heatmap",col=f1,row_km  = 3,
     column_title = " Mean difference values",right_annotation =rowAnnotation(category = ds_S$category, effect=ds_S$Effect ))
+```
+## Dummy variable effect
+
+```{r}
+ds.D <- ds[complete.cases(ds[,7:14]),]
+
+ds.D <- ds.D %>% mutate(Lengthening=ifelse(Effect=='lengthening',1,0))
+ds.D <- ds.D %>% mutate(Control=ifelse(Effect=='Control',1,0))
+ds.D <- ds.D %>% mutate(shortening=ifelse(Effect=='shortening',1,0))
+
+
+ds.d <- as.matrix(ds.D[,c(7:14,93,94,95)])
+
+f1 = colorRamp2(seq(-1,1, length = 3), c("red", "white", "dark blue"))
+
+Heatmap(ds.d, name = "Dummy variable heatmap",col=f1,row_km  = 3,
+    column_title = " Mean difference values",right_annotation =rowAnnotation(category = ds.D$category, effect=ds.D$Effect ),use_raster = FALSE)
 ```
 
 

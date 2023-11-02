@@ -185,8 +185,8 @@ Second method is called weight. The idea behind this approach is that if many ve
 
 ```{r}
 resultFis <- runTest(GOdata, algorithm = "weight01", statistic = "fisher")
-resultClassic <- runTest(GOdata, algorithm = "classic", statistic = "fisher")
-resultElim <- runTest(GOdata, algorithm = "elim", statistic = "fisher")
+#resultClassic <- runTest(GOdata, algorithm = "classic", statistic = "fisher")
+#resultElim <- runTest(GOdata, algorithm = "elim", statistic = "fisher")
 
 ```
 ```{r}
@@ -215,7 +215,7 @@ The p-values return by the getSigGroups function are row p-values. There is no m
 ```{r}
  pvalFis <- score(resultFis)
 hist(pvalFis)
-p.adjust(sort(pvalFis,decreasing = T), 'BH')#nothing is significant now 
+#p.adjust(sort(pvalFis,decreasing = T), 'BH')#nothing is significant now 
 ```
 
 
@@ -226,15 +226,17 @@ p.adjust(sort(pvalFis,decreasing = T), 'BH')#nothing is significant now
 ```{r}
 set.seed(1234)
 library(multtest)
-allRes <- GenTable(GOdata, weight = resultFis, topNodes = 20)
+allRes <- GenTable(GOdata, weight = resultFis, topNodes = 50)
 #allRes$weight
 allRes$weight <- as.numeric(allRes$weight)
+allRes$log_w <- log10(allRes$weight) 
 allRes$adj <- p.adjust(allRes$weight,'BH')
+allRes$adj_log <- log10(allRes$adj) 
 ```
 
 ```{r}
 library(ggplot2)
-ggplot(allRes[1:20,], aes(x=-log10(weight), y=reorder(paste(GO.ID,Term),-log10(weight)),color=log10(weight),size=Significant) )+scale_color_gradient(low = "magenta",high='blue')+
+ggplot(allRes[1:20,], aes(x=-log_w, y=reorder(paste(GO.ID,Term),-log_w),color=log_w,size=Significant) )+scale_color_gradient(low = "magenta",high='blue')+
   xlab('') +
 ylab("GO")+
     geom_point()+theme_bw()+labs(colour='weight')+ggtitle('GO results PRMT-reg')
@@ -242,7 +244,7 @@ ylab("GO")+
 
 ```
 ```{r}
-ggplot(allRes[1:20,], aes(x=adj, y=reorder(paste(GO.ID,Term),-adj),color=adj,size=Significant) )+scale_color_gradient(low = "magenta",high='blue')+
+ggplot(allRes[1:20,], aes(x=-adj_log, y=reorder(paste(GO.ID,Term),-adj_log),color=-adj_log,size=Significant) )+scale_color_gradient(low = "magenta",high='blue')+
   xlab('') +
 ylab("GO")+
     geom_point()+theme_bw()+labs(colour='weight')+ggtitle('GO results PRMT-reg')
@@ -301,7 +303,7 @@ plot_prmt
 ##PRMT
 
 ```{r}
-PRMT_GO_MCODE_ord <- PRMT_GO_MCODE[order(PRMT_GO_MCODE$LogP),]
+PRMT_GO_MCODE_ord <- PRMT_GO_MCODE[order(PRMT_GO_MCODE$LogP),][1:20,]
 #GO_results_ordered <- GO_results_ordered[1:10,]
 plot_prmt <- ggplot(PRMT_GO_MCODE_ord, aes(x=- LogP, y=reorder(paste(GO,Description),-LogP),colour=-LogP,size=`#GeneInGO`) )+scale_color_gradient2(high = "#DC143C")+
   xlab("-log(P)") +
@@ -318,7 +320,7 @@ plot_prmt
 
 
 ```{r}
-REG_GO_MCODE_ord <- REG_GO_MCODE[order(REG_GO_MCODE$LogP),]
+REG_GO_MCODE_ord <- REG_GO_MCODE[order(REG_GO_MCODE$LogP),][1:20,]
 plot_reg <- ggplot(REG_GO_MCODE_ord, aes(x=- LogP, y=reorder(paste(GO,Description),-LogP),colour=-LogP,size=`#GeneInGO`) )+scale_color_gradient2(high = "#DC143C")+
   xlab("-log(P)") +
 ylab("GO")+
@@ -329,7 +331,7 @@ plot_reg
 ##control
 
 ```{r}
-CTRL_GO_MCODE_ord <- CTRL_GO_MCODE[order(CTRL_GO_MCODE$LogP),]
+CTRL_GO_MCODE_ord <- CTRL_GO_MCODE[order(CTRL_GO_MCODE$LogP),][1:20,]
 plot_ctrl <- ggplot(CTRL_GO_MCODE_ord, aes(x=- LogP, y=reorder(paste(GO,Description),-LogP),colour=-LogP,size=`#GeneInGO`) )+scale_color_gradient2(high = "#DC143C")+
   xlab("-log(P)") +
 ylab("GO")+
