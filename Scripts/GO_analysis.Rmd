@@ -19,7 +19,7 @@ https://advaitabio.com/faq-items/understanding-gene-ontology/
 
 # 1 Data preparation
 
-##PRMT
+
 
 ```{r}
 df <- read.csv('../Outputs/All_categories_df.csv')
@@ -43,7 +43,8 @@ Ctrl_genes_symbol <- unlist(strsplit(Ctrl_genes,'_'))[seq(1,length(Ctrl_genes)*2
 Regulatable_genes_symbol <- unlist(strsplit(Regulatable_genes,'_'))[seq(1,length(Regulatable_genes)*2,2)]
 ```
 
-####
+#### Gene lists
+
 ```{r}
 ds <-  data.frame(matrix(nrow = 5177, ncol =4))
 colnames(ds) <- c('_BACKGROUND','PRMT_reg','Regulatable_sites','Control_sites')
@@ -53,11 +54,8 @@ ds$Regulatable_sites <- append(Regulatable_genes_symbol, rep(NA,5177-length(Regu
 ds$Control_sites <- append(Ctrl_genes_symbol, rep(NA,5177-length(Ctrl_genes_symbol)))
 
 library(writexl)
-write_xlsx(ds,'~/Desktop/GO_list.xlsx')
+write_xlsx(ds,'../GO_analysis/GO_list.xlsx')
 
-
-PRMT_genes_symbol
-gene_universe_symbol
 ```
 
 
@@ -75,6 +73,8 @@ names(geneList) <- gene_universe_symbol
 ```{r}
 table(names(geneList[geneList==1]) %in% PRMT_genes_symbol) #Check that everything is correct up to now
 ```
+
+#TopGO analysis
 
 ### GO DATA
 
@@ -129,15 +129,12 @@ We are therefore forced at this point to restrict the gene universe to the set o
 The summary on the GO graph shows the number of GO terms and the relations between them of the speci􏰂ed GO ontology.
 This graph contains only GO terms which have at least one gene annotated to them!
 
-### Useful fx to retrieve data info
+#### Useful fx to retrieve data info
 ```{r}
 head(genes(GOdata))
 head(sigGenes(GOdata))
 ```
 
-```{r}
-plot(graph(GOdata))
-```
 
 ```{r}
 head(usedGO(GOdata))
@@ -164,7 +161,7 @@ get some stats
 termStat(GOdata, selected_terms)
 ```
 
-# 2 Running the enrichment tests
+## 2 Running the enrichment tests
 
 
 topGO package was designed to work with various test statistics and various algorithms which take the GO dependencies into account. At the base of this design stands a S4 class mechanism which facilitates defining and executing a (new) group test. Three types of enrichment tests can be distinguish if we look at the data used by the each test.
@@ -203,7 +200,7 @@ showSigOfNodes(GOdata, score(resultFis), useInfo = "none", sigForAll=FALSE, firs
 
 
 
-###multiple comparisons adjustment yes/no?
+####multiple comparisons adjustment yes/no?
 
 The p-values return by the getSigGroups function are row p-values. There is no multiple testing correction applied to them, unless the test statistic directly incorporate such a correction. Of course, the researcher can perform an adjustment of the p-values if he considers it is important for the analysis. The reason for not automatically correcting for multiple testing are:
 􏰅 In many cases the row p-values return by an enrichment analysis are not that extreme. A FDR/FWER adjustment procedure can in this case produce very conservative p-values and declare no, or very few, terms as significant. This is not necessary a bad thing, but it can happen that there are interesting GO terms which didn't make it over the cutoff but they are omitted and thus valuable information lost. In this case the researcher might be interested in the ranking of the GO terms even though no top term is significant at a specify FDR level.
@@ -237,7 +234,7 @@ allRes$adj <- p.adjust(allRes$weight,'BH')
 
 ```{r}
 library(ggplot2)
-ggplot(allRes[1:20,], aes(x=weight, y=reorder(paste(GO.ID,Term),-weight),color=weight,size=Significant) )+scale_color_gradient(low = "magenta",high='blue')+
+ggplot(allRes[1:20,], aes(x=-log10(weight), y=reorder(paste(GO.ID,Term),-log10(weight)),color=log10(weight),size=Significant) )+scale_color_gradient(low = "magenta",high='blue')+
   xlab('') +
 ylab("GO")+
     geom_point()+theme_bw()+labs(colour='weight')+ggtitle('GO results PRMT-reg')
@@ -251,21 +248,92 @@ ylab("GO")+
     geom_point()+theme_bw()+labs(colour='weight')+ggtitle('GO results PRMT-reg')
 
 ```
-```{r}
-set.seed(1234)
-allRes.1 <- GenTable(GOdata, weight = resultClassic, topNodes = 300)
-allRes$weight
-allRes.1$weight <- as.numeric(allRes.1$weight)
-allRes.1$adj <- p.adjust(allRes.1$weight,'BH')
 
+
+
+# Metscape analysis
+
+data
+
+```{r}
+CTRL_GO_MCODE <- read_csv('../GO_analysis/CTRL_GO_MCODE.csv')
+ML_GO_MCODE <- read_csv('../GO_analysis/ML_GO_MCODE.csv')
+PRMT_GO_MCODE <- read_csv('../GO_analysis/PRMT_GO_MCODE.csv')
+REG_GO_MCODE <- read_csv('../GO_analysis/REG_GO_MCODE.csv')
 ```
 
 ```{r}
-ggplot(allRes.1[1:20,], aes(x=adj, y=reorder(paste(GO.ID,Term),-adj),color=adj,size=Significant) )+scale_color_gradient(low = "magenta",high='blue')+
-  xlab('') +
+library(ggplot2)
+library(dplyr)
+```
+
+
+##Multi list analysis
+
+```{r}
+
+ML_GO_MCODE_top20 <- ML_GO_MCODE[order(ML_GO_MCODE$Enrichment),][1:20,]
+
+ML_GO_MCODE_HM <- ML_GO_MCODE_top20 %>% mutate(Control_sites= ifelse(Name=='Control_sites',1,0))
+ML_GO_MCODE_HM <- ML_GO_MCODE_HM %>% mutate(Regulatable_sites= ifelse(Name=='Regulatable_sites',1,0))
+ML_GO_MCODE_HM <- ML_GO_MCODE_HM %>% mutate(PRMT_reg= ifelse(Name=='PRMT_reg',1,0))
+
+
+ML_GO_MCODE_HM <- as.matrix(ML_GO_MCODE_HM[,c(20,21,19)])
+
+rownames(ML_GO_MCODE_HM) <- paste(ML_GO_MCODE_top20$GO,ML_GO_MCODE_top20$Description)
+
+f1 = colorRamp2(seq(min(-ML_GO_MCODE_top20$LogP), max(-ML_GO_MCODE_top20$LogP), length = 3), c("red", "white", "dark blue"))
+heatmap(ML_GO_MCODE_HM,col=f1)
+
+
+#GO_results_ordered <- GO_results_ordered[1:10,]
+plot_prmt <- ggplot(GO_results_ordered, aes(x=- LogP, y=reorder(paste(GO,Description),-LogP),colour=-LogP,size=`#GeneInGO`) )+scale_color_gradient2(high = "#DC143C")+
+  xlab("-log(P)") +
 ylab("GO")+
-    geom_point()+theme_bw()+labs(colour='weight')+ggtitle('GO results PRMT-reg')
+    geom_point()+theme_bw()+labs(colour="-log(P)")+ggtitle('GO results PRMT-reg')
 
+#ggsave(plot_prmt,filename="../Pictures/GO results PRMT reg",device=png,width = 12,height = 7)
+
+plot_prmt
 ```
 
+##PRMT
+
+```{r}
+PRMT_GO_MCODE_ord <- PRMT_GO_MCODE[order(PRMT_GO_MCODE$LogP),]
+#GO_results_ordered <- GO_results_ordered[1:10,]
+plot_prmt <- ggplot(PRMT_GO_MCODE_ord, aes(x=- LogP, y=reorder(paste(GO,Description),-LogP),colour=-LogP,size=`#GeneInGO`) )+scale_color_gradient2(high = "#DC143C")+
+  xlab("-log(P)") +
+ylab("GO")+
+    geom_point()+theme_bw()+labs(colour="-log(P)")+ggtitle('GO results PRMT-reg')
+
+#ggsave(plot_prmt,filename="../Pictures/GO results PRMT reg",device=png,width = 12,height = 7)
+
+plot_prmt
+```
+
+
+##Regulatable
+
+
+```{r}
+REG_GO_MCODE_ord <- REG_GO_MCODE[order(REG_GO_MCODE$LogP),]
+plot_reg <- ggplot(REG_GO_MCODE_ord, aes(x=- LogP, y=reorder(paste(GO,Description),-LogP),colour=-LogP,size=`#GeneInGO`) )+scale_color_gradient2(high = "#DC143C")+
+  xlab("-log(P)") +
+ylab("GO")+
+    geom_point()+theme_bw()+labs(colour="-log(P)")+ggtitle('GO results Regulatable')
+plot_reg
+```
+
+##control
+
+```{r}
+CTRL_GO_MCODE_ord <- CTRL_GO_MCODE[order(CTRL_GO_MCODE$LogP),]
+plot_ctrl <- ggplot(CTRL_GO_MCODE_ord, aes(x=- LogP, y=reorder(paste(GO,Description),-LogP),colour=-LogP,size=`#GeneInGO`) )+scale_color_gradient2(high = "#DC143C")+
+  xlab("-log(P)") +
+ylab("GO")+
+    geom_point()+theme_bw()+labs(colour="-log(P)")+ggtitle('GO results Regulatable')
+plot_ctrl
+```
 

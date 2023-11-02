@@ -231,13 +231,13 @@ dend2 <- dendrapply(dend2, noLabel)
 
 
 ```{r}
-plot(dend2 ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Control_sites", "Regulatable_sites",'PRMT_regulated'),
+plot(dend2,main='Clustering normal'  ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Control_sites", "Regulatable_sites",'PRMT_regulated'),
        col=c("red", "blue",'yellow'),lty=1, cex=0.8) 
 
 ```
 
 ```{r}
-plot(dend2,horiz = T ); legend(x='topleft', legend=c("Control_sites", "Regulatable_sites",'PRMT_regulated'),
+plot(dend2,horiz = T ,main='Clustering normal' ); legend(x='topleft', legend=c("Control_sites", "Regulatable_sites",'PRMT_regulated'),
        col=c("red", "blue",'yellow'),lty=1, cex=0.8)
 ```
 
@@ -299,7 +299,7 @@ dend2 <- dendrapply(dend2, noLabel)
 
 
 ```{r}
-plot(dend2 ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Control_sites", "Regulatable_sites",'PRMT_regulated'),
+plot(dend2 ,main='Clustering lengthening' ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Control_sites", "Regulatable_sites",'PRMT_regulated'),
        col=c("red", "blue",'yellow'),lty=1, cex=0.8) 
 ```
 
@@ -343,7 +343,7 @@ dend2 <- dendrapply(dend2, noLabel)
 
 
 ```{r}
-plot(dend2 ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Control_sites", "Regulatable_sites",'PRMT_regulated'),
+plot(dend2, main='Clustering shortening' ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Control_sites", "Regulatable_sites",'PRMT_regulated'),
        col=c("red", "blue",'yellow'),lty=1, cex=0.8) 
 ```
 
@@ -416,7 +416,7 @@ Heatmap(ds.l, name = "Lengthening heatmap",col=f1,row_km  = 3,
     column_title = " Mean difference values",right_annotation =rowAnnotation(category = ds_L$category, effect=ds_L$Effect ))
 ```
 ```{r}
-ds_S <- ds %>% filter(Effect!='shortening')
+ds_S <- ds %>% filter(Effect!='lengthening')
 ds_S <- ds_S[complete.cases(ds_S[,7:14]),]
 
 ds.s <-ds_S %>%  mutate(color_categ = ifelse(category=='Control_sites','red' ,  ifelse(category=='Regulatable_sites','blue' , "yellow")))
@@ -426,7 +426,7 @@ ds.s <- as.matrix(ds.s[,c(7:14)])
 f1 = colorRamp2(seq(-1,1, length = 3), c("red", "white", "dark blue"))
 
 #rowAnnotation(foo2 = 18:1, bar2 = anno_barplot(runif(18)) 
-Heatmap(ds.s, name = "Lengthening heatmap",col=f1,row_km  = 3,
+Heatmap(ds.s, name = "Shortening heatmap",col=f1,row_km  = 3,
     column_title = " Mean difference values",right_annotation =rowAnnotation(category = ds_S$category, effect=ds_S$Effect ))
 ```
 
