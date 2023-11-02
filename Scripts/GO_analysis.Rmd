@@ -270,46 +270,6 @@ library(dplyr)
 ```
 
 
-##Multi list analysis
-
-```{r}
-
-ML_GO_MCODE_top20 <- ML_GO_MCODE[order(ML_GO_MCODE$Enrichment),][1:20,]
-
-ML_GO_MCODE_HM <- ML_GO_MCODE_top20 %>% mutate(Control_sites= ifelse(Name=='Control_sites',1,0))
-ML_GO_MCODE_HM <- ML_GO_MCODE_HM %>% mutate(Regulatable_sites= ifelse(Name=='Regulatable_sites',1,0))
-ML_GO_MCODE_HM <- ML_GO_MCODE_HM %>% mutate(PRMT_reg= ifelse(Name=='PRMT_reg',1,0))
-
-
-ML_GO_MCODE_HM <- as.matrix(ML_GO_MCODE_HM[,c(20,21,19)])
-
-rownames(ML_GO_MCODE_HM) <- paste(ML_GO_MCODE_top20$GO,ML_GO_MCODE_top20$Description)
-
-f1 = colorRamp2(seq(min(-ML_GO_MCODE_top20$LogP), max(-ML_GO_MCODE_top20$LogP), length = 3), c("red", "white", "dark blue"))
-heatmap(ML_GO_MCODE_HM,col=f1)
-
-
-#GO_results_ordered <- GO_results_ordered[1:10,]
-plot_prmt <- ggplot(GO_results_ordered, aes(x=- LogP, y=reorder(paste(GO,Description),-LogP),colour=-LogP,size=`#GeneInGO`) )+scale_color_gradient2(high = "#DC143C")+
-  xlab("-log(P)") +
-ylab("GO")+
-    geom_point()+theme_bw()+labs(colour="-log(P)")+ggtitle('GO results PRMT-reg')
-
-#ggsave(plot_prmt,filename="../Pictures/GO results PRMT reg",device=png,width = 12,height = 7)
-
-plot_prmt
-```
-
-```{r}
-library(recolorize)
-
-# define image path - we're using an image that comes with the package
-img_path <- system.file("../../Metscape/Multi_list/Enrichment_heatmap/HeatmapSelectedGO.png", package = "recolorize")
-
-# load image
-img <- readImage(img_path, resize = NULL, rotate = NULL)
-
-```
 
 
 ##PRMT

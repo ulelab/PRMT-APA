@@ -426,7 +426,7 @@ There are quite a lot of NAs (tried and doesnt cluster)
 So unfortunately only kept complete cases
 cat: mean differences 7:14, 87 category features belong 
 ```{r}
-ds.1 <- ds[complete.cases(ds[,7:14]),c(7:14,87,90)]
+ds.1 <- ds[complete.cases(ds[,7:14]),c(7:14,87,89,90)]
 ```
 
 ```{r}
@@ -442,12 +442,12 @@ f1 = colorRamp2(seq(min(complete_cases), max(complete_cases), length = 3), c("re
 
 #rowAnnotation(foo2 = 18:1, bar2 = anno_barplot(runif(18)) 
 Heatmap(complete_cases, name = "Complete cases heatmap",col=f1,row_km  = 3,
-    column_title = " Mean difference values",right_annotation =rowAnnotation(category = ds.1$category, effect=ds.1$Effect))
+    column_title = " Mean difference values",right_annotation =rowAnnotation(category = ds.1$category, effect=ds.1$Effect,location=ds.1$Location))
 
 ```
 
 
-## shorteing /lengthening and distal proximal
+## shorteing /lengthening
 
 
 
@@ -475,6 +475,39 @@ f1 = colorRamp2(seq(-1,1, length = 3), c("red", "white", "dark blue"))
 Heatmap(ds.s, name = "Shortening heatmap",col=f1,row_km  = 3,
     column_title = " Mean difference values",right_annotation =rowAnnotation(category = ds_S$category, effect=ds_S$Effect ))
 ```
+
+## distal proximal
+
+
+```{r}
+ds_dis<- ds %>% filter(Location=='distal')
+ds_dis <- ds_dis[complete.cases(ds_dis[,7:14]),]
+
+ds_dis.n <- as.matrix(ds_dis[,c(7:14)])
+
+f1 = colorRamp2(seq(-1,1, length = 3), c("red", "white", "dark blue"))
+
+#rowAnnotation(foo2 = 18:1, bar2 = anno_barplot(runif(18)) 
+Heatmap(ds_dis.n, name = "Distal heatmap",col=f1,row_km  = 3,
+    column_title = " Mean difference values",right_annotation =rowAnnotation(category = ds_dis$category, effect=ds_dis$Effect ))
+```
+```{r}
+ds_pro<- ds %>% filter(Location=='proximal')
+ds_pro <- ds_pro[complete.cases(ds_pro[,7:14]),]
+
+ds_pro.n <- as.matrix(ds_pro[,c(7:14)])
+
+f1 = colorRamp2(seq(-1,1, length = 3), c("red", "white", "dark blue"))
+
+#rowAnnotation(foo2 = 18:1, bar2 = anno_barplot(runif(18)) 
+Heatmap(ds_pro.n, name = "Proximal heatmap",col=f1,row_km  = 3,
+    column_title = " Mean difference values",right_annotation =rowAnnotation(category = ds_pro$category, effect=ds_pro$Effect ))
+```
+
+
+
+
+
 ## Dummy variable effect
 
 ```{r}
