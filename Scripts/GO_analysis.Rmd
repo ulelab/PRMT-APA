@@ -22,25 +22,22 @@ https://advaitabio.com/faq-items/understanding-gene-ontology/
 
 
 ```{r}
-df <- read.csv('../Outputs/All_categories_df.csv')
+df <- read.csv('../Outputs/All_categories_DP_LS.csv')
 gene_universe_df <- read.csv('../Outputs/Unfiltered_Formatted_All_Data_Sets_Final.csv')
 ```
 
 ```{r}
 PRMT_genes <- unique(df[df$category=='PRMT_regulated',]$gene_ID) # interesting genes
 gene_universe <- unique(gene_universe_df$gene_ID) #gene universe 
-Ctrl_genes <- unique(df[df$category=='Regulatable_sites',]$gene_ID) # interesting genes
-Regulatable_genes <- unique(df[df$category=='Control_sites',]$gene_ID) # interesting genes
+Ctrl_genes <- unique(df[df$category=='Control_sites',]$gene_ID) # interesting genes
+Regulatable_genes <- unique(df[df$category=='Regulatable_sites',]$gene_ID) # interesting genes
 #Control_sites"     "Regulatable_sites" "PRMT_regulate
 ```
 
 Only symbol
 
 ```{r}
-PRMT_genes_symbol <- unlist(strsplit(PRMT_genes,'_'))[seq(1,length(PRMT_genes)*2,2)]
 gene_universe_symbol <- unlist(strsplit(gene_universe,'_'))[seq(1,length(gene_universe)*2,2)]
-Ctrl_genes_symbol <- unlist(strsplit(Ctrl_genes,'_'))[seq(1,length(Ctrl_genes)*2,2)]
-Regulatable_genes_symbol <- unlist(strsplit(Regulatable_genes,'_'))[seq(1,length(Regulatable_genes)*2,2)]
 ```
 
 #### Gene lists
@@ -49,32 +46,183 @@ Regulatable_genes_symbol <- unlist(strsplit(Regulatable_genes,'_'))[seq(1,length
 ds <-  data.frame(matrix(nrow = 5177, ncol =4))
 colnames(ds) <- c('_BACKGROUND','PRMT_reg','Regulatable_sites','Control_sites')
 ds$'_BACKGROUND' <- gene_universe_symbol
-ds$PRMT_reg <- append(PRMT_genes_symbol, rep(NA,5177-length(PRMT_genes_symbol)))
-ds$Regulatable_sites <- append(Regulatable_genes_symbol, rep(NA,5177-length(Regulatable_genes_symbol)))
-ds$Control_sites <- append(Ctrl_genes_symbol, rep(NA,5177-length(Ctrl_genes_symbol)))
-
+ds$PRMT_reg <- append(PRMT_genes, rep(NA,5177-length(PRMT_genes)))
+ds$Regulatable_sites <- append(Regulatable_genes, rep(NA,5177-length(Regulatable_genes)))
+ds$Control_sites <- append(Ctrl_genes, rep(NA,5177-length(Ctrl_genes)))
+#table(is.na(ds$'_BACKGROUND'))
 library(writexl)
 write_xlsx(ds,'../GO_analysis/GO_list.xlsx')
 
 ```
 
 
+
+
+
+# Metscape analysis
+
+
+
+
+
+data
+
+
+```{r}
+library(readxl)
+```
+
+```{r}
+#CTRL_GO_MCODE <- read_csv('../GO_analysis/CTRL_GO_MCODE.csv')
+#ML_GO_MCODE <- read_csv('../GO_analysis/HeatmapSelectedGOTop100.csv')
+#PRMT_GO_MCODE <- read_csv('../GO_analysis/PRMT_GO_MCODE.csv')
+#REG_GO_MCODE <- read_csv('../GO_analysis/REG_GO_MCODE.csv')
+```
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(Rfast)
+```
+
+##multi list 
+
+
+```{r}
+ML_GO_MCODE <- read_csv('../GO_analysis/_FINAL_GO.csv')
+```
+
+
+```{r}
+library(circlize)
+library(ComplexHeatmap)
+
+a <- ML_GO_MCODE[order(ML_GO_MCODE$Enrichment,decreasing = T),][1:50,]
+
+b <- as.matrix(a[,4:6])
+f1 <- colorRamp2(seq(min(a$LogP),-2, length = 3), c("Dark blue", "Magenta", "white"))
+
+hm <- Heatmap(b,col =  f1, border = TRUE, name = "LogP")+rowAnnotation(foo=anno_text( paste(a$GO, a$Description) , gp = gpar(fontsize = 9))) 
+
+draw(hm,column_title="Heatmap top50 enrichement",
+   column_title_gp=grid::gpar(fontsize=16))
+```
+
+###single categories
+```{r}
+Reg <- ML_GO_MCODE %>% filter(ML_GO_MCODE$'_MEMBER_Regulatable_sites' == 1)
+PRMT <- ML_GO_MCODE %>% filter(ML_GO_MCODE$'_MEMBER_PRMT_reg' == 1)
+CTRL <- ML_GO_MCODE %>% filter(ML_GO_MCODE$'_MEMBER_Control_sites' == 1)
+```
+
+```{r}
+Reg <- Reg[order(Reg$Enrichment,decreasing = T),][1:20,] %>% filter(LogP< -2)
+plot_reg <- ggplot(Reg, aes(x=- LogP, y=reorder(paste(GO,Description),-LogP),colour=-LogP,size=Enrichment) )+scale_color_gradient2(high = "#DC143C")+
+  xlab("-log(P)") +
+ylab("GO")+
+    geom_point()+theme_bw()+labs(colour="-log(P)")+ggtitle('GO results Regulatable')
+plot_reg
+```
+```{r}
+PRMT <- PRMT[order(PRMT$Enrichment,decreasing = T),][1:20,]%>% filter(LogP< -2)
+plot_prmt <- ggplot(PRMT, aes(x=- LogP, y=reorder(paste(GO,Description),-LogP),colour=-LogP,size=Enrichment) )+scale_color_gradient2(high = "#DC143C")+
+  xlab("-log(P)") +
+ylab("GO")+
+    geom_point()+theme_bw()+labs(colour="-log(P)")+ggtitle('GO results PRMT')
+plot_prmt
+```
+
+```{r}
+CTRL <- CTRL[order(CTRL$Enrichment,decreasing = T),][1:20,]%>% filter(LogP< -2)
+plot_CTRL <- ggplot(CTRL, aes(x=- LogP, y=reorder(paste(GO,Description),-LogP),colour=-LogP,size=Enrichment) )+scale_color_gradient2(high = "#DC143C")+
+  xlab("-log(P)") +
+ylab("GO")+
+    geom_point()+theme_bw()+labs(colour="-log(P)")+ggtitle('GO results Control sites')
+plot_CTRL
+```
+
+
+
+```{r}
+ds <- read_csv('../Outputs/All_categories_DP_LS.csv')
+list_PRMT_FGFRL1 <- strsplit(ML_GO_MCODE[ML_GO_MCODE$GO=='R-HSA-5658623',]$Hits,'\\|')
+vector_PRMT_FGFRL1 <- unlist(list_PRMT_FGFRL1)
+
+Effect_double <- ds[ds$gene_ID %in% vector_PRMT_FGFRL1,]$Effect
+names(Effect_double) <- ds[ds$gene_ID %in% vector_PRMT_FGFRL1,]$gene_ID
+table(Effect_double)/2
+
+
+list_reg_FGFR2 <- strsplit(ML_GO_MCODE[ML_GO_MCODE$GO=='R-HSA-5654738',]$Hits,'\\|')
+vector_reg_FGFR2 <- unlist(list_reg_FGFR2)
+Effect_double_reg <- ds[ds$gene_ID %in% vector_reg_FGFR2,]$Effect
+names(Effect_double_reg) <- ds[ds$gene_ID %in% vector_reg_FGFR2,]$gene_ID
+table(Effect_double_reg)/2
+
+table(ds$category,ds$Effect)
+```
+
+
+
+
+##PRMT
+
+```{r}
+PRMT_GO_MCODE_ord <- PRMT_GO_MCODE[order(PRMT_GO_MCODE$LogP),][1:20,]
+#GO_results_ordered <- GO_results_ordered[1:10,]
+plot_prmt <- ggplot(PRMT_GO_MCODE_ord, aes(x=- LogP, y=reorder(paste(GO,Description),-LogP),colour=-LogP,size=`#GeneInGO`) )+scale_color_gradient2(high = "#DC143C")+
+  xlab("-log(P)") +
+ylab("GO")+
+    geom_point()+theme_bw()+labs(colour="-log(P)")+ggtitle('GO results PRMT-reg')
+
+#ggsave(plot_prmt,filename="../Pictures/GO results PRMT reg",device=png,width = 12,height = 7)
+
+plot_prmt
+```
+
+
+##Regulatable
+
+
+```{r}
+REG_GO_MCODE_ord <- REG_GO_MCODE[order(REG_GO_MCODE$LogP),][1:20,]
+plot_reg <- ggplot(REG_GO_MCODE_ord, aes(x=- LogP, y=reorder(paste(GO,Description),-LogP),colour=-LogP,size=`#GeneInGO`) )+scale_color_gradient2(high = "#DC143C")+
+  xlab("-log(P)") +
+ylab("GO")+
+    geom_point()+theme_bw()+labs(colour="-log(P)")+ggtitle('GO results Regulatable')
+plot_reg
+```
+
+##control
+
+```{r}
+CTRL_GO_MCODE_ord <- CTRL_GO_MCODE[order(CTRL_GO_MCODE$LogP),][1:20,]
+plot_ctrl <- ggplot(CTRL_GO_MCODE_ord, aes(x=- LogP, y=reorder(paste(GO,Description),-LogP),colour=-LogP,size=`#GeneInGO`) )+scale_color_gradient2(high = "#DC143C")+
+  xlab("-log(P)") +
+ylab("GO")+
+    geom_point()+theme_bw()+labs(colour="-log(P)")+ggtitle('GO results Regulatable')
+plot_ctrl
+```
+
+#TopGO analysis
+
 input of top go is a named factor vector.
 if 0 gene is not interesting but part of universe, id 1 gene is interesting and part of universe
 
 ```{r}
-geneList <- factor(as.integer(gene_universe_symbol %in% PRMT_genes_symbol ))
-geneList.1 <- factor(as.integer(gene_universe_symbol %in% Regulatable_genes_symbol ))
-geneList.2 <- factor(as.integer(gene_universe_symbol %in% Ctrl_genes_symbol ))
+geneList_PRMT <- factor(as.integer(gene_universe_symbol %in% PRMT_genes ))
+geneList_Reg <- factor(as.integer(gene_universe_symbol %in% Regulatable_genes ))
+geneList_Ctrl <- factor(as.integer(gene_universe_symbol %in% Ctrl_genes ))
 
-names(geneList) <- gene_universe_symbol
+names(geneList_PRMT) <- gene_universe_symbol
+names(geneList_Reg) <- gene_universe_symbol
+names(geneList_Ctrl) <- gene_universe_symbol
 ```
 
 ```{r}
-table(names(geneList[geneList==1]) %in% PRMT_genes_symbol) #Check that everything is correct up to now
+table(names(geneList_PRMT[geneList_PRMT==1]) %in% PRMT_genes) #Check that everything is correct up to now
 ```
-
-#TopGO analysis
 
 ### GO DATA
 
@@ -116,12 +264,9 @@ character string specifing the gene identifier to use.
 Currently only the following identifiers can be used: c("entrez", "genbank", "alias", "ensembl", "symbol", "genename", "unigene")
 
 ```{r}
- GOdata <- new("topGOdata", ontology = "BP", allGenes = geneList,annotationFun = annFUN.org, ID="symbol",mapping= 'org.Hs.eg.db')
+ GOdata <- new("topGOdata", ontology = "BP", allGenes = geneList_PRMT,annotationFun = annFUN.org, ID="symbol",mapping= 'org.Hs.eg.db')
 ```
 
-```{r}
-GOdata
-```
 
 One important point to notice is that not all the genes that are provided by geneList, the initial gene universe, can be annotated to the GO. (4794 unverse, 593 signific genes)
 This can be seen by comparing the number of all available genes, the genes present in geneList, with the number of feasible genes.
@@ -253,61 +398,82 @@ ylab("GO")+
 
 
 
-# Metscape analysis
 
-data
-
+#clusterProfiler
+https://yulab-smu.top/biomedical-knowledge-mining-book/clusterprofiler-kegg.html
 ```{r}
-CTRL_GO_MCODE <- read_csv('../GO_analysis/CTRL_GO_MCODE.csv')
-ML_GO_MCODE <- read_csv('../GO_analysis/ML_GO_MCODE.csv')
-PRMT_GO_MCODE <- read_csv('../GO_analysis/PRMT_GO_MCODE.csv')
-REG_GO_MCODE <- read_csv('../GO_analysis/REG_GO_MCODE.csv')
+library(gProfileR)
+library(clusterProfiler)
 ```
 
 ```{r}
-library(ggplot2)
-library(dplyr)
+df <- read.csv('../Outputs/All_categories_DP_LS.csv')
+gene_universe_df <- read.csv('../Outputs/Unfiltered_Formatted_All_Data_Sets_Final.csv')
+```
+
+```{r}
+PRMT_genes <- unique(df[df$category=='PRMT_regulated',]$gene_ID) # interesting genes
+gene_universe <- unique(gene_universe_df$gene_ID) #gene universe 
+Ctrl_genes <- unique(df[df$category=='Control_sites',]$gene_ID) # interesting genes
+Regulatable_genes <- unique(df[df$category=='Regulatable_sites',]$gene_ID) # interesting genes
+
+gene_universe_symbol <- unlist(strsplit(gene_universe,'_'))[seq(1,length(gene_universe)*2,2)]
+
+```
+
+```{r}
+geneList_PRMT <- factor(as.integer(gene_universe_symbol %in% PRMT_genes ))
+geneList_Reg <- factor(as.integer(gene_universe_symbol %in% Regulatable_genes ))
+geneList_Ctrl <- factor(as.integer(gene_universe_symbol %in% Ctrl_genes ))
+
+names(geneList_PRMT) <- gene_universe_symbol
+names(geneList_Reg) <- gene_universe_symbol
+names(geneList_Ctrl) <- gene_universe_symbol
+```
+### GO
+```{r}
+ego <- enrichGO(gene          = PRMT_genes,
+                #universe      = gene_universe_symbol,
+                OrgDb         = 'org.Hs.eg.db',
+                ont           = "BP",
+                pAdjustMethod = "BH",
+                pvalueCutoff  = 0.01,
+                qvalueCutoff  = 0.05,
+                keyType = "SYMBOL",
+        readable      = TRUE)
+head(ego)
 ```
 
 
-
-
-##PRMT
-
 ```{r}
-PRMT_GO_MCODE_ord <- PRMT_GO_MCODE[order(PRMT_GO_MCODE$LogP),][1:20,]
-#GO_results_ordered <- GO_results_ordered[1:10,]
-plot_prmt <- ggplot(PRMT_GO_MCODE_ord, aes(x=- LogP, y=reorder(paste(GO,Description),-LogP),colour=-LogP,size=`#GeneInGO`) )+scale_color_gradient2(high = "#DC143C")+
-  xlab("-log(P)") +
-ylab("GO")+
-    geom_point()+theme_bw()+labs(colour="-log(P)")+ggtitle('GO results PRMT-reg')
-
-#ggsave(plot_prmt,filename="../Pictures/GO results PRMT reg",device=png,width = 12,height = 7)
-
-plot_prmt
+library(enrichplot)
+barplot(ego, showCategory=20) 
+```
+```{r}
+mutate(ego, qscore = -log(p.adjust, base=10)) %>% 
+    barplot(x="qscore")
 ```
 
-
-##Regulatable
-
-
 ```{r}
-REG_GO_MCODE_ord <- REG_GO_MCODE[order(REG_GO_MCODE$LogP),][1:20,]
-plot_reg <- ggplot(REG_GO_MCODE_ord, aes(x=- LogP, y=reorder(paste(GO,Description),-LogP),colour=-LogP,size=`#GeneInGO`) )+scale_color_gradient2(high = "#DC143C")+
-  xlab("-log(P)") +
-ylab("GO")+
-    geom_point()+theme_bw()+labs(colour="-log(P)")+ggtitle('GO results Regulatable')
-plot_reg
+dotplot(ego,x='Count', showCategory=30) + ggtitle("dotplot for ORA")
 ```
-
-##control
-
+###Kegg
 ```{r}
-CTRL_GO_MCODE_ord <- CTRL_GO_MCODE[order(CTRL_GO_MCODE$LogP),][1:20,]
-plot_ctrl <- ggplot(CTRL_GO_MCODE_ord, aes(x=- LogP, y=reorder(paste(GO,Description),-LogP),colour=-LogP,size=`#GeneInGO`) )+scale_color_gradient2(high = "#DC143C")+
-  xlab("-log(P)") +
-ylab("GO")+
-    geom_point()+theme_bw()+labs(colour="-log(P)")+ggtitle('GO results Regulatable')
-plot_ctrl
+library(org.Hs.eg.db)
+
+library(annotate)
+
+getUniqAnnItem()
+
+
+kk <- enrichKEGG(gene         = PRMT_genes,
+                 organism     = 'hsa',
+                 universe      = gene_universe_symbol,
+                 keyType = "kegg",
+                 pvalueCutoff = 0.05)
+head(kk)
+
+write.csv(PRMT_genes,'~/Desktop/prmt.csv')
+
 ```
 

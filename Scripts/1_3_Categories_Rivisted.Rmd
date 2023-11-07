@@ -218,8 +218,6 @@ length(unique(df_all$gene_ID))
 ```
 
 
-
-
 #PRMT regulated
 
 #20 at least 1 and 15 at least 1
@@ -234,47 +232,47 @@ cutoff_2 <- 0.15
 df_prmt_20_15_24 <- df_all%>% filter((
   ((mean_diff24>cutoff_1 | mean_diff24< -cutoff_1)
   & twostep_transcript_padj_24<0.05) &
-  ( (mean_diff48>cutoff_2 | mean_diff48< -cutoff_2) |              
-  (mean_diff72>cutoff_2 | mean_diff72< -cutoff_2) | 
-  (mean_diff96>cutoff_2 | mean_diff96< -cutoff_2) |
-  (mean_diff96hrs_prev>cutoff_2 | mean_diff96hrs_prev< -cutoff_2)) ))
+  ( ((mean_diff48>cutoff_2 | mean_diff48< -cutoff_2) & sign(mean_diff48)==sign(mean_diff24) )|              
+  ((mean_diff72>cutoff_2 | mean_diff72< -cutoff_2)& sign(mean_diff72)==sign(mean_diff24) ) | 
+  ((mean_diff96>cutoff_2 | mean_diff96< -cutoff_2) & sign(mean_diff96)==sign(mean_diff24) )|
+  ((mean_diff96hrs_prev>cutoff_2 | mean_diff96hrs_prev< -cutoff_2) & sign(mean_diff96hrs_prev)==sign(mean_diff24) ) )))
 
 df_prmt_20_15_48 <- df_all %>% filter((
   ((mean_diff48>cutoff_1 | mean_diff48< -cutoff_1)
   & twostep_transcript_padj_48<0.05) &
-  ( (mean_diff24>cutoff_2 | mean_diff24< -cutoff_2) |              
-  (mean_diff72>cutoff_2 | mean_diff72< -cutoff_2) | 
-  (mean_diff96>cutoff_2 | mean_diff96< -cutoff_2) |
-  (mean_diff96hrs_prev>cutoff_2 | mean_diff96hrs_prev< -cutoff_2)) ))
+  (( (mean_diff24>cutoff_2 | mean_diff24< -cutoff_2) & sign(mean_diff48)==sign(mean_diff24) )|              
+  ((mean_diff72>cutoff_2 | mean_diff72< -cutoff_2) & sign(mean_diff48)==sign(mean_diff72) )| 
+  ((mean_diff96>cutoff_2 | mean_diff96< -cutoff_2) & sign(mean_diff48)==sign(mean_diff96) )|
+  ((mean_diff96hrs_prev>cutoff_2 | mean_diff96hrs_prev< -cutoff_2)& sign(mean_diff48)==sign(mean_diff96hrs_prev) )) ))
 
 
 df_prmt_20_15_72 <- df_all%>% filter((
   ((mean_diff72>cutoff_1 | mean_diff72< -cutoff_1)
   & twostep_transcript_padj_72<0.05) &
-  ( (mean_diff48>cutoff_2 | mean_diff48< -cutoff_2) |              
-  (mean_diff24>cutoff_2 | mean_diff24< -cutoff_2) | 
-  (mean_diff96>cutoff_2 | mean_diff96< -cutoff_2) |
-  (mean_diff96hrs_prev>cutoff_2 | mean_diff96hrs_prev< -cutoff_2)) ))
+  ( ((mean_diff48>cutoff_2 | mean_diff48< -cutoff_2)& sign(mean_diff48)==sign(mean_diff72) ) |              
+  ((mean_diff24>cutoff_2 | mean_diff24< -cutoff_2)& sign(mean_diff24)==sign(mean_diff72) ) | 
+  ((mean_diff96>cutoff_2 | mean_diff96< -cutoff_2)& sign(mean_diff96)==sign(mean_diff72) ) |
+  ((mean_diff96hrs_prev>cutoff_2 | mean_diff96hrs_prev< -cutoff_2)& sign(mean_diff96hrs_prev)==sign(mean_diff72) )) ))
 
 
 
 df_prmt_20_15_96 <- df_all%>% filter((
   ((mean_diff96>cutoff_1 | mean_diff96< -cutoff_1)
   & twostep_transcript_padj_96<0.05) &
-  ( (mean_diff48>cutoff_2 | mean_diff48< -cutoff_2) |              
-  (mean_diff72>cutoff_2 | mean_diff72< -cutoff_2) | 
-  (mean_diff24>cutoff_2 | mean_diff24< -cutoff_2) |
-  (mean_diff96hrs_prev>cutoff_2 | mean_diff96hrs_prev< -cutoff_2)) ))
+  (( (mean_diff48>cutoff_2 | mean_diff48< -cutoff_2)& sign(mean_diff48)==sign(mean_diff96) ) |              
+  ((mean_diff72>cutoff_2 | mean_diff72< -cutoff_2) & sign(mean_diff72)==sign(mean_diff96) )| 
+  ((mean_diff24>cutoff_2 | mean_diff24< -cutoff_2) & sign(mean_diff24)==sign(mean_diff96) )|
+  ((mean_diff96hrs_prev>cutoff_2 | mean_diff96hrs_prev< -cutoff_2)& sign(mean_diff96hrs_prev)==sign(mean_diff96) )) ))
 
 
 
 df_prmt_20_15_96_prev <- df_all%>% filter((
   ((mean_diff96hrs_prev>cutoff_1 | mean_diff96hrs_prev< -cutoff_1)
   & twostep_transcript_padj_96hrs_prev<0.05) &
-  ( (mean_diff48>cutoff_2 | mean_diff48< -cutoff_2) |              
-  (mean_diff72>cutoff_2 | mean_diff72< -cutoff_2) | 
-  (mean_diff96>cutoff_2 | mean_diff96< -cutoff_2) |
-  (mean_diff24>cutoff_2 | mean_diff24< -cutoff_2)) ))
+  (( (mean_diff48>cutoff_2 | mean_diff48< -cutoff_2)& sign(mean_diff48)==sign(mean_diff96hrs_prev) ) |              
+  ((mean_diff72>cutoff_2 | mean_diff72< -cutoff_2) & sign(mean_diff72)==sign(mean_diff96hrs_prev) )| 
+  ((mean_diff96>cutoff_2 | mean_diff96< -cutoff_2) & sign(mean_diff96)==sign(mean_diff96hrs_prev) )|
+  ((mean_diff24>cutoff_2 | mean_diff24< -cutoff_2) & sign(mean_diff24)==sign(mean_diff96hrs_prev) )) ))
 
 
 
@@ -310,15 +308,19 @@ Take the best feature (in terms of mean), independetly if it's positive or negat
 _Take the  mean of mean_diff across time points, then by gene take the maximum change in either direction (hence abs)and if same take value take 1 of the 2 (n=1)
 ```{r}
 df_prmt_20_15_70$mean_diff_across <- rowMeans(df_prmt_20_15_70[,10:14],na.rm = T)
-df_prmt_20_15_70.1 <- df_prmt_20_15_70 %>% group_by(gene_ID) %>% slice_max(abs(mean_diff_across),n=1,with_ties=FALSE)
+df_prmt_20_15_70.1 <- df_prmt_20_15_70 %>% group_by(gene_ID) %>% slice_max(abs(mean_diff_across),with_ties=FALSE)
 ```
 
 _In the original ds I filter out all the features we found earlier + kept only corresponding genes 
 computed the mean as before
 ```{r}
 all_other_features <- df_all[!(df_all$unique_featureID %in% df_prmt_20_15_70.1$unique_featureID) & (df_all$gene_ID %in% df_prmt_20_15_70.1$gene_ID), ]
+```
 
+```{r}
 all_other_features$mean_diff_across <- rowMeans(all_other_features[,10:14],na.rm = T)
+all_other_features[,c(10:14,87)]
+
 ```
 
 _went through all genes of the signifcant best feature ds +
@@ -329,9 +331,9 @@ _if negative: we want to find a positive changing feature, so of all the feature
 features_to_add <- vector()
 for (gene in df_prmt_20_15_70.1$gene_ID) {
   if (df_prmt_20_15_70.1[df_prmt_20_15_70.1$gene_ID==gene,]$mean_diff_across>0) {
-      feature <- all_other_features[all_other_features$gene_ID==gene,] %>% slice_min(mean_diff_across<0,n=1,with_ties=FALSE)
+      feature <- all_other_features[all_other_features$gene_ID==gene,] %>% filter(mean_diff_across<0) %>% slice_min(mean_diff_across,n=1,with_ties=FALSE)
      features_to_add<- append(features_to_add,feature$unique_featureID)} else {
-      feature <- all_other_features[all_other_features$gene_ID==gene,] %>% slice_max(mean_diff_across>0,n=1,with_ties=FALSE)
+      feature <- all_other_features[all_other_features$gene_ID==gene,] %>% filter(mean_diff_across>0) %>%  slice_max(mean_diff_across,n=1,with_ties=FALSE)
      features_to_add<- append(features_to_add,feature$unique_featureID)}
 
   }
@@ -340,6 +342,7 @@ for (gene in df_prmt_20_15_70.1$gene_ID) {
 Then I simply merge the 2 df
 ```{r}
 df_prmt_20_15_70_PO <- rbind(df_prmt_20_15_70.1,all_other_features[all_other_features$unique_featureID %in% features_to_add,])
+table(tally(df_prmt_20_15_70_PO)$n)
 
 write_csv(df_prmt_20_15_70_PO,'../Outputs/PRMT_reg.csv')
 ```
@@ -396,9 +399,9 @@ df_siRNA_20.CF_other <- df_all[!(df_all$unique_featureID %in% df_siRNA_20.CF$uni
 features_to_add <- vector()
 for (gene in df_siRNA_20.CF$gene_ID) {
   if (df_siRNA_20.CF[df_siRNA_20.CF$gene_ID==gene,]$mean_diffsiCFIM25>0) {
-      feature <- df_siRNA_20.CF_other[df_siRNA_20.CF_other$gene_ID==gene,] %>% slice_min(mean_diffsiCFIM25<0,n=1,with_ties=FALSE)
+      feature <- df_siRNA_20.CF_other[df_siRNA_20.CF_other$gene_ID==gene,] %>% filter(mean_diffsiCFIM25<0) %>%  slice_min(mean_diffsiCFIM25,n=1,with_ties=FALSE)
      features_to_add<- append(features_to_add,feature$unique_featureID)} else {
-      feature <- df_siRNA_20.CF_other[df_siRNA_20.CF_other$gene_ID==gene,] %>% slice_max(mean_diffsiCFIM25>0,n=1,with_ties=FALSE)
+      feature <- df_siRNA_20.CF_other[df_siRNA_20.CF_other$gene_ID==gene,] %>%filter(mean_diffsiCFIM25>0) %>%  slice_max(mean_diffsiCFIM25,n=1,with_ties=FALSE)
      features_to_add<- append(features_to_add,feature$unique_featureID)}}
 
 df_siRNA_20.CF_PO <- rbind(df_siRNA_20.CF,df_siRNA_20.CF_other[df_siRNA_20.CF_other$unique_featureID %in% features_to_add,])
@@ -412,9 +415,9 @@ df_siRNA_20.EL_other <- df_all[!(df_all$unique_featureID %in% df_siRNA_20.EL$uni
 features_to_add <- vector()
 for (gene in df_siRNA_20.EL$gene_ID) {
   if (df_siRNA_20.EL[df_siRNA_20.EL$gene_ID==gene,]$mean_diffsiELAVL1>0) {
-      feature <- df_siRNA_20.EL_other[df_siRNA_20.EL_other$gene_ID==gene,] %>% slice_min(mean_diffsiELAVL1<0,n=1,with_ties=FALSE)
+      feature <- df_siRNA_20.EL_other[df_siRNA_20.EL_other$gene_ID==gene,] %>% filter(mean_diffsiELAVL1<0) %>%  slice_min(mean_diffsiELAVL1,n=1,with_ties=FALSE)
      features_to_add<- append(features_to_add,feature$unique_featureID)} else {
-      feature <- df_siRNA_20.EL_other[df_siRNA_20.EL_other$gene_ID==gene,] %>% slice_max(mean_diffsiELAVL1>0,n=1,with_ties=FALSE)
+      feature <- df_siRNA_20.EL_other[df_siRNA_20.EL_other$gene_ID==gene,] %>%filter(mean_diffsiELAVL1>0) %>%  slice_max(mean_diffsiELAVL1,n=1,with_ties=FALSE)
      features_to_add<- append(features_to_add,feature$unique_featureID)}}
 
 df_siRNA_20.EL_PO <- rbind(df_siRNA_20.EL,df_siRNA_20.EL_other[df_siRNA_20.EL_other$unique_featureID %in% features_to_add,])
@@ -430,9 +433,9 @@ df_siRNA_20.SM_other <- df_all[!(df_all$unique_featureID %in% df_siRNA_20.SM$uni
 features_to_add <- vector()
 for (gene in df_siRNA_20.SM$gene_ID) {
   if (df_siRNA_20.SM[df_siRNA_20.SM$gene_ID==gene,]$mean_diffsiSam68>0) {
-      feature <- df_siRNA_20.SM_other[df_siRNA_20.SM_other$gene_ID==gene,] %>% slice_min(mean_diffsiSam68<0,n=1,with_ties=FALSE)
+      feature <- df_siRNA_20.SM_other[df_siRNA_20.SM_other$gene_ID==gene,] %>% filter(mean_diffsiSam68<0) %>%  slice_min(mean_diffsiSam68,n=1,with_ties=FALSE)
      features_to_add<- append(features_to_add,feature$unique_featureID)} else {
-      feature <- df_siRNA_20.SM_other[df_siRNA_20.SM_other$gene_ID==gene,] %>% slice_max(mean_diffsiSam68>0,n=1,with_ties=FALSE)
+      feature <- df_siRNA_20.SM_other[df_siRNA_20.SM_other$gene_ID==gene,] %>% filter(mean_diffsiSam68>0) %>%  slice_max(mean_diffsiSam68,n=1,with_ties=FALSE)
      features_to_add<- append(features_to_add,feature$unique_featureID)}}
 
 df_siRNA_20.SM_PO <- rbind(df_siRNA_20.SM,df_siRNA_20.SM_other[df_siRNA_20.SM_other$unique_featureID %in% features_to_add,])
@@ -515,7 +518,7 @@ length(unique(df_15_5$gene_ID))
 ```
 
 
-#Keeping PO
+##Keeping PO
 
 Keeping for each gene the 2 most used sites (calc as average across all ds)
 
@@ -555,7 +558,7 @@ for (gene in unique(df_15_5$gene_ID)) {
 ```
 
 
-## removed all genes found in orev 2 categories
+## removed all genes found in Prev 2 categories
 
 ```{r}
 df_control_pairs <- df_15_5[df_15_5$unique_featureID %in% to_keep_control,]
@@ -563,7 +566,7 @@ df_control_pairs <- df_15_5[df_15_5$unique_featureID %in% to_keep_control,]
 nrow(df_control_pairs)
 length(unique(df_control_pairs$gene_ID))
 
-write_csv2(df_control_final,'../Data/Outputs/Control_sites')
+write_csv(df_control_pairs,'../Outputs/All_categories_df.csv')
 ```
 
 
@@ -582,6 +585,113 @@ df_prmt_20_15_70_PO$category <- 'PRMT_regulated'
 df_all_categories <- rbind(df_control_pairs,Regulatable_sites_noPRMT,df_prmt_20_15_70_PO[,-87])
 
 write_csv(df_all_categories,'../Outputs/All_categories_df.csv')
+```
+
+
+# Add distal prox + find if gene lengthening or shortening
+
+For each feature do dist vs proximal and then put feaure of gene as lengthening or shortening
+
+```{r}
+library(readr)
+ds <- read_csv('../Outputs/All_categories_df.csv')
+rownames(ds) <- ds$unique_featureID
+```
+
+
+```{r}
+library(tidyr)
+library(dplyr)
+```
+
+To add lengthening or shortening I need to decide on wich mean diff to use.
+PRMT Reg cat: i used mean over timecourse
+Reg: I looked at the siRNA picked the one with the biggest effect
+Control: just control
+
+I find which of the 3 siRNA causes the biggest effect and store that (instead of the mean)
+
+```{r}
+ds$RowMEAN <- 0
+for (gene in unique(ds[ds$category=='Regulatable_sites',]$gene_ID)) {
+   list <- as.vector(abs(ds[ds$gene_ID==gene,7:9]))
+   l1 <- max(list[[1]],na.rm = T)
+   l2 <- max(list[[2]],na.rm = T)
+   l3 <- max(list[[3]],na.rm = T)
+   ifelse((l1>l2 & l1>l3),
+          ds[ds$gene_ID==gene,]$RowMEAN <- ds[ds$gene_ID==gene,]$mean_diffsiELAVL1,
+          ifelse((l2>l1 & l2>l3),ds[ds$gene_ID==gene,]$RowMEAN <- ds[ds$gene_ID==gene,]$mean_diffsiSam68,
+                 ds[ds$gene_ID==gene,]$RowMEAN <- ds[ds$gene_ID==gene,]$mean_diffsiCFIM25))
+}
+```
+
+This one kinda useless but there are 7 genes with more than 2 features (as different ones where picked up for different siRNA ds) so I picked the 2 with biggest effect (after decided for which siRNA the effect was biggest)
+```{r}
+a <- ds  %>% group_by(gene_ID) %>% filter(category=='Regulatable_sites') %>% slice_max(RowMEAN)
+b <- ds  %>% group_by(gene_ID) %>% filter(category=='Regulatable_sites') %>% slice_min(RowMEAN)
+
+to_remove <- ds[ds$category=='Regulatable_sites',][!(ds[ds$category=='Regulatable_sites',]$unique_featureID %in% rbind(a,b)$unique_featureID),]$unique_featureID
+
+ds <- ds[!(ds$unique_featureID %in% to_remove),]
+```
+
+add row mean for prmt reg (the one for reg is just value of max effect reg)
+```{r}
+ds[ds$category=='PRMT_regulated',]$RowMEAN <- rowMeans(ds[ds$category=='PRMT_regulated',10:14],na.rm = T)
+
+#a <- ds[ds$category=='Regulatable_sites',c(1:14,85:89)]
+```
+
+
+
+Added column called location where inserted if PAS was proximal or distal
+
+```{r}
+ds$Location <- 'distal'
+for (gene in ds$gene_ID) {
+  if (nrow(ds[ds$gene_ID==gene,])>2) {
+    ds[ds$gene_ID==gene,]$Location <- NA
+  }else{
+  
+  ifelse ((ds[ds$gene_ID==gene,]$strand=='+') ,
+    {if(ds[ds$gene_ID==gene,]$start[1] >ds[ds$gene_ID==gene,]$start[2] ) {
+      ds[ds$gene_ID==gene,][2,]$Location <- 'proximal'
+    }else{
+      ds[ds$gene_ID==gene,][1,]$Location <- 'proximal'
+      }},
+    {if(ds[ds$gene_ID==gene,]$start[1] >ds[ds$gene_ID==gene,]$start[2] ) {
+      ds[ds$gene_ID==gene,][1,]$Location <- 'proximal'
+    }else{
+      ds[ds$gene_ID==gene,][2,]$Location <- 'proximal'
+    }} )}
+  
+}
+
+table(complete.cases(ds$Location ))
+```
+
+Looked at sign of mean diff to pick if len or short
+```{r}
+ds <- ds %>% group_by(gene_ID) %>% mutate(Effect= 
+                                      ifelse(category!='Control_sites'
+                                             ,ifelse((Location=='distal' & RowMEAN>0)
+                                               ,'lengthening',
+                                               ifelse((Location=='proximal' & RowMEAN<0)
+                                               ,'lengthening','shortening'
+                                               )
+                                               ),
+                                               'Control')
+                                             )
+
+
+ds <- ds %>% select(-RowMEAN)
+ds <- ds %>% mutate(gene_ID= unlist(strsplit(gene_ID,'_'))[1])
+
+table(ds$category,ds$Effect)
+```
+
+```{r}
+write_csv(ds,'../Outputs/All_categories_DP_LS.csv')
 ```
 
 

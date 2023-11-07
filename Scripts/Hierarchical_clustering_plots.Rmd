@@ -7,101 +7,11 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Add distal prox + find if gene lengthening or shortening
-
-For each feature do dist vs proximal and then put feaure of gene as lengthening or shortening
-
-```{r}
-library(readr)
-ds <- read_csv('../Outputs/All_categories_df.csv')
-rownames(ds) <- ds$unique_featureID
-```
-
-
+#data
 ```{r}
 library(tidyr)
-library(dplyr)
-```
-
-To add lengthening or shortening I need to decide on wich mean diff to use.
-PRMT Reg cat: i used mean over timecourse
-Reg: I looked at the siRNA picked the one with the biggest effect
-Control: just control
-
-I find which of the 3 siRNA causes the biggest effect and store that (instead of the mean)
-
-```{r}
-ds$RowMEAN <- 0
-for (gene in unique(ds[ds$category=='Regulatable_sites',]$gene_ID)) {
-   list <- as.vector(abs(ds[ds$gene_ID==gene,7:9]))
-   l1 <- max(list[[1]],na.rm = T)
-   l2 <- max(list[[2]],na.rm = T)
-   l3 <- max(list[[3]],na.rm = T)
-   ifelse((l1>l2 & l1>l3),
-          ds[ds$gene_ID==gene,]$RowMEAN <- ds[ds$gene_ID==gene,]$mean_diffsiELAVL1,
-          ifelse((l2>l1 & l2>l3),ds[ds$gene_ID==gene,]$RowMEAN <- ds[ds$gene_ID==gene,]$mean_diffsiSam68,
-                 ds[ds$gene_ID==gene,]$RowMEAN <- ds[ds$gene_ID==gene,]$mean_diffsiCFIM25))
-}
-```
-
-This one kinda useless but there are 7 genes with more than 2 features (as different ones where picked up for different siRNA ds) so I picked the 2 with biggest effect (after decided for which siRNA the effect was biggest)
-```{r}
-a <- ds  %>% group_by(gene_ID) %>% filter(category=='Regulatable_sites') %>% slice_max(RowMEAN)
-b <- ds  %>% group_by(gene_ID) %>% filter(category=='Regulatable_sites') %>% slice_min(RowMEAN)
-
-to_remove <- ds[ds$category=='Regulatable_sites',][!(ds[ds$category=='Regulatable_sites',]$unique_featureID %in% rbind(a,b)$unique_featureID),]$unique_featureID
-
-ds <- ds[!(ds$unique_featureID %in% to_remove),]
-
-ds[ds$category=='PRMT_regulated',]$RowMEAN <- rowMeans(ds[ds$category=='PRMT_regulated',10:14],na.rm = T)
-
-#a <- ds[ds$category=='Regulatable_sites',c(1:14,85:89)]
-```
-
-
-
-Added column called location where inserted if PAS was proximal or distal
-
-```{r}
-ds$Location <- 'distal'
-for (gene in ds$gene_ID) {
-  if (nrow(ds[ds$gene_ID==gene,])>2) {
-    ds[ds$gene_ID==gene,]$Location <- NA
-  }else{
-  
-  ifelse ((ds[ds$gene_ID==gene,]$strand=='+') ,
-    {if(ds[ds$gene_ID==gene,]$start[1] >ds[ds$gene_ID==gene,]$start[1] ) {
-      ds[ds$gene_ID==gene,][2,]$Location <- 'proximal'
-    }else{
-      ds[ds$gene_ID==gene,][1,]$Location <- 'proximal'
-      }},
-    {if(ds[ds$gene_ID==gene,]$start[1] >ds[ds$gene_ID==gene,]$start[1] ) {
-      ds[ds$gene_ID==gene,][1,]$Location <- 'proximal'
-    }else{
-      ds[ds$gene_ID==gene,][2,]$Location <- 'proximal'
-    }} )}
-  
-}
-
-table(complete.cases(ds$Location ))
-```
-
-Looked at sign of mean diff to pick if len or short
-```{r}
-ds <- ds %>% group_by(gene_ID) %>% mutate(Effect= 
-                                      ifelse(category!='Control_sites'
-                                             ,ifelse((Location=='distal' & RowMEAN>0)
-                                               ,'lengthening',
-                                               ifelse((Location=='proximal' & RowMEAN<0)
-                                               ,'lengthening','shortening'
-                                               )
-                                               ),
-                                               'Control')
-                                             )
-
-
-#a <- ds[,c(1:14,85:90)]
-
+library(tidyverse)
+ds <- read.csv('../Outputs/All_categories_DP_LS.csv')
 ```
 
 
@@ -174,9 +84,6 @@ library(dendextend)
 
 
 ```{r}
-#ds <- read_csv('../Outputs/All_categories_df.csv')
-rownames(ds) <- ds$unique_featureID
-
 set.seed(1234)
 ```
 
@@ -184,27 +91,43 @@ set.seed(1234)
 first take the complete cases (no NA) of the mean diff columns
 Add a column that assigns a color to the 3 categories
 
-### normal
 
+
+####format data
 ```{r}
-ds.1 <- ds[complete.cases(ds[,7:14]),]
+ds.1 <- ds[complete.cases(ds[,7:14]),c(7:14,1,87:89)]
+table(ds.1$Effect,ds.1$category)
+ds.1 <- ds.1 %>% mutate(Lengthening=ifelse(Effect=='lengthening',1,0))
+ds.1 <- ds.1 %>% mutate(Control=ifelse(Effect=='Control',1,0))
+ds.1 <- ds.1 %>% mutate(shortening=ifelse(Effect=='shortening',1,0))
+ds.1 <- ds.1 %>% mutate(color_effect=ifelse(shortening==1,'pink',ifelse(Lengthening==1,'blue','green')))
+ds.1 <-ds.1%>% mutate(distal=ifelse(Location=='distal',1,0))
+ds.1 <- ds.1 %>% mutate(proximal=ifelse(Location=='proximal',1,0))
+
+ds.1 <- ds.1 %>% mutate(color_effect=ifelse(Effect=='shortening','orange',ifelse(Effect=='lengthening','purple','green')))
+ds.1 <- ds.1 %>% mutate(color_dist_prox=ifelse(Location=='distal','magenta','turquoise'))
 
 ds.1 <-ds.1 %>%  mutate( color = ifelse(category=='Control_sites','red' ,  ifelse(category=='Regulatable_sites','blue' , "yellow")))
 ```
 
+```{r}
+table(ds.1$category,ds.1$Effect)/2
+```
 
+
+### normal
 IMPORTANT: convert df to matrix otherwise the rownames won't be kept and we need them to backtrace the color in the other matrix
 
 ```{r}
-ds.1 <- as.matrix(ds.1[,c(7:14,1,87,93)])
+ds.n <- as.matrix(ds.1)
 
-rownames(ds.1) <-ds.1[,'unique_featureID']
+rownames(ds.n) <-ds.n[,'unique_featureID']
 ```
 
 Compute distance (without the columns with categorical data: unique feature, the category and the color assigned)
 Then do clustering with hclust method complete should be best
 ```{r}
-distSamples <- dist(ds.1[,-c(9,10,11)])
+distSamples <- dist(ds.n[,c(1:8)])
 hc <- hclust(distSamples,method = 'complete')
 hc
 ```
@@ -214,7 +137,10 @@ color branches based on the category
 ```{r}
 dend <- as.dendrogram(hc)
 
-dend2 <- color_branches(dend, col=ds.1[labels(dend),'color'])
+dend_cat <- color_branches(dend, col=ds.n[labels(dend),'color'])
+dend_eff <- color_branches(dend, col=ds.n[labels(dend),'color_effect'])
+dend_loc <- color_branches(dend, col=ds.n[labels(dend),'color_dist_prox'])
+
 ```
 
 function to remove labels as there are too many and won't be able to read them anyway
@@ -226,22 +152,38 @@ noLabel <- function(x) {
   return(x)
 }
 
-dend2 <- dendrapply(dend2, noLabel)
+dend_cat <- dendrapply(dend_cat, noLabel)
+dend_eff <- dendrapply(dend_eff, noLabel)
+dend_loc <- dendrapply(dend_loc, noLabel)
+
 ```
 
 
 ```{r}
-plot(dend2,main='Clustering normal'  ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Control_sites", "Regulatable_sites",'PRMT_regulated'),
+plot(dend_cat,main='Clustering normal colored category'  ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Control_sites", "Regulatable_sites",'PRMT_regulated'),
        col=c("red", "blue",'yellow'),lty=1, cex=0.8) 
 
 ```
 
 ```{r}
-plot(dend2,horiz = T ,main='Clustering normal' ); legend(x='topleft', legend=c("Control_sites", "Regulatable_sites",'PRMT_regulated'),
+plot(dend_cat,horiz = T ,main='Clustering normal' ); legend(x='topleft', legend=c("Control_sites", "Regulatable_sites",'PRMT_regulated'),
        col=c("red", "blue",'yellow'),lty=1, cex=0.8)
 ```
 
-### try to get out labels category and plot
+
+```{r}
+plot(dend_eff,main='Clustering normal colored effect'  ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Control", "lengthening",'shortening'),
+       col=c("green", "purple",'orange'),lty=1, cex=0.8) 
+
+```
+
+```{r}
+plot(dend_loc,main='Clustering normal colored location'  ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("distal", "proximal"),
+       col=c("magenta", "turquoise"),lty=1, cex=0.8) 
+
+```
+
+##### try to get out labels category and plot
 
 ```{r}
 tree_labels.3 <- cutree(hc,3)
@@ -258,24 +200,19 @@ ggscatter(
 
 
 
-### Do hierarchical clustering separating shortening from lengthening
+##### Do hierarchical clustering separating shortening from lengthening
 
 
-####lengthening
+######lengthening
 
 ```{r}
-ds.3 <- ds %>% filter(Effect!='shortening')
-ds.3 <- ds.3[complete.cases(ds.3[,7:14]),]
-
-ds.3 <-ds.3 %>%  mutate(color_categ = ifelse(category=='Control_sites','red' ,  ifelse(category=='Regulatable_sites','blue' , "yellow")))
-
-ds.3 <- as.matrix(ds.3[,c(7:14,1,87,93)])
+ds.3 <- ds.1[ds.1[,12]!='shortening',]
 
 rownames(ds.3) <-ds.3[,'unique_featureID']
 ```
 
 ```{r}
-distSamples <- dist(ds.3[,-c(9,10,11)])
+distSamples <- dist(ds.3[,c(1:8)])
 hc <- hclust(distSamples,method = 'complete')
 hc
 ```
@@ -283,43 +220,43 @@ hc
 ```{r}
 dend <- as.dendrogram(hc)
 
-dend2 <- color_branches(dend, col=ds.3[labels(dend),'color_categ'])
+dend_cat <- color_branches(dend, col=ds.3[labels(dend),'color'])
+dend_loc <- color_branches(dend, col=ds.3[labels(dend),'color_dist_prox'])
+dend_eff <- color_branches(dend, col=ds.3[labels(dend),'color_effect'])
+
 ```
 
 ```{r}
-noLabel <- function(x) {
-  if (stats::is.leaf(x)) {
-    attr(x, "label") <- NULL }
-  return(x)
-}
-
-dend2 <- dendrapply(dend2, noLabel)
-
+dend_cat <- dendrapply(dend_cat, noLabel)
+dend_loc <- dendrapply(dend_loc, noLabel)
+dend_eff <- dendrapply(dend_eff, noLabel)
 ```
 
 
 ```{r}
-plot(dend2 ,main='Clustering lengthening' ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Control_sites", "Regulatable_sites",'PRMT_regulated'),
+plot(dend_cat ,main='Clustering lengthening colored category' ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Control_sites", "Regulatable_sites",'PRMT_regulated'),
        col=c("red", "blue",'yellow'),lty=1, cex=0.8) 
+
+plot(dend_loc ,main='Clustering lengthening colored Location'  ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Distal", "Proximal"),
+       col=c("magenta", "turquoise"),lty=1, cex=0.8) 
+
+plot(dend_eff ,main='Clustering lengthening colored Effect' ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Control", "Lengthening"),
+       col=c("green", "purple"),lty=1, cex=0.8) 
+
 ```
 
 
 
-####shortening
+######shortening
 
 ```{r}
-ds.3 <- ds %>% filter(Effect!='lengthening')
-ds.3 <- ds.3[complete.cases(ds.3[,7:14]),]
-
-ds.3 <-ds.3 %>%  mutate(color_categ = ifelse(category=='Control_sites','red' ,  ifelse(category=='Regulatable_sites','blue' , "yellow")))
-
-ds.3 <- as.matrix(ds.3[,c(7:14,1,87,93)])
+ds.3 <- ds.1[ds.1[,12]!='lengthening',]
 
 rownames(ds.3) <-ds.3[,'unique_featureID']
 ```
 
 ```{r}
-distSamples <- dist(ds.3[,-c(9,10,11)])
+distSamples <- dist(ds.3[,-c(9:13)])
 hc <- hclust(distSamples,method = 'complete')
 hc
 ```
@@ -327,51 +264,52 @@ hc
 ```{r}
 dend <- as.dendrogram(hc)
 
-dend2 <- color_branches(dend, col=ds.3[labels(dend),'color_categ'])
+dend_cat <- color_branches(dend, col=ds.3[labels(dend),'color'])
+dend_loc <- color_branches(dend, col=ds.3[labels(dend),'color_dist_prox'])
+dend_eff <- color_branches(dend, col=ds.3[labels(dend),'color_effect'])
+
 ```
 
 ```{r}
-noLabel <- function(x) {
-  if (stats::is.leaf(x)) {
-    attr(x, "label") <- NULL }
-  return(x)
-}
-
-dend2 <- dendrapply(dend2, noLabel)
-
+dend_cat <- dendrapply(dend_cat, noLabel)
+dend_loc <- dendrapply(dend_loc, noLabel)
+dend_eff <- dendrapply(dend_eff, noLabel)
 ```
 
 
 ```{r}
-plot(dend2, main='Clustering shortening' ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Control_sites", "Regulatable_sites",'PRMT_regulated'),
+plot(dend_cat ,main='Clustering Shortening colored category' ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Control_sites", "Regulatable_sites",'PRMT_regulated'),
        col=c("red", "blue",'yellow'),lty=1, cex=0.8) 
+
+plot(dend_loc ,main='Clustering Shortening colored Location'  ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Distal", "Proximal"),
+       col=c("magenta", "turquoise"),lty=1, cex=0.8) 
+
+plot(dend_eff ,main='Clustering Shortening colored Effect' ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Control", "Shortening"),
+       col=c("green", "orange"),lty=1, cex=0.8) 
+
 ```
 
+###Dummy variable for hierarchical clustering
 
-####Try using dummy variable for hierarchical clustering
-
+##### Leng/short
 
 ```{r}
-ds.2 <- ds[complete.cases(ds[,7:14]),]
+ds.3 <- as.matrix(ds.1)
 
-ds.2 <-ds.2 %>%  mutate(color_categ = ifelse(category=='Control_sites','red' ,  ifelse(category=='Regulatable_sites','blue' , "yellow")))
-
-ds.2 <-ds.2 %>%  mutate(color_effect = ifelse(Effect=='lengthening','red' ,  ifelse(Effect=='shortening','blue' , "yellow")))
-
-ds.2 <- ds.2 %>% mutate(Lengthening=ifelse(Effect=='lengthening',1,0))
-ds.2 <- ds.2 %>% mutate(Control=ifelse(Effect=='Control',1,0))
-ds.2 <- ds.2 %>% mutate(shortening=ifelse(Effect=='shortening',1,0))
-
-
-ds.2 <- as.matrix(ds.2[,c(7:14,1,87,93,94,95,96,97)])
-
-rownames(ds.2) <-ds.2[,'unique_featureID']
+rownames(ds.3) <-ds.3[,'unique_featureID']
 ```
 
 Compute distance (without the columns with categorical data: unique feature, the category and the color assigned)
 Then do clustering with hclust method complete should be best
 ```{r}
-distSamples <- dist(ds.2[,-c(9,10,10,11,12)])
+distSamples <- dist(ds.3[,c(1:8,13:15)])
+hc <- hclust(distSamples,method = 'complete')
+hc
+```
+
+
+```{r}
+distSamples <- dist(ds.3[,c(1:8,13:15)])
 hc <- hclust(distSamples,method = 'complete')
 hc
 ```
@@ -379,38 +317,79 @@ hc
 ```{r}
 dend <- as.dendrogram(hc)
 
-dend2 <- color_branches(dend, col=ds.2[labels(dend),'color_categ'])
-dend2.2 <- color_branches(dend, col=ds.2[labels(dend),'color_effect'])
+dend_cat <- color_branches(dend, col=ds.3[labels(dend),'color'])
+dend_loc <- color_branches(dend, col=ds.3[labels(dend),'color_dist_prox'])
+dend_eff <- color_branches(dend, col=ds.3[labels(dend),'color_effect'])
 
 ```
 
-function to remove labels as there are too many and won't be able to read them anyway
-
 ```{r}
-noLabel <- function(x) {
-  if (stats::is.leaf(x)) {
-    attr(x, "label") <- NULL }
-  return(x)
-}
-
-dend2 <- dendrapply(dend2, noLabel)
-dend2.2 <- dendrapply(dend2.2, noLabel)
-
+dend_cat <- dendrapply(dend_cat, noLabel)
+dend_loc <- dendrapply(dend_loc, noLabel)
+dend_eff <- dendrapply(dend_eff, noLabel)
 ```
 
 
 ```{r}
-plot(dend2.2,,main='Dummy variable for effect, colored by effect' ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Lengthening", "Shortening",'Control'),
+plot(dend_cat ,main='Dummy variable Effect colored category' ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Control_sites", "Regulatable_sites",'PRMT_regulated'),
        col=c("red", "blue",'yellow'),lty=1, cex=0.8) 
 
+plot(dend_loc ,main='Dummy variable Effect colored Location'  ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Distal", "Proximal"),
+       col=c("magenta", "turquoise"),lty=1, cex=0.8) 
+
+plot(dend_eff ,main='Dummy variable Effect colored Effect' ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Control", "Lengthening",'Shortening'),
+       col=c("green", "purple",'orange'),lty=1, cex=0.8) 
+
+```
+
+
+
+
+##### Dist/prox
+
+
+```{r}
+ds.3 <- as.matrix(ds.1)
+
+rownames(ds.3) <-ds.3[,'unique_featureID']
 ```
 
 
 ```{r}
-plot(dend2,main='Dummy variable for effect, colored by category' ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Control_sites", "Regulatable_sites",'PRMT_regulated'),
-       col=c("red", "blue",'yellow'),lty=1, cex=0.8) 
+distSamples <- dist(ds.3[,c(1:8,17:18)])
+hc <- hclust(distSamples,method = 'complete')
+hc
+```
+
+```{r}
+dend <- as.dendrogram(hc)
+
+dend_cat <- color_branches(dend, col=ds.3[labels(dend),'color'])
+dend_loc <- color_branches(dend, col=ds.3[labels(dend),'color_dist_prox'])
+dend_eff <- color_branches(dend, col=ds.3[labels(dend),'color_effect'])
 
 ```
+
+```{r}
+dend_cat <- dendrapply(dend_cat, noLabel)
+dend_loc <- dendrapply(dend_loc, noLabel)
+dend_eff <- dendrapply(dend_eff, noLabel)
+```
+
+
+```{r}
+plot(dend_cat ,main='Dummy variable Location colored category' ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Control_sites", "Regulatable_sites",'PRMT_regulated'),
+       col=c("red", "blue",'yellow'),lty=1, cex=0.8) 
+
+plot(dend_loc ,main='Dummy variable Location  colored Location'  ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Distal", "Proximal"),
+       col=c("magenta", "turquoise"),lty=1, cex=0.8) 
+
+plot(dend_eff ,main='Dummy variable Location colored Effect' ) ;  rect.hclust(hc,k = 3); legend(x='topleft', legend=c("Control", "Shortening",'Lengthening'),
+       col=c("green", "orange",'purple'),lty=1, cex=0.8) 
+
+```
+
+
 #Complex Heatmaps 
 
 libraries loading
@@ -425,23 +404,18 @@ library(circlize)
 There are quite a lot of NAs (tried and doesnt cluster)
 So unfortunately only kept complete cases
 cat: mean differences 7:14, 87 category features belong 
-```{r}
-ds.1 <- ds[complete.cases(ds[,7:14]),c(7:14,87,89,90)]
-```
 
 ```{r}
-complete_cases <- ds[complete.cases(ds[,7:14]),7:14]
-complete_cases <- as.matrix(complete_cases)
+ds.3 <- as.matrix(ds.1[,1:8],rownames.force = F)
 ```
 
 ## Normal
 
 
 ```{r}
-f1 = colorRamp2(seq(min(complete_cases), max(complete_cases), length = 3), c("red", "white", "dark blue"))
+f1 = colorRamp2(seq(-1,1, length = 3), c("red", "white", "dark blue"))
 
-#rowAnnotation(foo2 = 18:1, bar2 = anno_barplot(runif(18)) 
-Heatmap(complete_cases, name = "Complete cases heatmap",col=f1,row_km  = 3,
+Heatmap(ds.3, name = "Complete cases heatmap",col=f1,row_km  = 3,
     column_title = " Mean difference values",right_annotation =rowAnnotation(category = ds.1$category, effect=ds.1$Effect,location=ds.1$Location))
 
 ```
@@ -452,56 +426,49 @@ Heatmap(complete_cases, name = "Complete cases heatmap",col=f1,row_km  = 3,
 
 
 ```{r}
-ds_L <- ds %>% filter(Effect!='shortening')
-ds_L <- ds_L[complete.cases(ds_L[,7:14]),]
+ds.3 <- ds.1 %>% filter(Effect!='shortening')
 
-ds.l <- as.matrix(ds_L[,c(7:14)])
+ds.l <- as.matrix(ds.3[,c(1:8)],rownames.force = F)
 
 f1 = colorRamp2(seq(-1,1, length = 3), c("red", "white", "dark blue"))
 
-#rowAnnotation(foo2 = 18:1, bar2 = anno_barplot(runif(18)) 
 Heatmap(ds.l, name = "Lengthening heatmap",col=f1,row_km  = 3,
-    column_title = " Mean difference values",right_annotation =rowAnnotation(category = ds_L$category, effect=ds_L$Effect ))
+    column_title = " Mean difference values",right_annotation =rowAnnotation(category = ds.3$category, effect=ds.3$Effect ,location=ds.3$Location))
 ```
-```{r}
-ds_S <- ds %>% filter(Effect!='lengthening')
-ds_S <- ds_S[complete.cases(ds_S[,7:14]),]
 
-ds.s <- as.matrix(ds_S[,c(7:14)])
+```{r}
+ds.3 <- ds.1 %>% filter(Effect!='lengthening')
+ds_S <- ds.3[,1:8]
+
+ds_S <- as.matrix(ds_S[,c(1:8)],rownames.force = F)
 
 f1 = colorRamp2(seq(-1,1, length = 3), c("red", "white", "dark blue"))
 
-#rowAnnotation(foo2 = 18:1, bar2 = anno_barplot(runif(18)) 
-Heatmap(ds.s, name = "Shortening heatmap",col=f1,row_km  = 3,
-    column_title = " Mean difference values",right_annotation =rowAnnotation(category = ds_S$category, effect=ds_S$Effect ))
+Heatmap(ds_S, name = "Shortening heatmap",col=f1,row_km  = 3,
+    column_title = " Mean difference values",right_annotation =rowAnnotation(category = ds.3$category, effect=ds.3$Effect,location=ds.3$Location ))
 ```
 
 ## distal proximal
 
 
 ```{r}
-ds_dis<- ds %>% filter(Location=='distal')
-ds_dis <- ds_dis[complete.cases(ds_dis[,7:14]),]
-
-ds_dis.n <- as.matrix(ds_dis[,c(7:14)])
+ds.3<- ds.1 %>% filter(Location=='distal')
+ds_dis <-  as.matrix(ds.3[,1:8],rownames.force = F)
 
 f1 = colorRamp2(seq(-1,1, length = 3), c("red", "white", "dark blue"))
 
-#rowAnnotation(foo2 = 18:1, bar2 = anno_barplot(runif(18)) 
-Heatmap(ds_dis.n, name = "Distal heatmap",col=f1,row_km  = 3,
-    column_title = " Mean difference values",right_annotation =rowAnnotation(category = ds_dis$category, effect=ds_dis$Effect ))
+Heatmap(ds_dis, name = "Distal heatmap",col=f1,row_km  = 3,
+    column_title = " Mean difference values",right_annotation =rowAnnotation(category = ds.3$category, effect=ds.3$Effect ,location=ds.3$Location))
 ```
-```{r}
-ds_pro<- ds %>% filter(Location=='proximal')
-ds_pro <- ds_pro[complete.cases(ds_pro[,7:14]),]
 
-ds_pro.n <- as.matrix(ds_pro[,c(7:14)])
+```{r}
+ds.3<- ds.1 %>% filter(Location=='proximal')
+ds_pro <-  as.matrix(ds.3[,1:8],rownames.force = F)
 
 f1 = colorRamp2(seq(-1,1, length = 3), c("red", "white", "dark blue"))
 
-#rowAnnotation(foo2 = 18:1, bar2 = anno_barplot(runif(18)) 
-Heatmap(ds_pro.n, name = "Proximal heatmap",col=f1,row_km  = 3,
-    column_title = " Mean difference values",right_annotation =rowAnnotation(category = ds_pro$category, effect=ds_pro$Effect ))
+Heatmap(ds_pro, name = "Proximal heatmap",col=f1,row_km  = 3,
+    column_title = " Mean difference values",right_annotation =rowAnnotation(category = ds.3$category, effect=ds.3$Effect ,location=ds.3$Location))
 ```
 
 
@@ -511,19 +478,22 @@ Heatmap(ds_pro.n, name = "Proximal heatmap",col=f1,row_km  = 3,
 ## Dummy variable effect
 
 ```{r}
-ds.D <- ds[complete.cases(ds[,7:14]),]
-
-ds.D <- ds.D %>% mutate(Lengthening=ifelse(Effect=='lengthening',1,0))
-ds.D <- ds.D %>% mutate(Control=ifelse(Effect=='Control',1,0))
-ds.D <- ds.D %>% mutate(shortening=ifelse(Effect=='shortening',1,0))
-
-
-ds.d <- as.matrix(ds.D[,c(7:14,93,94,95)])
+ds_de <-  as.matrix(ds.1[,c(1:8,13:15)],rownames.force = F)
 
 f1 = colorRamp2(seq(-1,1, length = 3), c("red", "white", "dark blue"))
 
-Heatmap(ds.d, name = "Dummy variable heatmap",col=f1,row_km  = 3,
-    column_title = " Mean difference values",right_annotation =rowAnnotation(category = ds.D$category, effect=ds.D$Effect ),use_raster = FALSE)
+Heatmap(ds_de, name = "Dummy variable effect heatmap",col=f1,row_km  = 3,
+    column_title = " Mean difference values",right_annotation =rowAnnotation(category = ds.1$category, effect=ds.1$Effect ,location=ds.1$Location),use_raster = F)
 ```
 
+## Dummy variable Location
+
+```{r}
+ds_dl <-  as.matrix(ds.1[,c(1:8,17:18)],rownames.force = F)
+
+f1 = colorRamp2(seq(-1,1, length = 3), c("red", "white", "dark blue"))
+
+Heatmap(ds_dl, name = "Dummy variable location heatmap",col=f1,row_km  = 3,
+    column_title = " Mean difference values",right_annotation =rowAnnotation(category = ds.1$category, effect=ds.1$Effect ,location=ds.1$Location))
+```
 
