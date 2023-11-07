@@ -88,28 +88,54 @@ CTRL <- ML_GO_MCODE %>% filter(ML_GO_MCODE$'_MEMBER_Control_sites' == 1)
 ```
 
 ```{r}
-Reg <- Reg[order(Reg$Enrichment,decreasing = T),][1:20,] %>% filter(LogP< -2)
-plot_reg <- ggplot(Reg, aes(x=- LogP, y=reorder(paste(GO,Description),-LogP),colour=-LogP,size=Enrichment) )+scale_color_gradient2(high = "#DC143C")+
+Reg_ordered <- Reg[order(Reg$Enrichment,decreasing = T),][1:20,] %>% filter(LogP< -2)
+plot_reg <- ggplot(Reg_ordered, aes(x=- LogP, y=reorder(paste(GO,Description),-LogP),colour=-LogP,size=Enrichment) )+scale_color_gradient2(high = "#DC143C")+
   xlab("-log(P)") +
 ylab("GO")+
     geom_point()+theme_bw()+labs(colour="-log(P)")+ggtitle('GO results Regulatable')
 plot_reg
 ```
 ```{r}
-PRMT <- PRMT[order(PRMT$Enrichment,decreasing = T),][1:20,]%>% filter(LogP< -2)
-plot_prmt <- ggplot(PRMT, aes(x=- LogP, y=reorder(paste(GO,Description),-LogP),colour=-LogP,size=Enrichment) )+scale_color_gradient2(high = "#DC143C")+
+PRMT_ordered <- PRMT[order(PRMT$Enrichment,decreasing = T),][1:20,]%>% filter(LogP< -2)
+plot_prmt <- ggplot(PRMT_ordered, aes(x=- LogP, y=reorder(paste(GO,Description),-LogP),colour=-LogP,size=Enrichment) )+scale_color_gradient2(high = "#DC143C")+
   xlab("-log(P)") +
 ylab("GO")+
     geom_point()+theme_bw()+labs(colour="-log(P)")+ggtitle('GO results PRMT')
 plot_prmt
 ```
 
+
 ```{r}
-CTRL <- CTRL[order(CTRL$Enrichment,decreasing = T),][1:20,]%>% filter(LogP< -2)
-plot_CTRL <- ggplot(CTRL, aes(x=- LogP, y=reorder(paste(GO,Description),-LogP),colour=-LogP,size=Enrichment) )+scale_color_gradient2(high = "#DC143C")+
+CTRL_ordered <- CTRL[order(CTRL$Enrichment,decreasing = T),][1:20,]%>% filter(LogP< -2)
+plot_CTRL <- ggplot(CTRL_ordered, aes(x=- LogP, y=reorder(paste(GO,Description),-LogP),colour=-LogP,size=Enrichment) )+scale_color_gradient2(high = "#DC143C")+
   xlab("-log(P)") +
 ylab("GO")+
     geom_point()+theme_bw()+labs(colour="-log(P)")+ggtitle('GO results Control sites')
 plot_CTRL
 ```
+
+#genes shortening /lengthening top
+
+```{r}
+genes_FGFR1 <- PRMT[PRMT$Description=='FGFRL1 modulation of FGFR1 signaling',]$Hits
+
+a <- df[df$gene_ID %in% unlist(strsplit(genes_FGFR1,'\\|')),c(1:14,87:89)]
+table(a$Effect,a$gene_ID)/2
+
+```
+
+FGF2:
+
+https://link.springer.com/article/10.1007/s12672-018-0339-4
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2819821/
+
+
+SPRED1,2 
+
+The protein encoded by this gene is a member of the Sprouty family of proteins and is phosphorylated by tyrosine kinase in response to several growth factors. The encoded protein can act as a homodimer or as a heterodimer with SPRED2 to regulate activation of the MAP kinase cascade. ùù
+
+https://www.nature.com/articles/s41375-021-01423-x
+
+
+
 
