@@ -117,9 +117,12 @@ plot_CTRL
 #genes shortening /lengthening top
 
 ```{r}
-genes_FGFR1 <- PRMT[PRMT$Description=='FGFRL1 modulation of FGFR1 signaling',]$Hits
+#prmt
 
-a <- df[df$gene_ID %in% unlist(strsplit(genes_FGFR1,'\\|')),c(1:14,87:89)]
+genes_FGFR1 <- unlist(strsplit(PRMT[PRMT$Description=='FGFRL1 modulation of FGFR1 signaling',]$Hits,'\\|'))
+genes_Cterm <- unlist(strsplit(PRMT[PRMT$Description=='C-terminal protein amino acid modification',]$Hits,'\\|'))
+genes_Nano <- unlist(strsplit(PRMT[PRMT$Description=='Nanoparticle triggered autophagic cell death',]$Hits,'\\|'))
+a <- df[df$gene_ID %in% c(genes_FGFR1,genes_Cterm,genes_Nano),c(1:14,87:89)]
 table(a$Effect,a$gene_ID)/2
 
 ```
@@ -137,5 +140,14 @@ The protein encoded by this gene is a member of the Sprouty family of proteins a
 https://www.nature.com/articles/s41375-021-01423-x
 
 
+```{r}
+#reg
 
+genes_NOVA <- unlist(strsplit(Reg[Reg$Description=='Splicing factor NOVA regulated synaptic proteins',]$Hits,'\\|'))
+genes_LMC <- unlist(strsplit(Reg[Reg$Description=='leukocyte mediated cytotoxicity',]$Hits,'\\|'))
+genes_DCD <- unlist(strsplit(Reg[Reg$Description=='detection of cell density',]$Hits,'\\|'))
+a <- df[df$gene_ID %in% c(genes_NOVA,genes_LMC,genes_DCD),c(1:14,87:89)]
+table(a$Effect,a$gene_ID)/2
+
+```
 

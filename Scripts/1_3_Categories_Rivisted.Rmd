@@ -611,6 +611,7 @@ Control: just control
 
 I find which of the 3 siRNA causes the biggest effect and store that (instead of the mean)
 
+Take abs value so sign doesnt influence look at max value between the 3 (if Na in one for that value it returns -inf so for sure wont be picked as the one with biggest value)
 ```{r}
 ds$RowMEAN <- 0
 for (gene in unique(ds[ds$category=='Regulatable_sites',]$gene_ID)) {
@@ -638,8 +639,6 @@ ds <- ds[!(ds$unique_featureID %in% to_remove),]
 add row mean for prmt reg (the one for reg is just value of max effect reg)
 ```{r}
 ds[ds$category=='PRMT_regulated',]$RowMEAN <- rowMeans(ds[ds$category=='PRMT_regulated',10:14],na.rm = T)
-
-#a <- ds[ds$category=='Regulatable_sites',c(1:14,85:89)]
 ```
 
 
@@ -684,14 +683,17 @@ ds <- ds %>% group_by(gene_ID) %>% mutate(Effect=
                                              )
 
 
-ds <- ds %>% select(-RowMEAN)
 ds <- ds %>% mutate(gene_ID= unlist(strsplit(gene_ID,'_'))[1])
+#write_csv(ds,'../Outputs/All_categories_DP_LS_RM.csv')
+
+ds <- ds %>% select(-RowMEAN)
 
 table(ds$category,ds$Effect)
 ```
 
 ```{r}
 write_csv(ds,'../Outputs/All_categories_DP_LS.csv')
+
 ```
 
 

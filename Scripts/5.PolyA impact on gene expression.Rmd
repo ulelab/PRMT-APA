@@ -1,0 +1,395 @@
+---
+title: "Whole_DeSeq"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ComplexHeatmap)
+library(circlize)
+library(ggplot2)
+library(ggrepel)
+```
+
+#Data
+
+```{r}
+df <- read_csv('../Outputs/All_categories_DP_LS.csv')
+WG_24_hrs <- read_csv('../whole_gene_deseq_BATCH_B_SDMAi_ADMAi_timecourse_tables/DMSO_vs_SDMAi_ADMAi_24hrs_whole_gene_deseq.csv')
+WG_48_hrs <- read_csv('../whole_gene_deseq_BATCH_B_SDMAi_ADMAi_timecourse_tables/DMSO_vs_SDMAi_ADMAi_48hrs_whole_gene_deseq.csv')
+WG_72_hrs <- read_csv('../whole_gene_deseq_BATCH_B_SDMAi_ADMAi_timecourse_tables/DMSO_vs_SDMAi_ADMAi_72hrs_whole_gene_deseq.csv')
+WG_96_hrs <- read_csv('../whole_gene_deseq_BATCH_B_SDMAi_ADMAi_timecourse_tables/DMSO_vs_SDMAi_ADMAi_96hrs_whole_gene_deseq.csv')
+```
+
+```{r}
+PRMT_genes <- unique(df[df$category=='PRMT_regulated',]$gene_ID)
+Regulatable_genes <- unique(df[df$category=='Regulatable_sites',]$gene_ID)
+Control_genes <- unique(df[df$category=='Control_sites',]$gene_ID)
+```
+
+```{r}
+padj.cutoff <- 0.05
+lfc.cutoff <- 0.58 #1.5 base10 
+```
+
+## 24 hrs
+
+
+```{r}
+WG_24_hrs <- WG_24_hrs %>% filter((external_gene_name %in% c(PRMT_genes,Regulatable_genes,Control_genes)))
+```
+
+
+```{r}
+#useless
+#da rifare
+#f1 <- colorRamp2(c(-4,0,4),c('#013220','#f6f6f6','#410441'))
+#Heatmap(as.matrix(WG_24_hrs[,10:12]),col=f1,column_split = 3)
+```
+
+
+```{r}
+WG_24_hrs_ord <- WG_24_hrs[order(WG_24_hrs$padj), ] 
+WG_24_hrs_ord$genelabels <- rownames(WG_24_hrs_ord) %in% rownames(WG_24_hrs_ord[1:10,])
+rownames(WG_24_hrs_ord) <- make.unique(WG_24_hrs_ord$external_gene_name)
+
+threshold <-( WG_24_hrs_ord$padj<padj.cutoff & (WG_24_hrs_ord$log2FoldChange> lfc.cutoff | WG_24_hrs_ord$log2FoldChange < -lfc.cutoff))
+
+ggplot(WG_24_hrs_ord) +
+  geom_point(aes(x = log2FoldChange, y = -log10(padj), colour = threshold)) +
+  geom_text_repel(aes(x = log2FoldChange, y = -log10(padj), label = ifelse(genelabels == T, rownames(WG_24_hrs_ord),""))) +
+  ggtitle("Time course 24 total") +
+  xlab("log2 fold change") + 
+  ylab("-log10 adjusted p-value") +
+  theme(legend.position = "none",
+        plot.title = element_text(size = rel(1.5), hjust = 0.5),
+        axis.title = element_text(size = rel(1.25))) 
+```
+
+```{r}
+for (category in c("Control_sites", "Regulatable_sites" ,"PRMT_regulated" ) ) {
+  genes <- unique(df[df$category==category,]$gene_ID)
+  WG_24_hrs_tmp <- WG_24_hrs %>%  filter(external_gene_name %in% genes)
+  WG_24_hrs_ord <- WG_24_hrs_tmp[order(WG_24_hrs_tmp$padj), ] 
+  WG_24_hrs_ord$genelabels <- rownames(WG_24_hrs_ord) %in% rownames(WG_24_hrs_ord[1:10,])
+  rownames(WG_24_hrs_ord) <- make.unique(WG_24_hrs_ord$external_gene_name)
+
+  threshold <-( WG_24_hrs_ord$padj<padj.cutoff & (WG_24_hrs_ord$log2FoldChange> lfc.cutoff |   WG_24_hrs_ord$log2FoldChange < -lfc.cutoff))
+
+  plot <- ggplot(WG_24_hrs_ord) +
+    geom_point(aes(x = log2FoldChange, y = -log10(padj), colour = threshold)) +
+    geom_text_repel(aes(x = log2FoldChange, y = -log10(padj), label = ifelse(genelabels == T, rownames(WG_24_hrs_ord),""))) +
+    ggtitle(paste("Time course 24",category)) +
+    xlab("log2 fold change") + 
+    ylab("-log10 adjusted p-value") +
+    theme(legend.position = "none",
+        plot.title = element_text(size = rel(1.5), hjust = 0.5),
+        axis.title = element_text(size = rel(1.25))) 
+  print(plot)
+}
+```
+
+
+
+## 48 hrs
+
+
+```{r}
+WG_48_hrs <- WG_48_hrs %>% filter((external_gene_name %in% c(PRMT_genes,Regulatable_genes,Control_genes)))
+```
+
+
+```{r}
+WG_48_hrs_ord <- WG_48_hrs[order(WG_48_hrs$padj), ] 
+WG_48_hrs_ord$genelabels <- rownames(WG_48_hrs_ord) %in% rownames(WG_48_hrs_ord[1:10,])
+rownames(WG_48_hrs_ord) <- make.unique(WG_48_hrs_ord$external_gene_name)
+
+threshold <-( WG_48_hrs_ord$padj<padj.cutoff & (WG_48_hrs_ord$log2FoldChange> lfc.cutoff | WG_48_hrs_ord$log2FoldChange < -lfc.cutoff))
+
+ggplot(WG_48_hrs_ord) +
+  geom_point(aes(x = log2FoldChange, y = -log10(padj), colour = threshold)) +
+  geom_text_repel(aes(x = log2FoldChange, y = -log10(padj), label = ifelse(genelabels == T, rownames(WG_48_hrs_ord),""))) +
+  ggtitle("Time course 48 total") +
+  xlab("log2 fold change") + 
+  ylab("-log10 adjusted p-value") +
+  theme(legend.position = "none",
+        plot.title = element_text(size = rel(1.5), hjust = 0.5),
+        axis.title = element_text(size = rel(1.25))) 
+```
+
+```{r}
+for (category in c("Control_sites", "Regulatable_sites" ,"PRMT_regulated" ) ) {
+  genes <- unique(df[df$category==category,]$gene_ID)
+  WG_48_hrs_tmp <- WG_48_hrs %>%  filter(external_gene_name %in% genes)
+  WG_48_hrs_ord <- WG_48_hrs_tmp[order(WG_48_hrs_tmp$padj), ] 
+  WG_48_hrs_ord$genelabels <- rownames(WG_48_hrs_ord) %in% rownames(WG_48_hrs_ord[1:10,])
+  rownames(WG_48_hrs_ord) <- make.unique(WG_48_hrs_ord$external_gene_name)
+
+  threshold <-( WG_48_hrs_ord$padj<padj.cutoff & (WG_48_hrs_ord$log2FoldChange> lfc.cutoff |   WG_48_hrs_ord$log2FoldChange < -lfc.cutoff))
+
+  plot <- ggplot(WG_48_hrs_ord) +
+    geom_point(aes(x = log2FoldChange, y = -log10(padj), colour = threshold)) +
+    geom_text_repel(aes(x = log2FoldChange, y = -log10(padj), label = ifelse(genelabels == T, rownames(WG_48_hrs_ord),""))) +
+    ggtitle(paste("Time course 48",category)) +
+    xlab("log2 fold change") + 
+    ylab("-log10 adjusted p-value") +
+    theme(legend.position = "none",
+        plot.title = element_text(size = rel(1.5), hjust = 0.5),
+        axis.title = element_text(size = rel(1.25))) 
+  print(plot)
+}
+```
+
+
+
+
+
+
+
+## 72 hrs
+
+
+```{r}
+WG_72_hrs <- WG_72_hrs %>% filter((external_gene_name %in% c(PRMT_genes,Regulatable_genes,Control_genes)))
+```
+
+
+```{r}
+WG_72_hrs_ord <- WG_72_hrs[order(WG_72_hrs$padj), ] 
+WG_72_hrs_ord$genelabels <- rownames(WG_72_hrs_ord) %in% rownames(WG_72_hrs_ord[1:10,])
+rownames(WG_72_hrs_ord) <- make.unique(WG_72_hrs_ord$external_gene_name)
+
+threshold <-( WG_72_hrs_ord$padj<padj.cutoff & (WG_72_hrs_ord$log2FoldChange> lfc.cutoff | WG_72_hrs_ord$log2FoldChange < -lfc.cutoff))
+
+ggplot(WG_72_hrs_ord) +
+  geom_point(aes(x = log2FoldChange, y = -log10(padj), colour = threshold)) +
+  geom_text_repel(aes(x = log2FoldChange, y = -log10(padj), label = ifelse(genelabels == T, rownames(WG_72_hrs_ord),""))) +
+  ggtitle("Time course 72 total") +
+  xlab("log2 fold change") + 
+  ylab("-log10 adjusted p-value") +
+  theme(legend.position = "none",
+        plot.title = element_text(size = rel(1.5), hjust = 0.5),
+        axis.title = element_text(size = rel(1.25))) 
+```
+
+```{r}
+for (category in c("Control_sites", "Regulatable_sites" ,"PRMT_regulated" ) ) {
+  genes <- unique(df[df$category==category,]$gene_ID)
+  WG_72_hrs_tmp <- WG_72_hrs %>%  filter(external_gene_name %in% genes)
+  WG_72_hrs_ord <- WG_72_hrs_tmp[order(WG_72_hrs_tmp$padj), ] 
+  WG_72_hrs_ord$genelabels <- rownames(WG_72_hrs_ord) %in% rownames(WG_72_hrs_ord[1:10,])
+  rownames(WG_72_hrs_ord) <- make.unique(WG_72_hrs_ord$external_gene_name)
+
+  threshold <-( WG_72_hrs_ord$padj<padj.cutoff & (WG_72_hrs_ord$log2FoldChange> lfc.cutoff |   WG_72_hrs_ord$log2FoldChange < -lfc.cutoff))
+
+  plot <- ggplot(WG_72_hrs_ord) +
+    geom_point(aes(x = log2FoldChange, y = -log10(padj), colour = threshold)) +
+    geom_text_repel(aes(x = log2FoldChange, y = -log10(padj), label = ifelse(genelabels == T, rownames(WG_72_hrs_ord),""))) +
+    ggtitle(paste("Time course 72",category)) +
+    xlab("log2 fold change") + 
+    ylab("-log10 adjusted p-value") +
+    theme(legend.position = "none",
+        plot.title = element_text(size = rel(1.5), hjust = 0.5),
+        axis.title = element_text(size = rel(1.25))) 
+  print(plot)
+}
+```
+
+
+
+
+
+
+## 96 hrs
+
+
+```{r}
+WG_96_hrs <- WG_96_hrs %>% filter((external_gene_name %in% c(PRMT_genes,Regulatable_genes,Control_genes)))
+```
+
+
+```{r}
+WG_96_hrs_ord <- WG_96_hrs[order(WG_96_hrs$padj), ] 
+WG_96_hrs_ord$genelabels <- rownames(WG_96_hrs_ord) %in% rownames(WG_96_hrs_ord[1:10,])
+rownames(WG_96_hrs_ord) <- make.unique(WG_96_hrs_ord$external_gene_name)
+
+threshold <-( WG_96_hrs_ord$padj<padj.cutoff & (WG_96_hrs_ord$log2FoldChange> lfc.cutoff | WG_96_hrs_ord$log2FoldChange < -lfc.cutoff))
+
+ggplot(WG_96_hrs_ord) +
+  geom_point(aes(x = log2FoldChange, y = -log10(padj), colour = threshold)) +
+  geom_text_repel(aes(x = log2FoldChange, y = -log10(padj), label = ifelse(genelabels == T, rownames(WG_96_hrs_ord),""))) +
+  ggtitle("Time course 96 total") +
+  xlab("log2 fold change") + 
+  ylab("-log10 adjusted p-value") +
+  theme(legend.position = "none",
+        plot.title = element_text(size = rel(1.5), hjust = 0.5),
+        axis.title = element_text(size = rel(1.25))) 
+```
+
+```{r}
+for (category in c("Control_sites", "Regulatable_sites" ,"PRMT_regulated" ) ) {
+  genes <- unique(df[df$category==category,]$gene_ID)
+  WG_96_hrs_tmp <- WG_96_hrs %>%  filter(external_gene_name %in% genes)
+  WG_96_hrs_ord <- WG_96_hrs_tmp[order(WG_96_hrs_tmp$padj), ] 
+  WG_96_hrs_ord$genelabels <- rownames(WG_96_hrs_ord) %in% rownames(WG_96_hrs_ord[1:10,])
+  rownames(WG_96_hrs_ord) <- make.unique(WG_96_hrs_ord$external_gene_name)
+
+  threshold <-( WG_96_hrs_ord$padj<padj.cutoff & (WG_96_hrs_ord$log2FoldChange> lfc.cutoff |   WG_96_hrs_ord$log2FoldChange < -lfc.cutoff))
+
+  plot <- ggplot(WG_96_hrs_ord) +
+    geom_point(aes(x = log2FoldChange, y = -log10(padj), colour = threshold)) +
+    geom_text_repel(aes(x = log2FoldChange, y = -log10(padj), label = ifelse(genelabels == T, rownames(WG_96_hrs_ord),""))) +
+    ggtitle(paste("Time course 96",category)) +
+    xlab("log2 fold change") + 
+    ylab("-log10 adjusted p-value") +
+    theme(legend.position = "none",
+        plot.title = element_text(size = rel(1.5), hjust = 0.5),
+        axis.title = element_text(size = rel(1.25))) 
+  print(plot)
+}
+```
+# plots
+
+I wanna try to scatter plot mean diff at prev timepoint than whole gene 
+
+```{r}
+df <- read_csv('../Outputs/All_categories_DP_LS_RM.csv')
+
+ds <- tibble(Gene_ID=unique(df$gene_ID))
+
+df.1 <- rbind(df %>% group_by(gene_ID) %>% filter(Effect=='shortening') %>% filter(RowMEAN<0),
+df %>% group_by(gene_ID) %>% filter(Effect=='lengthening') %>% filter(RowMEAN>0),df %>% filter(Effect=='Control' & Location=='distal'))
+```
+
+#1  does poly A site change precede change in expression level? 
+
+### 48 WG and 24 
+```{r}
+#WG_48_hrs<-
+  
+WG_48_hrs_APA_24<-left_join(WG_48_hrs, df.1[df.1$gene_ID %in%  WG_48_hrs$external_gene_name,c(2,13,87,89,88,90)], by = c("external_gene_name" = "gene_ID")) 
+
+
+WG_48_hrs_APA_24_Prmt <-WG_48_hrs_APA_24 %>% filter(category=='PRMT_regulated')
+threshold <-((WG_48_hrs_APA_24_Prmt$log2FoldChange > 1.5 & WG_48_hrs_APA_24_Prmt$mean_diff24 < -0.1 )|
+               WG_48_hrs_APA_24_Prmt$log2FoldChange < -1.5 & WG_48_hrs_APA_24_Prmt$mean_diff24 > 0.1)
+
+
+threshold.1 <-((WG_48_hrs_APA_24_Prmt$log2FoldChange > 1.5 | WG_48_hrs_APA_24_Prmt$log2FoldChange < -1.5 ) &
+                (WG_48_hrs_APA_24_Prmt$mean_diff24 < -0.1 | WG_48_hrs_APA_24_Prmt$mean_diff24 > 0.1))
+
+ WG_48_hrs_APA_24_Prmt %>% ggplot() +
+    geom_point(aes(x = log2FoldChange, y = mean_diff24,colour = threshold.1)) +
+    geom_text_repel(aes(x = log2FoldChange, y = mean_diff24, label = ifelse(threshold.1 == T,WG_48_hrs_APA_24_Prmt$external_gene_name ,""))) +
+    ggtitle(paste("WG 48 APA 24 PRMT reg")) +
+   geom_hline(yintercept=-0.1, linetype="dashed", color = "black",size=0.1)+
+   geom_hline(yintercept=0.1, linetype="dashed", color = "black",size=0.1)+
+   geom_vline(xintercept=-1.5, linetype="dashed", color = "black",size=0.1)+
+   geom_vline(xintercept=+1.5, linetype="dashed", color = "black",size=0.1)+
+    xlab("log2 fold change") + 
+    ylab("mean diff 24") +
+    theme(legend.position = "none",
+        plot.title = element_text(size = rel(1.5), hjust = 0.5),
+        axis.title = element_text(size = rel(1.25))) 
+
+
+
+```
+
+```{r}
+WG_48_hrs_APA_24_reg <-WG_48_hrs_APA_24 %>% filter(category=='Regulatable_sites')
+threshold <-((WG_48_hrs_APA_24_reg$log2FoldChange > 1.5 & WG_48_hrs_APA_24_reg$RowMEAN < -0.1 )|
+               WG_48_hrs_APA_24_reg$log2FoldChange < -1.5 & WG_48_hrs_APA_24_reg$RowMEAN > 0.1)
+
+ WG_48_hrs_APA_24_reg %>% ggplot() +
+    geom_point(aes(x = log2FoldChange, y = RowMEAN,colour = threshold)) +
+    geom_text_repel(aes(x = log2FoldChange, y = RowMEAN, label = ifelse(threshold == T,WG_48_hrs_APA_24_reg$external_gene_name ,""))) +
+    ggtitle(paste("WG 48 APA 24 Regulatable")) +
+   geom_hline(yintercept=-0.1, linetype="dashed", color = "black",size=0.1)+
+   geom_hline(yintercept=0.1, linetype="dashed", color = "black",size=0.1)+
+   geom_vline(xintercept=-1.5, linetype="dashed", color = "black",size=0.1)+
+   geom_vline(xintercept=+1.5, linetype="dashed", color = "black",size=0.1)+
+    xlab("log2 fold change") + 
+    ylab("mean diff 24") +
+    theme(legend.position = "none",
+        plot.title = element_text(size = rel(1.5), hjust = 0.5),
+        axis.title = element_text(size = rel(1.25))) 
+ 
+ 
+```
+
+
+
+### 24 WG and 24 
+```{r}
+
+WG_24_hrs_APA_24<-left_join(WG_24_hrs, df.1[df.1$gene_ID %in%  WG_24_hrs$external_gene_name,c(2,13,87,89,88,90)], by = c("external_gene_name" = "gene_ID")) 
+
+
+WG_24_hrs_APA_24_Prmt <-WG_24_hrs_APA_24 %>% filter(category=='PRMT_regulated')
+threshold <-((WG_24_hrs_APA_24_Prmt$log2FoldChange > 1.5 & WG_24_hrs_APA_24_Prmt$mean_diff24 < -0.1 )|
+               WG_24_hrs_APA_24_Prmt$log2FoldChange < -1.5 & WG_24_hrs_APA_24_Prmt$mean_diff24 > 0.1)
+
+ WG_24_hrs_APA_24_Prmt %>% ggplot() +
+    geom_point(aes(x = log2FoldChange, y = mean_diff24,colour = threshold)) +
+    geom_text_repel(aes(x = log2FoldChange, y = mean_diff24, label = ifelse(threshold == T,WG_24_hrs_APA_24_Prmt$external_gene_name ,""))) +
+    ggtitle(paste("WG 24 APA 24 PRMT reg")) +
+   geom_hline(yintercept=-0.1, linetype="dashed", color = "black",size=0.1)+
+   geom_hline(yintercept=0.1, linetype="dashed", color = "black",size=0.1)+
+   geom_vline(xintercept=-1.5, linetype="dashed", color = "black",size=0.1)+
+   geom_vline(xintercept=+1.5, linetype="dashed", color = "black",size=0.1)+
+    xlab("log2 fold change") + 
+    ylab("mean diff 24 distal") +
+    theme(legend.position = "none",
+        plot.title = element_text(size = rel(1.5), hjust = 0.5),
+        axis.title = element_text(size = rel(1.25))) 
+
+
+a <- WG_24_hrs_APA_24_Prmt[threshold,]
+
+```
+
+```{r}
+WG_24_hrs_APA_24_reg <-WG_24_hrs_APA_24 %>% filter(category=='Regulatable_sites')
+threshold <-((WG_24_hrs_APA_24_reg$log2FoldChange > 1.5 & WG_24_hrs_APA_24_reg$RowMEAN < -0.1 )|
+               WG_24_hrs_APA_24_reg$log2FoldChange < -1.5 & WG_24_hrs_APA_24_reg$RowMEAN > 0.1)
+
+ WG_24_hrs_APA_24_reg %>% ggplot() +
+    geom_point(aes(x = log2FoldChange, y = RowMEAN,colour = threshold)) +
+    geom_text_repel(aes(x = log2FoldChange, y = RowMEAN, label = ifelse(threshold == T,WG_24_hrs_APA_24_reg$external_gene_name ,""))) +
+    ggtitle(paste("WG 24 APA 24 Regulatable")) +
+   geom_hline(yintercept=-0.1, linetype="dashed", color = "black",size=0.1)+
+   geom_hline(yintercept=0.1, linetype="dashed", color = "black",size=0.1)+
+   geom_vline(xintercept=-1.5, linetype="dashed", color = "black",size=0.1)+
+   geom_vline(xintercept=+1.5, linetype="dashed", color = "black",size=0.1)+
+    xlab("log2 fold change") + 
+    ylab("mean diff 24") +
+    theme(legend.position = "none",
+        plot.title = element_text(size = rel(1.5), hjust = 0.5),
+        axis.title = element_text(size = rel(1.25))) 
+```
+
+#2 Cell cycle genes focus
+
+```{r}
+library(KEGGREST)
+library(org.Hs.eg.db)
+library(tidyverse)     ## dplyr::select() vs. AnnotationDbi::select() !
+#These are the KEGG pathways and their Entrez gene ids
+
+hsa_path_eg  <- keggLink("pathway", "hsa") %>% 
+    tibble(pathway = ., eg = sub("hsa:", "", names(.)))
+#annotated with the SYMBOL and ENSEMBL identifiers associated with each Entrez id
+
+hsa_kegg_anno <- hsa_path_eg %>%
+    mutate(
+        symbol = mapIds(org.Hs.eg.db, eg, "SYMBOL", "ENTREZID"),
+        ensembl = mapIds(org.Hs.eg.db, eg, "ENSEMBL", "ENTREZID")
+    )
+
+
+cc_genes <- hsa_kegg_anno[hsa_kegg_anno$pathway=='path:hsa04110',]$symbol
+#'MCM4' %in% cc_genes
+```
+
