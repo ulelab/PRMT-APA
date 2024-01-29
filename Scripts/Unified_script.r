@@ -1,5 +1,6 @@
 #!/usr/bin/Rscript
 
+
 list.of.packages <- c( "R.utils","tidyverse",'ggplot2','dplyr','readr','zeallot')
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
@@ -27,7 +28,8 @@ library(readr)
 #....
 
 options <- R.utils::commandArgs(trailingOnly = TRUE,asValues=TRUE,default=
-                                  list(c1_prmt=0.2,c2_prmt=0.15,padj_prmt=0.05,similarity_threshold=0.7,
+                                  list(c1_prmt=0.2,c2_prmt=0.15,padj_prmt=0.05,similarity_threshold_PRMT=0.7,
+                                       similarity_threshold_reg=0.7,
                                        c1_reg= 0.2, c2_reg = 0.05, c1_ctrl=0.15,c2_ctrl=0.10))
 print(options)
 #setwd('/Users/martinapedna/Desktop/PHD/MRes/Rotation1/PRMT-APA/Scripts/')
@@ -137,7 +139,7 @@ print(head(df_all))
 write_csv(df_all,'../Output/Files/Unfiltered_Formatted_All_Data_Sets_Final.csv')
 
 
-df_all <- read_csv('../Outputs/Unfiltered_Formatted_All_Data_Sets_Final.csv')
+#df_all <- read_csv('../Outputs/Unfiltered_Formatted_All_Data_Sets_Final.csv')
 
 print(head(df_all))
 #PRMT
@@ -161,8 +163,8 @@ for (i in c(1:options$n_tp) ){
     #print('hereee')
     tmp_2 <- dplyr::filter(ds_tmp, ((
       ds_tmp[,paste0('mean_diff',sample_info_e)] >options$c2_prmt | ds_tmp[,paste0('mean_diff',sample_info_e)] < -options$c2_prmt )&
-      ((ds_tmp[,paste0('mean_diff',sample_info_i)]> 0 & ds_tmp[,paste0('mean_diff',sample_info_e)] >0) |
-        (ds_tmp[,paste0('mean_diff',sample_info_i)] < 0 & ds_tmp[,paste0('mean_diff',sample_info_e)]<0)) ))
+        ((ds_tmp[,paste0('mean_diff',sample_info_i)]> 0 & ds_tmp[,paste0('mean_diff',sample_info_e)] >0) |
+           (ds_tmp[,paste0('mean_diff',sample_info_i)] < 0 & ds_tmp[,paste0('mean_diff',sample_info_e)]<0)) ))
     features_to_keep <- append(features_to_keep,tmp_2$unique_featureID)
   }
   
@@ -206,7 +208,7 @@ for (i in c(1:options$n_RBP)) {
   sample_info_i <- as.character(options[sample_index_i])
   
   #ds_tmp <- dplyr::filter(ds_tmp,(is.na(ds_tmp[,paste0('mean_diff',sample_info_i)])!=TRUE))
-  ds_tmp <- dplyr::filter(ds_tmp, abs(ds_tmp[,'mean_diff72']) > options$similarity_threshold*(abs(ds_tmp[,paste0('mean_diff',sample_info_i)])))
+  ds_tmp <- dplyr::filter(ds_tmp, abs(ds_tmp[,'mean_diff72']) > options$similarity_threshold_PRMT*(abs(ds_tmp[,paste0('mean_diff',sample_info_i)])))
   #features_to_keep <- append(features_to_keep,ds_tmp$unique_featureID)
   #print(ds_tmp)
 }
@@ -263,7 +265,7 @@ for (i in c(1:options$n_RBP)) {
   sample_index_i <- as.character(paste0('sample_RBP_',i))
   sample_info_i <- as.character(options[sample_index_i])
   ds_tmp <- dplyr::filter(df_siRNA,is.na(df_siRNA$mean_diff72)!=TRUE)
-  ds_tmp <- dplyr::filter(ds_tmp,abs(ds_tmp[,paste0('mean_diff',sample_info_i)])>options$similarity_threshold*abs(mean_diff72))
+  ds_tmp <- dplyr::filter(ds_tmp,abs(ds_tmp[,paste0('mean_diff',sample_info_i)])>options$similarity_threshold_reg*abs(mean_diff72))
   features_to_keep <- append(features_to_keep,ds_tmp$unique_featureID)
 }
 
@@ -283,7 +285,7 @@ for (i in c(1:options$n_RBP)) {
   
   ds_tmp <-dplyr::filter(df_siRNA_20,(df_siRNA_20[,paste0('mean_diff',sample_info_i)]>options$c1_reg | 
                                         df_siRNA_20[,paste0('mean_diff',sample_info_i)]< -options$c1_reg)
-                                        & df_siRNA_20[,paste0('twostep_transcript_padj_',sample_info_i)]<options$c2_reg)
+                         & df_siRNA_20[,paste0('twostep_transcript_padj_',sample_info_i)]<options$c2_reg)
   
   ds_tmp$tmp_var <- ds_tmp[,paste0('mean_diff',sample_info_i)]
   ds_tmp <- ds_tmp %>%  group_by(gene_ID) %>% slice_max(abs(tmp_var),n=1,with_ties=FALSE)
@@ -299,29 +301,29 @@ for (i in c(1:options$n_RBP)) {
       
       ds_gene_tmp_other <- dplyr::select(ds_gene_tmp_other,-tmp_var)
       ds_gene_tmp <- dplyr::select(ds_gene_tmp,-tmp_var)
-
+      
       ds_gene_tmp_other$siRNA <- sample_info_i
       ds_gene_tmp$siRNA <- sample_info_i
-        
+      
       df_siRNA_20_multiple<- rbind(df_siRNA_20_multiple,ds_gene_tmp_other)
       df_siRNA_20_multiple<- rbind(df_siRNA_20_multiple,ds_gene_tmp)
-      } else {
-        ds_gene_tmp_other <- ds_tmp_other[ds_tmp_other$gene_ID==gene,]
-        ds_gene_tmp_other <- dplyr::filter(ds_gene_tmp_other,ds_gene_tmp_other[,paste0('mean_diff',sample_info_i)]>0) 
-        ds_gene_tmp_other$tmp_var <- ds_gene_tmp_other[,paste0('mean_diff',sample_info_i)]
-        ds_gene_tmp_other <- ds_gene_tmp_other %>% slice_max(tmp_var,n=1,with_ties=FALSE)
-        
-        ds_gene_tmp_other <- dplyr::select(ds_gene_tmp_other,-tmp_var)
-        ds_gene_tmp <- dplyr::select(ds_gene_tmp,-tmp_var)
-        
-        ds_gene_tmp_other$siRNA <- sample_info_i
-        ds_gene_tmp$siRNA <- sample_info_i
-        
-        df_siRNA_20_multiple<- rbind(df_siRNA_20_multiple,ds_gene_tmp_other)
-        df_siRNA_20_multiple<- rbind(df_siRNA_20_multiple,ds_gene_tmp)
-        }
-}
-
+    } else {
+      ds_gene_tmp_other <- ds_tmp_other[ds_tmp_other$gene_ID==gene,]
+      ds_gene_tmp_other <- dplyr::filter(ds_gene_tmp_other,ds_gene_tmp_other[,paste0('mean_diff',sample_info_i)]>0) 
+      ds_gene_tmp_other$tmp_var <- ds_gene_tmp_other[,paste0('mean_diff',sample_info_i)]
+      ds_gene_tmp_other <- ds_gene_tmp_other %>% slice_max(tmp_var,n=1,with_ties=FALSE)
+      
+      ds_gene_tmp_other <- dplyr::select(ds_gene_tmp_other,-tmp_var)
+      ds_gene_tmp <- dplyr::select(ds_gene_tmp,-tmp_var)
+      
+      ds_gene_tmp_other$siRNA <- sample_info_i
+      ds_gene_tmp$siRNA <- sample_info_i
+      
+      df_siRNA_20_multiple<- rbind(df_siRNA_20_multiple,ds_gene_tmp_other)
+      df_siRNA_20_multiple<- rbind(df_siRNA_20_multiple,ds_gene_tmp)
+    }
+  }
+  
 }
 
 print('here')
@@ -371,7 +373,7 @@ for (gene in unique(Regulatable_sites_noPRMT$gene_ID)) {
   #print(ds_tmp[1,'RowMean'] <- ds_tmp[1,paste0('mean_diff',biggest_s)])
   ds_tmp[1,'RowMean'] <- as.double(ds_tmp[1,paste0('mean_diff',biggest_s)])
   ds_tmp[2,'RowMean'] <- as.double(ds_tmp[2,paste0('mean_diff',biggest_s)])
-    #dplyr::mutate(ds_tmp,RowMean=ds_tmp[,paste0('mean_diff',biggest_s)])
+  #dplyr::mutate(ds_tmp,RowMean=ds_tmp[,paste0('mean_diff',biggest_s)])
   Regulatable_sites_single <- rbind(Regulatable_sites_single,ds_tmp)
 }
 
@@ -418,7 +420,7 @@ df_ctrl <-  dplyr::filter(Ctrl,rowMeans(Ctrl[,c(PRMT_ctrl,REG_ctrl)],na.rm = TRU
 
 for (meandiff_v in c(REG_meandif,PRMT_meandif)) {
   df_ctrl <- dplyr::filter(df_ctrl,(df_ctrl[,meandiff_v]  > - options$c1_ctrl & df_ctrl[,meandiff_v] < options$c1_ctrl))}
-  
+
 
 print('nfeature filtering 10-15:')
 print(nrow(df_ctrl))
@@ -537,14 +539,14 @@ for (gene in df_all_categories$gene_ID) {
 table(complete.cases(df_all_categories$Location ))
 
 df_all_categories <- df_all_categories %>% group_by(gene_ID) %>% mutate(Effect= 
-                                            ifelse(category!='Control_sites'
-                                                   ,ifelse((Location=='distal' & RowMean>0)
-                                                           ,'lengthening',
-                                                           ifelse((Location=='proximal' & RowMean<0)
-                                                                  ,'lengthening','shortening'
-                                                           )
-                                                   ),
-                                                   'Control')
+                                                                          ifelse(category!='Control_sites'
+                                                                                 ,ifelse((Location=='distal' & RowMean>0)
+                                                                                         ,'lengthening',
+                                                                                         ifelse((Location=='proximal' & RowMean<0)
+                                                                                                ,'lengthening','shortening'
+                                                                                         )
+                                                                                 ),
+                                                                                 'Control')
 )
 
 
