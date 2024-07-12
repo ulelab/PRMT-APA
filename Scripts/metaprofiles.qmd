@@ -8,6 +8,7 @@ editor: visual
 ```{r}
 library(rtracklayer)
 library(GenomicRanges)
+library(genomation) #requires version genomation_1.19.1 or dev
 ```
 
 ```{r}
