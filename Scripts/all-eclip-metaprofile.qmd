@@ -109,13 +109,16 @@ saveRDS(bl, file="All-eclip-xls.RDS")
 #eclip_bed_list <- readRDS("All-eclip-xls.RDS")
 eclip_bed_list
 eclip_names
+
+# Create a new GRangesList from each CompressedGRangesList
+eclip_bed_granges_list <- GRangesList(lapply(eclip_bed_list, function(x) unlist(x, recursive = FALSE)))
 ```
 
 ```{r}
-UTR_prox = genomation::ScoreMatrixList(target = eclip_bed_list, windows = down_prox_600,strand.aware=TRUE)
-UTR_dist = genomation::ScoreMatrixList(target = iclip_bed_list, windows = up_dist_600,strand.aware=TRUE)
-CTRL_prox = genomation::ScoreMatrixList(target = iclip_bed_list, windows = ctrl_prox_600,strand.aware=TRUE)
-CTRL_dist = genomation::ScoreMatrixList(target = iclip_bed_list, windows = ctrl_dist_600,strand.aware=TRUE)
+UTR_prox = genomation::ScoreMatrixList(target = eclip_bed_granges_list, windows = down_prox_600,strand.aware=TRUE)
+UTR_dist = genomation::ScoreMatrixList(target = eclip_bed_granges_list, windows = up_dist_600,strand.aware=TRUE)
+CTRL_prox = genomation::ScoreMatrixList(target = eclip_bed_granges_list, windows = ctrl_prox_600,strand.aware=TRUE)
+CTRL_dist = genomation::ScoreMatrixList(target = eclip_bed_granges_list, windows = ctrl_dist_600,strand.aware=TRUE)
 ```
 
 ```{r}
