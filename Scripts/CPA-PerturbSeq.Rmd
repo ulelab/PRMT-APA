@@ -1,0 +1,35 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+
+```{r}
+#install remotes and BiocManager if necessary 
+#if (!requireNamespace("remotes", quietly = TRUE))
+#    install.packages("remotes")
+#if (!requireNamespace("BiocManager", quietly = TRUE))
+#    install.packages("BiocManager")
+
+#additionally install several Bioconductor dependencies
+#BiocManager::install(c("BSgenome.Hsapiens.UCSC.hg38", "EnsDb.Hsapiens.v86", 
+                       "rtracklayer","GenomicFeatures","plyranges"))
+
+#remotes::install_github("satijalab/PASTA")
+```
+
+```{r}
+library(PASTA)
+```
+
+```{r}
+hek <- readRDS("../../../data/prmt-apa/CPA_HEK293FT.Rds")
+hek[["polyA"]][[]]
+hek[["polyA"]]$counts
+```
+
+```{r}
+
+```
+
