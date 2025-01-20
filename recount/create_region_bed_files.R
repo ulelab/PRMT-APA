@@ -4,7 +4,7 @@ library(rtracklayer)
 library(data.table)
 
 #### 1) make the 150nt bed files
-# Specify the directory
+# Specify the directory where bed files are
 bed_dir <- "/Users/llywelyngriffith/Documents/AZ_postdoc/files_for_charlotte/github/motif_and_clip_analysis/DMAi_vs_non_DMAi/bed"
 
 # Get full file paths of all .bed files in that directory
@@ -30,6 +30,7 @@ bed_files <- lapply(bed_file_paths, function(file) {
 #read in whole pA atlas
 atlas_colnames = c('chr','start', 'end','feature_id','score','strand','gene_symbol','gene_name','region')
 
+#set path to location of pA atlas file
 pA_atlas = read.delim("/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/merged_polya.filteredunique.annotated.bed",header = FALSE,
                       stringsAsFactors = FALSE,
                       col.names = atlas_colnames)
@@ -97,14 +98,13 @@ for (i in seq_along(APA_sites_with_window_list)) {
 # create bed files of proximal to distal region
 control_sites = rbind(bed_files_with_original_coordinates[[1]],bed_files_with_original_coordinates[[2]])
 DMAi_sites = rbind(bed_files_with_original_coordinates[[3]],bed_files_with_original_coordinates[[4]])
-JTE607_control_sites = rbind(bed_files_with_original_coordinates[[5]],bed_files_with_original_coordinates[[6]])
-JTE607_sites = rbind(bed_files_with_original_coordinates[[7]],bed_files_with_original_coordinates[[8]])
-non_DMAi_sites = rbind(bed_files_with_original_coordinates[[9]],bed_files_with_original_coordinates[[10]])
-siCFIM25_sites = rbind(bed_files_with_original_coordinates[[11]],bed_files_with_original_coordinates[[12]])
+JTE607_sites = rbind(bed_files_with_original_coordinates[[5]],bed_files_with_original_coordinates[[6]])
+non_DMAi_sites = rbind(bed_files_with_original_coordinates[[7]],bed_files_with_original_coordinates[[8]])
+siCFIM25_sites = rbind(bed_files_with_original_coordinates[[9]],bed_files_with_original_coordinates[[10]])
 
 #turn back into list
-all_sites = list(control_sites,DMAi_sites,JTE607_control_sites,JTE607_sites,non_DMAi_sites,siCFIM25_sites)
-proximal_sites = list(bed_files_with_original_coordinates[[2]],bed_files_with_original_coordinates[[4]],bed_files_with_original_coordinates[[6]],bed_files_with_original_coordinates[[8]],bed_files_with_original_coordinates[[10]],bed_files_with_original_coordinates[[12]])
+all_sites = list(control_sites,DMAi_sites,JTE607_sites,non_DMAi_sites,siCFIM25_sites)
+proximal_sites = list(bed_files_with_original_coordinates[[2]],bed_files_with_original_coordinates[[4]],bed_files_with_original_coordinates[[6]],bed_files_with_original_coordinates[[8]],bed_files_with_original_coordinates[[10]])
 
 #read in gencode file
 gencode_gtf_path='/Users/llywelyngriffith/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/own_atlas/TUTR_vs_ALE/gencode.v45.annotation.gtf'
@@ -240,7 +240,6 @@ output_dir = "/Users/llywelyngriffith/Documents/AZ_postdoc/files_for_charlotte/g
 prefixes <- c(
   "control_",
   "DMAi_",
-  "JTE607_control_",
   "JTE607_",
   "non_DMAi_",
   "siCFIM25_"
@@ -334,7 +333,6 @@ output_dir = "/Users/llywelyngriffith/Documents/AZ_postdoc/files_for_charlotte/g
 prefixes <- c(
   "control_",
   "DMAi_",
-  "JTE607_control_",
   "JTE607_",
   "non_DMAi_",
   "siCFIM25_"
