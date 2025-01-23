@@ -18,11 +18,11 @@ output_dir <- "/path/to/your/output_directory"
 
 # For demonstration purposes, replace the above paths with your actual paths
 # For example:
-polyA_csv_dir <- "/Users/llywelyngriffith/Documents/AZ_postdoc/quantseq_96hrs/Nobby_APA_analysis/dedup/github/CSV_files"
-anno_bed_dir <- "/Users/llywelyngriffith/Documents/AZ_postdoc/quantseq_96hrs/Nobby_APA_analysis/dedup/github/TUTR_vs_ALE"
-UTR_info_path <- "/Users/llywelyngriffith/Documents/AZ_postdoc/quantseq_96hrs/Nobby_APA_analysis/no_dedup/two_step_test/TUTR_vs_ALE/UTR_regions_gencode_v45.bed"
-splice_site_info_path <- "/Users/llywelyngriffith/Documents/AZ_postdoc/quantseq_96hrs/Nobby_APA_analysis/no_dedup/two_step_test/TUTR_vs_ALE/splice_regions_gencode_v45.bed"
-output_dir <- "/Users/llywelyngriffith/Documents/AZ_postdoc/quantseq_96hrs/Nobby_APA_analysis/dedup/github/TUTR_vs_ALE"
+polyA_csv_dir <- "../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files"
+anno_bed_dir <- "../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/APA_classification"
+UTR_info_path <- "../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/APA_classification/UTR_regions_gencode_v45.bed"
+splice_site_info_path <- "../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/APA_classification/splice_regions_gencode_v45.bed"
+output_dir <- "../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/APA_classification"
 
 # Ensure the output directory exists
 if(!dir.exists(output_dir)) {
