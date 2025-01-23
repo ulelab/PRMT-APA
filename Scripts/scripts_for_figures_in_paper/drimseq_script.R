@@ -12,7 +12,7 @@ library(stageR)         # For stage-wise analysis in high-dimensional data
 # Make sure all input files are located in this directory or provide full paths
 setwd("/path/to/your/working/directory")
 # Example:
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/3_end_seq_timecourse_LU99/Nobby_APA_analysis/common_atlas/dedup")
+setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/")
 
 # Step 1: Read in the PolyA Site (PAS) atlas file
 # Input: PAS atlas file in BED format (e.g., 'merged_polya.filteredunique.annotated.bed')
@@ -229,8 +229,8 @@ for (i in seq_along(condition_results)) {
 # Output: CSV files containing all polyA sites and significant polyA sites with change in usage
 # The files are saved in 'CSV_files/' directory
 # Create output directories if they don't exist
-dir.create("github/CSV_files", showWarnings = FALSE)
-dir.create("github/CSV_files/positional_info", showWarnings = FALSE)
+dir.create("../CSV_files", showWarnings = FALSE)
+dir.create("../CSV_files/positional_info", showWarnings = FALSE)
 
 for (i in seq_along(condition_results)) {
   cond_name <- condition_results[[i]]$condition_name
@@ -334,7 +334,7 @@ for (i in seq_along(condition_results)) {
 # Output: CSV files containing top two PAS with positional information
 for (i in seq_along(condition_results)) {
   cond_name <- condition_results[[i]]$condition_name
-  output_file <- paste0("github/CSV_files/positional_info/top2_", cond_name, "_sites_with_positional_info.csv")
+  output_file <- paste0("../CSV_files/positional_info/top2_", cond_name, "_sites_with_positional_info.csv")
   write_csv(condition_results[[i]]$shifted_pAs, output_file)
 }
 
