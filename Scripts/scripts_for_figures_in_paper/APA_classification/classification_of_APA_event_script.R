@@ -18,7 +18,7 @@ output_dir <- "/path/to/your/output_directory"
 
 # For demonstration purposes, replace the above paths with your actual paths
 # For example:
-polyA_csv_dir <- "../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files"
+polyA_csv_dir <- "../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig1/ADMAi_vs_SDMAi_vs_double"
 anno_bed_dir <- "../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/APA_classification"
 UTR_info_path <- "../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/APA_classification/UTR_regions_gencode_v45.bed"
 splice_site_info_path <- "../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/APA_classification/splice_regions_gencode_v45.bed"
