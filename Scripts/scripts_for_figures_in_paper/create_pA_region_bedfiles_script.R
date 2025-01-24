@@ -2,9 +2,9 @@ library(tidyverse)
 library(data.table)
 
 ##read in significant TUTR site files
-#read in sig DMAi cell lines TUTR sites - change directory to the location of your TUTR significant site csv files are (generated from TUTR_vs_ALE_and_jitterplot_script.R script)
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/TUTR_vs_ALE/sig_CSV/")
-DMAi_data_frames = list.files(pattern = "*TUTR.csv")
+#read in sig DMAi cell lines TUTR sites - change directory to the location of your TUTR significant site csv files are (generated from classification_of_APA_event_script.R script)
+setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig2/panel_of_cancer_lines/APA_classified")
+DMAi_data_frames = list.files(pattern = "^sig.*\\.csv")
 
 # List to store data frames
 sig_DMAi_TUTR_csv_files = list()
@@ -16,8 +16,8 @@ for (file in DMAi_data_frames) {
 }
 
 #read in non-DMAi condition TUTR sites
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/TUTR_vs_ALE/sig_CSV/non_DMAi/")
-non_DMAi_data_frames = list.files(pattern = "*TUTR.csv")
+setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig3/non_DMAi_datasets/APA_classified")
+non_DMAi_data_frames = list.files(pattern = "^sig.*\\.csv")
 
 # List to store data frames
 sig_non_DMAi_TUTR_csv_files = list()
@@ -33,8 +33,8 @@ sig_TUTR_dfs = c(sig_DMAi_TUTR_csv_files,sig_non_DMAi_TUTR_csv_files)
 
 ## read in ctrl TUTR files
 #read in ctrl DMAi cell lines TUTR sites - - change directory to the location of your TUTR ctrl site csv files are (generated from TUTR_vs_ALE_and_jitterplot_script.R script)
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/TUTR_vs_ALE/ctrl_CSV/")
-DMAi_data_frames = list.files(pattern = "*TUTR.csv")
+setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig2/panel_of_cancer_lines/APA_classified")
+DMAi_data_frames = list.files(pattern = "^ctrl.*\\.csv")
 
 # List to store data frames
 ctrl_DMAi_TUTR_csv_files = list()
@@ -47,7 +47,7 @@ for (file in DMAi_data_frames) {
 
 #read in non-DMAi condition TUTR sites
 setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/TUTR_vs_ALE/ctrl_CSV/non_DMAi/")
-non_DMAi_data_frames = list.files(pattern = "*TUTR.csv")
+non_DMAi_data_frames = list.files(pattern = "^ctrl.*\\.csv")
 
 # List to store data frames
 ctrl_non_DMAi_TUTR_csv_files = list()
@@ -152,8 +152,8 @@ all_TUTR_list_with_pA_regions <- lapply(all_TUTR_list, calculate_PA_regions)
 # Apply the function to each data frame in gene_groups_with_tss_regions
 all_TUTR_bed_files <- lapply(all_TUTR_list_with_pA_regions, prepare_bed_df)
 
-# Function to write data frames to BED files with specified filenames and directories
-setwd('/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/bed/200')
+# Function to write data frames to BED files with specified filenames and directories e.g.
+setwd('../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed')
 
 # Define the prefixes and suffixes
 prefixes <- c('GP2D', 'H838', 'HCT116_p53minus', 'HCT116_p53plus', 'LU99', 'MCF7', 'PANC0403', 'SKMEL2', 'SUM149PT', 'U2OS', 'CBPi', 'CDK11i', 'CDK12i', 'CLKi_C', 'CLKi_N', 'HNRNPC_KD', 'HUB_N_vs_T_DMSO', 'JTE607', 'METTL3i', 'siCFIM25', 'siELAVL1', 'siPCF11', 'siSam68', 'siSUPT4H1', 'siXRN2')
