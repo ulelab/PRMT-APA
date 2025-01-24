@@ -715,7 +715,7 @@ for (df in sig_sites_with_UTR_type_anno_with_position_list) {
   condition_value <- unique(df$condition)
   
   # Construct the filename
-  filename <- paste0("sig_", condition_value, "_sites_with_positional.info.csv")
+  filename <- paste0("sig_", condition_value, "_sites_with_positional_info.csv")
   
   # Full file path
   filepath <- file.path(polyA_csv_dir,'positional_info', filename)
