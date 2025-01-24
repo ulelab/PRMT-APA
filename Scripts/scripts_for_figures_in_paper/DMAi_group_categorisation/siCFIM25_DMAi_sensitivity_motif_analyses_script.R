@@ -4,8 +4,8 @@ library(tidyverse)
 library(stringr)
 library(ggh4x)
 
-#setwd to location of fasta files directory
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/common_atlas/dedup/github/siCFIM25_DMSO_vs_DMAi/")
+#setwd to location of fasta files directory, e.g
+setwd("siCFIM25_DMSO_vs_DMAi_fasta_files")
 
 #function for reading in fasta files
 process_directory <- function(directory_name) {
@@ -73,7 +73,7 @@ process_fasta_files <- function(fasta_files, motifs) {
   return(combined_results)
 }
 
-# Define motifs
+# Define motifs e.g
 motifs = c('AATAAA','ATTAAA')
 
 #assess frequency of motifs 
