@@ -18,7 +18,7 @@ process_directory <- function(directory_name) {
   return(fasta_files)
 }
 
-#execute fasta reading function
+#execute fasta reading function, e.g
 fasta_files = process_directory("fasta/1000/")
 
 ##### multiple motifs
