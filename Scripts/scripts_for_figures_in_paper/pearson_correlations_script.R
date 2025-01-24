@@ -5,7 +5,7 @@ library(ggpubr)
 # Set the working directory to the directory containing the CSV files
 # (Adjust the path according to your specific directory structure)
 setwd("/path/to/your/directory")
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/CSV_files/pearson_correlations/DMAi_cell_lines/")
+setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig2/panel_of_cancer_lines/positional_info")
 
 # List all CSV files in the directory
 csv_files <- list.files(pattern = "\\.csv$")  # This regex matches files that end with .csv
@@ -204,7 +204,7 @@ ggplot(all_APA_events_in_both_HCT116_p53plus_and_U2OS, aes(x = HCT116_p53plus_ch
 
 ### lung cell line vs organoid comparison
 #setwd for organoids
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/CSV_files/pearson_correlations/organoids/")
+setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig2/patient_derived_organoids/positional_info")
 csv_files <- list.files(pattern = "\\.csv$")  # This regex matches files that end with .csv
 
 # Read each CSV file and store them in a list called 'DMAi_files'
@@ -302,7 +302,7 @@ ggplot(all_APA_events_in_both_organoid_and_DMAi_average, aes(x = avg_lung_line_c
 
 ### DMAi vs non-DMAi datasets analysis
 #setwd for non DMAi
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/CSV_files/pearson_correlations/non_DMAi/")
+setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig4/non_DMAi_datasets/positional_info")
 csv_files <- list.files(pattern = "\\.csv$")  # This regex matches files that end with .csv
 
 # Read each CSV file and store them in a list called 'non_DMAi_files'
@@ -427,7 +427,7 @@ ggplot(all_APA_events_in_both_siPCF11_and_DMAi_average, aes(x = siPCF11_change_i
 
 ###murine T cell analysis
 #setwd for murine T cells
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/CSV_files/pearson_correlations/murine_T/")
+setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig2/murine_T_cells/positional_info")
 csv_files <- list.files(pattern = "\\.csv$")  # This regex matches files that end with .csv
 
 # Read each CSV file and store them in a list called 'DMAi_files'
