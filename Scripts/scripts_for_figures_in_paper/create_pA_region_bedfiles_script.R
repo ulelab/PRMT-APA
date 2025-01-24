@@ -16,7 +16,7 @@ for (file in DMAi_data_frames) {
 }
 
 #read in non-DMAi condition TUTR sites
-setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig3/non_DMAi_datasets/APA_classified")
+setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig4/non_DMAi_datasets/APA_classified")
 non_DMAi_data_frames = list.files(pattern = "^sig.*\\.csv")
 
 # List to store data frames
@@ -46,7 +46,7 @@ for (file in DMAi_data_frames) {
 }
 
 #read in non-DMAi condition TUTR sites
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/TUTR_vs_ALE/ctrl_CSV/non_DMAi/")
+setwd(">./../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig4/non_DMAi_datasets/APA_classified")
 non_DMAi_data_frames = list.files(pattern = "^ctrl.*\\.csv")
 
 # List to store data frames
