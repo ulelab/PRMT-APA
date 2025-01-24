@@ -5,8 +5,8 @@ library(ggpubr)
 library(pheatmap)
 library(UpSetR)
 
-###setwd - change to location of directory containing the polyA sites with positional info CSVs (generated from the drimseq and TUTR_vs_ALE R scripts)
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/quantseq_96hrs/Nobby_APA_analysis/dedup/github/CSV_files/positional_info")
+###setwd - change to location of directory containing the polyA sites with positional info CSVs (generated from the drimseq.R and classification_of_APA_events.R R scripts)
+setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig1/ADMAi_vs_SDMAi_vs_double/positional_info")
 
 #### read in files
 # List all CSV files
@@ -119,7 +119,7 @@ pheatmap(non_TUTR_heatmap,clustering_distance_rows = "euclidean",
 
 ####Upset plot
 ###setwd
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/quantseq_96hrs/Nobby_APA_analysis/dedup/github/CSV_files/")
+setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig1/ADMAi_vs_SDMAi_vs_double/")
 
 #### read in files
 # List all CSV files
