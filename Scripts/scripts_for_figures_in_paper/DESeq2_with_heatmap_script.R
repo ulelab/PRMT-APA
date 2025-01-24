@@ -11,11 +11,11 @@ library(RColorBrewer)    # For figures
 library(pheatmap)        # For figures
 
 #### DMAi timecourse DESeq2
-# Set working directory - DMAi timecourse
-setwd('/Users/llywelyngriffith/Documents/AZ_postdoc/3_end_seq_timecourse_LU99')
+# Set working directory - e.g DMAi timecourse
+setwd('../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/')
 
-# Read in sample metadata
-timecourse_sample_info <- read_csv('timecourse_sample_info.csv') %>%
+# Read in sample metadata e.g
+timecourse_sample_info <- read_csv('deseq2_timecourse_sample_info.csv') %>%
   mutate(Treatment = factor(Treatment))
 
 # Create vector of Salmon quant.sf file paths and assign sample names
@@ -23,7 +23,7 @@ timecourse_sample_files <- paste0(timecourse_sample_info$Treatment, timecourse_s
 names(timecourse_sample_files) <- paste0(timecourse_sample_info$Treatment, '_', timecourse_sample_info$Replicate)
 
 # Create tx2gene mapping using GTF annotation
-txdb = makeTxDbFromGFF(file='/Users/llywelyngriffith/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/own_atlas/TUTR_vs_ALE/gencode.v45.annotation.gtf')
+txdb = makeTxDbFromGFF(file='gencode.v45.annotation.gtf')
 k = keys(txdb, keytype = "GENEID")
 df = select(txdb, keys = k, keytype = "GENEID", columns = "TXNAME")
 tx2gene_map = df[, 2:1]
@@ -145,16 +145,16 @@ for (tp in time_points) {
     filter(log2FoldChange < -1)
   
   # Write significant results to files
-  write_csv(res_sig, paste0('DESeq2_github/DESeq2_results_', tp, '_significant_genes.csv'))
-  write_csv(res_up, paste0('DESeq2_github/DESeq2_results_', tp, '_upregulated_genes.csv'))
-  write_csv(res_down, paste0('DESeq2_github/DESeq2_results_', tp, '_downregulated_genes.csv'))
+  write_csv(res_sig, paste0('DESeq2_tables/DESeq2_results_', tp, '_significant_genes.csv'))
+  write_csv(res_up, paste0('DESeq2_tables/DESeq2_results_', tp, '_upregulated_genes.csv'))
+  write_csv(res_down, paste0('DESeq2_tables/DESeq2_results_', tp, '_downregulated_genes.csv'))
 }
 
 #### CDK11i/TOPKi DESeq2
-setwd('/Users/llywelyngriffith/Documents/AZ_postdoc/CDK11i_3seq')
+setwd('../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/')
 
 # Read in sample metadata
-sample_info <- read_csv('sample_info.csv') %>%
+sample_info <- read_csv('deseq2_CDK11i_sample_info.csv') %>%
   mutate(Treatment = factor(Treatment))
 
 # Create vector of Salmon quant.sf file paths and assign sample names
@@ -247,9 +247,9 @@ res_down_cdk11i <- res_sig_cdk11i %>%
   filter(log2FoldChange < -1)
 
 # Write significant results to files
-write_csv(res_sig_cdk11i, 'DESeq2_github/DESeq2_results_CDK11i_significant_genes.csv')
-write_csv(res_up_cdk11i, 'DESeq2_github/DESeq2_results_CDK11i_upregulated_genes.csv')
-write_csv(res_down_cdk11i, 'DESeq2_github/DESeq2_results_CDK11i_downregulated_genes.csv')
+write_csv(res_sig_cdk11i, 'DESeq2_tables/DESeq2_results_CDK11i_significant_genes.csv')
+write_csv(res_up_cdk11i, 'DESeq2_tables/DESeq2_results_CDK11i_upregulated_genes.csv')
+write_csv(res_down_cdk11i, 'DESeq2_tables/DESeq2_results_CDK11i_downregulated_genes.csv')
 
 # Store results in a list for later use
 results_list_cdk11i <- list(
@@ -380,7 +380,7 @@ pheatmap(sig_gene_data,
 #setwd and write to file
 cluster_3_genes = gene_clusters %>% filter(Cluster == 3)
 
-write_csv(cluster_3_genes,'/Users/llywelyngriffith/Documents/AZ_postdoc/3_end_seq_timecourse_LU99/DESeq2_github/cluster_3_genes.csv')
-write_csv(all_gene_data,'/Users/llywelyngriffith/Documents/AZ_postdoc/3_end_seq_timecourse_LU99/DESeq2_github/background_genes.csv')
+write_csv(cluster_3_genes,'cluster_3_genes.csv')
+write_csv(all_gene_data,'background_genes.csv')
 
 
