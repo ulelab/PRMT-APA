@@ -10,10 +10,10 @@ library(tidyverse)
 library(stringr)
 
 ########################################################################
-# Set Working Directory
+# Set Working Directory to where your fasta files are located
 ########################################################################
 
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/fasta/non_removal/1000/")
+setwd("fasta_files")
 
 ########################################################################
 # Define Motifs
