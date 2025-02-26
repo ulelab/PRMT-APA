@@ -26,10 +26,10 @@ all_sites_csv_with_prox_to_dist_shift <- lapply(all_sites_csv,function(df) {
 #separate into sig sites and all sites for the subsequent filtering step
 sig_sites_list = all_sites_csv_with_prox_to_dist_shift[1:3]
 
-#restrict to most changed sites for heatmap and keep only one row per gene 
+#restrict to most changed sites for heatmap and only want distal pA rows
 most_regulated_sig_sites_list = lapply(sig_sites_list,function(df){
   df = df %>%
-    filter(abs(prox_to_dist_shift) > 0.4)
+    filter(abs(prox_to_dist_shift) > 0.4) %>% filter(pA_type == 'distal pA')
   return(df)
 })
 
@@ -40,7 +40,7 @@ most_regulated_sites_list = c(most_regulated_sig_sites_list,all_sites_csv_with_p
 most_regulated_sites_list = lapply(most_regulated_sites_list, function(df) {
   column_names_to_keep <- c("gene_name", "feature_id", "chr", "start",
                             "end", "strand", "pA_type", "UTR_type",
-                            "condition", "prox_to_dist_shift")
+                            "condition", "change_in_usage")
   
   # Check if the specified columns exist in the dataframe
   existing_columns <- column_names_to_keep[column_names_to_keep %in% names(df)]
@@ -51,15 +51,15 @@ most_regulated_sites_list = lapply(most_regulated_sites_list, function(df) {
   return(df)
 })
 
-#add condition onto prox_to_dist shift column 
+#add condition onto change_in_usage column 
 most_regulated_sites_list = lapply(most_regulated_sites_list, function(df) {
   # Create a new column name based on the first entry in the 'condition' column
-  new_colname = paste0(df$condition[1], "_prox_to_dist_shift")
+  new_colname = paste0(df$condition[1], "_change_in_usage")
   
-  # Check if 'prox_to_dist_shift' exists in the dataframe
-  if ("prox_to_dist_shift" %in% names(df)) {
-    # Change the name of the 'prox_to_dist_shift' column
-    names(df)[names(df) == "prox_to_dist_shift"] = new_colname
+  # Check if 'change_in_usage' exists in the dataframe
+  if ("change_in_usage" %in% names(df)) {
+    # Change the name of the 'change_in_usage' column
+    names(df)[names(df) == "change_in_usage"] = new_colname
   }
   
   # Return the modified dataframe
@@ -68,20 +68,19 @@ most_regulated_sites_list = lapply(most_regulated_sites_list, function(df) {
 
 #extract tables
 sig_ADMA_most_reg_sites=most_regulated_sites_list[[1]]
-sig_SDMA_most_reg_sites=most_regulated_sites_list[[2]]
-sig_SDMA_ADMA_most_reg_sites=most_regulated_sites_list[[3]]
+sig_SDMA_most_reg_sites=most_regulated_sites_list[[3]]
+sig_SDMA_ADMA_most_reg_sites=most_regulated_sites_list[[2]]
 
 all_ADMA_sites=most_regulated_sites_list[[4]]
-all_SDMA_sites=most_regulated_sites_list[[5]]
-all_SDMA_ADMA_sites=most_regulated_sites_list[[6]]
+all_SDMA_sites=most_regulated_sites_list[[6]]
+all_SDMA_ADMA_sites=most_regulated_sites_list[[5]]
 
 #merge tables
 SDMA_ADMA_most_reg_sites_with_ADMA_data = merge(sig_SDMA_ADMA_most_reg_sites, all_ADMA_sites, by = c('gene_name', 'feature_id', 'chr','start', 'end', 'strand'), all.x = TRUE)
 SDMA_ADMA_most_reg_sites_with_ADMA_and_SDMA_data = merge(SDMA_ADMA_most_reg_sites_with_ADMA_data, all_SDMA_sites, by = c('gene_name', 'feature_id', 'chr', 'start', 'end', 'strand'), all.x = TRUE)
-
 # Specify the column names you want to keep
 columns_to_keep <- c("gene_name", "feature_id", "chr", "start", "end", 
-                     "strand", "UTR_type","ADMAi_prox_to_dist_shift", "SDMAi_prox_to_dist_shift", "SDMAiADMAi_prox_to_dist_shift")
+                     "strand", "UTR_type","ADMAi_change_in_usage", "SDMAi_change_in_usage", "SDMAi_ADMAi_change_in_usage")
 SDMA_ADMA_most_reg_sites_with_ADMA_and_SDMA_data=SDMA_ADMA_most_reg_sites_with_ADMA_and_SDMA_data[, columns_to_keep]
 
 ADMA_most_reg_sites_with_SDMA_data = merge(sig_ADMA_most_reg_sites, all_SDMA_sites, by = c('gene_name', 'feature_id', 'chr', 'start', 'end', 'strand'), all.x = TRUE)
@@ -103,19 +102,24 @@ all_sig_sites = all_sig_sites %>%
 TUTR_sig_sites = all_sig_sites %>% filter(UTR_type == 'TUTR')
 non_TUTR_sig_sites = all_sig_sites %>% filter(UTR_type != 'TUTR')
 
-#isolate just prox-to-dist shifts for heatmap
-TUTR_heatmap = TUTR_sig_sites[,c(8:10)]
-non_TUTR_heatmap = non_TUTR_sig_sites[,c(8:10)]
+#isolate just distal change in usage for heatmap and multiply by 100 to turn in % change in dPA usage
+TUTR_heatmap <- TUTR_sig_sites %>%
+  select(8:10) %>%
+  mutate(across(everything(), ~ .x * 100))
+non_TUTR_heatmap <- non_TUTR_sig_sites %>%
+  select(8:10) %>%
+  mutate(across(everything(), ~ .x * 100))
 
 #define colour scheme
-RdBu=colorRampPalette(rev(brewer.pal(9,'RdBu')))(30)  #extrapolate 9 colours palette out to 30
+RdBu=colorRampPalette(rev(brewer.pal(9,'RdBu')))(40)  #extrapolate 9 colours palette out to 45
 
 # Define symmetrical breaks around 0
-breaks = seq(-1, 1, length.out = 31)
+breaks = seq(-40, 40, length.out = 41)
 
 #make heatmap
-pheatmap(non_TUTR_heatmap,clustering_distance_rows = "euclidean",
-         clustering_distance_cols = "euclidean",color=RdBu,breaks=breaks,fontsize_row = 2,fontsize_col=14,angle_col='45',cutree_rows = 2,labels_col=c("ADMAi","SDMAi","SDMAi + ADMAi"))
+pheatmap(TUTR_heatmap,clustering_distance_rows = "manhattan",
+         clustering_distance_cols = "canberra",color=RdBu,breaks=breaks,show_rownames = FALSE,fontsize_col=14,angle_col='45',legend_breaks = c(-50, -25, 0, 25, 50),   # where numeric labels appear
+         legend_labels = c("-50%", "-25%", "0%", "25%", "50%"),cutree_rows = 2,labels_col=c("ADMAi","SDMAi","SDMAi + ADMAi"))
 
 ####Upset plot
 ###setwd
