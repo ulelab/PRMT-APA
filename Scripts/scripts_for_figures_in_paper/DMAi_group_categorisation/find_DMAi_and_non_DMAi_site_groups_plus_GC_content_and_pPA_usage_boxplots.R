@@ -10,7 +10,7 @@ library(GenomicFeatures)
 
 ##read in DMAi pA site CSVs and merge with DESEQ2 tables to obtain transcript expression data (BaseMean)
 #setwd 
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/CSV_files/positional_info/")
+setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig2/panel_of_cancer_lines/positional_info")
 
 #read in mulit_sig_pAs file
 csv_files = list.files(pattern = "^top2")
@@ -25,7 +25,7 @@ for (file in csv_files) {
 }
 
 #read in DE tables
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/DE_tables/")
+setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/DESeq2_tables/DMAi_cancer_line_panel")
 
 #read in DE file
 DE_csv_files = list.files(pattern = "csv")
@@ -52,7 +52,7 @@ DMAi_data_frames_with_basemean <- Map(function(x, y) {
 
 ##read in non-DMAi pA site CSVs and merge with DESEQ2 tables to obtain transcript expression data (BaseMean)
 #setwd
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/CSV_files/positional_info/non_DMAi")
+setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig4/positional_info/")
 
 #read in mulit_sig_pAs file
 csv_files = list.files(pattern = "^top2")
@@ -67,7 +67,7 @@ for (file in csv_files) {
 }
 
 #read in DE file
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/DE_tables/non_DMAi/with_XRN2/")
+setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/DESeq2_tables/non_DMAi")
 non_DMAi_DE_csv_files = list.files(pattern = "csv")
 
 # List to store data frames
@@ -161,7 +161,7 @@ common_DMAi_pairs_no_non_DMAi_filter = common_DMAi_pairs_no_non_DMAi_filter %>%
   ungroup()
 
 #write to file 
-write_csv(common_DMAi_pairs_no_non_DMAi_filter,"/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/CSV_files/common_DMAi_pairs_without_non_DMAi_filter.csv")
+write_csv(common_DMAi_pairs_no_non_DMAi_filter,"common_DMAi_sites.csv")
 
 ## function to add additional filter - remove sites that are altered more in non-DMAi, i.e max dmai effect is at least 33% the effect of max non-DMAi
 filter_with_non_dmai <- function(dmai_results, non_dmai_data_frames, columns_of_interest) {
@@ -402,19 +402,19 @@ common_control_pairs = common_control_pairs %>%
 #read in significant and control csv files containing UTR_type annotation
 #read in TUTR and ALE info
 # Read each file into a list of dataframes
-directory <- "/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/TUTR_vs_ALE/sig_CSV/"
+directory <- "../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig2/panel_of_cancer_lines/APA_classified/"
 DMAi_file_list <- list.files(directory, pattern = ".*sig.*all.*", full.names = TRUE)
 DMAi_UTR_type_table_list <- lapply(DMAi_file_list, read.csv)
 
-directory <- "/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/TUTR_vs_ALE/sig_CSV/non_DMAi/"
+directory <- "../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig4/non_DMAi_datasets/APA_classified/"
 non_DMAi_file_list <- list.files(directory, pattern = ".*sig.*all.*", full.names = TRUE)
 non_DMAi_UTR_type_table_list <- lapply(non_DMAi_file_list, read.csv)
 
-directory <- "/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/TUTR_vs_ALE/ctrl_CSV/"
+directory <- "../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig2/panel_of_cancer_lines/APA_classified/"
 DMAi_ctrl_file_list <- list.files(directory, pattern = ".*ctrl.*all.*", full.names = TRUE)
 DMAi_ctrl_UTR_type_table_list <- lapply(DMAi_ctrl_file_list, read.csv)
 
-directory <- "/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/TUTR_vs_ALE/ctrl_CSV/non_DMAi/"
+directory <- "../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig4/non_DMAi_datasets/APA_classified/"
 non_DMAi_ctrl_file_list <- list.files(directory, pattern = ".*ctrl.*all.*", full.names = TRUE)
 non_DMAi_ctrl_UTR_type_table_list <- lapply(non_DMAi_ctrl_file_list, read.csv)
 
@@ -587,9 +587,7 @@ all_TUTR_list_with_pA_regions <- lapply(all_TUTR_list, calculate_PA_regions)
 # Apply the function to each data frame in all_TUTR_list_with_pA_regions
 all_TUTR_bed_files <- lapply(all_TUTR_list_with_pA_regions, prepare_bed_df)
 
-# Function to write data frames to BED files with specified filenames and directories
-setwd('/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/bed/test_triple_removal/400/relaxed_thresholds_for_charlotte/')
-
+#write bed files function
 write_bed_files <- function(df_list) {
   # Create directories if they don't already exist
   if (!dir.exists("common_DMAi")) {
@@ -641,8 +639,8 @@ prox_gene_groups = c(down_TUTR_proximal_sites_list[1:2],TUTR_proximal_sites_list
 distal_gene_groups = c(up_TUTR_distal_sites_list[1:2],TUTR_distal_sites_list[3])
 gene_groups <- Map(rbind, prox_gene_groups, distal_gene_groups)
 
-#read in gencode file
-gencode_gtf_path='/Users/llywelyngriffith/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/own_atlas/TUTR_vs_ALE/gencode.v45.annotation.gtf'
+#read in gencode file (set path to the location of your gencode annotation file)
+gencode_gtf_path='gencode.v45.annotation.gtf'
 
 # Import the GTF file
 gtf <- import(gencode_gtf_path)
@@ -906,9 +904,6 @@ downstream_of_gene_bed_dfs <- lapply(gene_groups_with_downstream_of_gene_regions
 #combine all gene region bed files into a single list
 gene_group_bed_files = c(upstream_of_gene_bed_dfs,pre_tss_bed_dfs,tss_bed_dfs,gene_body_bed_dfs,UTR_bed_dfs,post_dPA_bed_dfs,downstream_of_gene_bed_dfs)
 
-#setwd to write bed files into 
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines//Nobby_APA_analysis/common_atlas/resequenced/dedup/github/bed/test_triple_removal/boxplot_regions/")
-
 #write bed
 prefixes <- c('DMAi', 'non_DMAi', 'control')
 suffixes <- c('_upstream_of_gene.bed','_pre_TSS.bed', '_TSS.bed', '_gene_body.bed',
@@ -936,9 +931,8 @@ for (i in seq_along(gene_group_bed_files)) {
 }
 
 #### GC boxplot
-#Define the directory containing the FASTA files
+#Define the directory containing the FASTA files - these need to be generated with getFasta from the bedtools suite, using the bed files generated above as input
 #setwd
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines//Nobby_APA_analysis/common_atlas/resequenced/dedup/github/fasta/test_triple_removal/")
 fasta_dir <- "boxplot_regions/"
 
 # Get the list of FASTA files
@@ -1101,9 +1095,7 @@ all_expression_matched_TUTR_with_pA_regions_list <- lapply(all_expression_matche
 # Apply the previously made bed file generation function to each data frame in all_expression_matched_TUTR_with_pA_regions_list
 all_expression_matched_TUTR_bed_files <- lapply(all_expression_matched_TUTR_with_pA_regions_list, prepare_bed_df)
 
-# Function to write data frames to BED files with specified filenames and directories
-setwd('/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/bed/test_triple_removal/expression_matched/2000')
-
+# write expression matched bed files if required
 write_bed_files <- function(df_list) {
   # Create directories if they don't already exist
   if (!dir.exists("common_DMAi")) {
@@ -1197,5 +1189,3 @@ kruskal_test_result
 
 # Perform Dunn's test for multiple comparisons
 dunn_test_result <- dunn.test(all_sites_table$prox_usage, all_sites_table$category, method = "bonferroni")  #ctrl vs dmai-lengthened: padj =  6.488197e-14, ctrl vs non-dmai-lengthened: padj =3.553605e-24, dmai vs non-dmai-lengthened: padj = 1.251070e-01
-
-View(all_sites_table)
