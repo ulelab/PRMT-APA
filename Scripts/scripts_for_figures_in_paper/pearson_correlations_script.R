@@ -6,10 +6,10 @@ library(data.table)
 # Set the working directory to the directory containing the CSV files
 # (Adjust the path according to your specific directory structure)
 setwd("/path/to/your/directory")
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/CSV_files/pearson_correlations/DMAi_cell_lines/")
+setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig2/panel_of_cancer_lines/positional_info")
 
-# List all CSV files in the directory
-csv_files <- list.files(pattern = "\\.csv$")  # This regex matches files that end with .csv
+# List top2 files in the directory
+csv_files <- list.files(directory, pattern = "*top2*")  # This regex matches files that have top2 in their name
 
 # Read each CSV file and store them in a list called 'DMAi_files'
 DMAi_files <- lapply(csv_files, function(file) {
@@ -205,8 +205,10 @@ ggplot(all_APA_events_in_both_HCT116_p53plus_and_U2OS, aes(x = HCT116_p53plus_ch
 
 ### lung cell line vs organoid comparison
 #setwd for organoids
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/CSV_files/pearson_correlations/organoids/")
-csv_files <- list.files(pattern = "\\.csv$")  # This regex matches files that end with .csv
+setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig2/patient_derived_organoids/positional_info")
+
+# List top2 files in the directory
+csv_files <- list.files(directory, pattern = "*top2*")  # This regex matches files that have top2 in their name
 
 # Read each CSV file and store them in a list called 'DMAi_files'
 organoid_files <- lapply(csv_files, function(file) {
@@ -302,8 +304,10 @@ ggplot(all_APA_events_in_both_organoid_and_DMAi_average, aes(x = avg_lung_line_c
 
 ### DMAi vs non-DMAi datasets analysis
 #setwd for non DMAi
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/CSV_files/pearson_correlations/non_DMAi/")
-csv_files <- list.files(pattern = "\\.csv$")  # This regex matches files that end with .csv
+setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig4/non_DMAi_datasets")
+
+# List top2 files in the directory
+csv_files <- list.files(directory, pattern = "*top2*")  # This regex matches files that have top2 in their name
 
 # Read each CSV file and store them in a list called 'non_DMAi_files'
 non_DMAi_files <- lapply(csv_files, function(file) {
@@ -531,27 +535,6 @@ ggscatter(all_APA_events_in_both_siELAVL1_and_DMAi_average, x = "siELAVL1_DMSO_c
   ylim(c(-0.71,0.71))+
   xlim(c(-0.71,0.71))
 
-#siELAVL1 vs DMAi (calculated r = -0.2)
-all_APA_events_in_both_siELAVL1_and_DMAi_average=inner_join(non_DMAi_files[[8]],merged_df,by=c('gene_name','feature_id'))
-ggscatter(all_APA_events_in_both_siELAVL1_and_DMAi_average, x = "siELAVL1_DMSO_change_in_usage", y = "avg_DMAi_change_in_usage", 
-          add = "reg.line", conf.int = TRUE, cor.coef = TRUE,
-          cor.method = "pearson",
-          xlab = "Change in PAS usage - siELAVL1", ylab = "Change in PAS usage - DMAi cell line average",
-          shape = 19,            # Specifies the shape of points; 19 is solid circle
-          color = "#2B496A",    # Specifies the color of points
-          dot.size = 3,          # Size of the dots)
-          title = paste("APA Pearson r Correlation - siELAVL1 vs DMAi"))+
-  theme(plot.title = element_text(hjust = 0.5))  +
-  theme_bw()+
-  theme(
-    plot.title = element_text(hjust = 0.5, size = 30, face = "bold"),
-    axis.title = element_text(size = 25),
-    axis.text = element_text(size = 25),
-    legend.position = "none"  # Removes legend since there are no groups
-  ) +
-  ylim(c(-0.71,0.71))+
-  xlim(c(-0.71,0.71))
-
 #siPCF11 vs DMAi (calculated r = 0.58)
 all_APA_events_in_both_siPCF11_and_DMAi_average=inner_join(non_DMAi_files[[9]],merged_df,by=c('gene_name','feature_id'))
 ggscatter(all_APA_events_in_both_siPCF11_and_DMAi_average, x = "siPCF11_change_in_usage", y = "avg_DMAi_change_in_usage", 
@@ -702,8 +685,10 @@ ggplot(df_corr, aes(x = dataset, y = "DMAi", fill = r_value, size = abs(r_value)
 
 ###murine T cell analysis
 #setwd for murine T cells
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/CSV_files/pearson_correlations/murine_T/")
-csv_files <- list.files(pattern = "\\.csv$")  # This regex matches files that end with .csv
+setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig2/murine_T_cells")
+
+# List top2 files in the directory
+csv_files <- list.files(directory, pattern = "*top2*")  # This regex matches files that have top2 in their name
 
 # Read each CSV file and store them in a list called 'DMAi_files'
 murine_T_files <- lapply(csv_files, function(file) {
@@ -734,30 +719,6 @@ names(murine_T_files) <- gsub("\\_sites_with_positional_info.csv$", "", csv_file
 
 #Naive vs Polarised against Polarised vs Polarised + DMAi
 all_APA_events_in_both_N_vs_P_and_P_vs_Pdmai=inner_join(murine_T_files[[1]],murine_T_files[[2]],by=c('gene_name','feature_id'))
-
-#make sig table for Dimitros
-contrasting_APA_events_in_N_vs_P_and_P_vs_Pdmai <- all_APA_events_in_both_N_vs_P_and_P_vs_Pdmai %>%
-  filter(Naive_vs_Polarised_prox_to_dist_shift < -0.2,
-         Polarised_DMSO_vs_DMAi_prox_to_dist_shift > 0.2) %>%
-  select(-c(Naive_vs_Polarised_change_in_usage,
-            Polarised_DMSO_vs_DMAi_change_in_usage)) %>%
-  rename(
-    Polarised_DMSO_vs_Polarised_DMAi_prox_to_dist_shift = Polarised_DMSO_vs_DMAi_prox_to_dist_shift,
-    Polarised_DMSO_vs_Polarised_DMAi_padj = Polarised_DMSO_vs_DMAi_twostep_feature_padj,
-    Naive_vs_Polarised_padj = Naive_vs_Polarised_twostep_feature_padj
-  )
-
-#read in polyA coordinate atlas
-pA_atlas = fread("/Users/llywelyngriffith/Documents/AZ_postdoc/Magnus_T_cell_seq/Nobby_APA_analysis/dedup/correct_labels/merged_polya.filteredunique.annotated.bed",col.names = c("chr", "start", "end", "feature_id", "score", "strand", "ensg", "hgnc", "region"))
-
-#add coordinates
-contrasting_APA_events_in_N_vs_P_and_P_vs_Pdmai <- contrasting_APA_events_in_N_vs_P_and_P_vs_Pdmai %>%
-  left_join(
-    pA_atlas %>% select(feature_id, chr, start, end, strand),
-    by = "feature_id"
-  )
-
-write_csv(contrasting_APA_events_in_N_vs_P_and_P_vs_Pdmai,'/Users/llywelyngriffith/Documents/AZ_postdoc/Magnus_T_cell_seq/Nobby_APA_analysis/dedup/correct_labels/DMAi_regulated_UTRs.csv')
 
 #get inverse of Polarised vs Polarised + DMAi change in usage
 all_APA_events_in_both_N_vs_P_and_P_vs_Pdmai$Polarised_DMSO_vs_DMAi_change_in_usage_inverted = all_APA_events_in_both_N_vs_P_and_P_vs_Pdmai$Polarised_DMSO_vs_DMAi_change_in_usage * -1
