@@ -14,7 +14,7 @@ library(stringr)
 ########################################################################
 
 # Update this path to where your .fasta files are located
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/fasta/test_triple_removal/1000/")
+setwd("fasta_files/")
 
 ########################################################################
 # Define Motifs
