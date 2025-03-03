@@ -27,22 +27,22 @@ read_and_prepare_bed <- function(file_path) {
 
 # List of siCFIM25-transcript group (DMAi-sensitivity categorised) file paths, change path file to location of bed files you want to analyse
 siCFIM25_bed_file_paths <- list(
-  full_mit_proximal = "/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed_files/expression_matched/2000/DMAi_full_mit_proximal_sites.bed",
-  part_mit_proximal = /ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed_files/expression_matched/2000/DMAi_part_mit_proximal_sites.bed",
-  no_mit_proximal   = /ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed_files/expression_matched/2000/no_mit_proximal_sites.bed",
-  full_mit_distal   = /ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed_files/expression_matched/2000/DMAi_full_mit_distal_sites.bed",
-  part_mit_distal   = /ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed_files/expression_matched/2000/DMAi_part_mit_distal_sites.bed",
-  no_mit_distal     = /ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed_files/expression_matched/2000/no_mit_distal_sites.bed"
+  full_mit_proximal = "/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed_files/expression_matched/2000nt_window/siCFIM25/DMAi_full_mit_proximal_sites.bed",
+  part_mit_proximal = /ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed_files/expression_matched/2000nt_window/siCFIM25/DMAi_part_mit_proximal_sites.bed",
+  no_mit_proximal   = /ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed_files/expression_matched/2000nt_window/siCFIM25/no_mit_proximal_sites.bed",
+  full_mit_distal   = /ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed_files/expression_matched/2000nt_window/siCFIM25/DMAi_full_mit_distal_sites.bed",
+  part_mit_distal   = /ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed_files/expression_matched/2000nt_window/siCFIM25/DMAi_part_mit_distal_sites.bed",
+  no_mit_distal     = /ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed_files/expression_matched/2000nt_window/siCFIM25/no_mit_distal_sites.bed"
 )
 
 # List of DMAi vs non-DMAi transcript file paths
 DMAi_vs_non_DMAi_bed_file_paths <- list(
-  DMAi_proximal = /ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed_files/expression_matched/2000/common_DMAi/common_DMAi_sig_down_TUTR_proximal_sites.bed",
-  non_DMAi_proximal = /ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed_files/expression_matched/2000/non_DMAi/non_DMAi_sig_down_TUTR_proximal_sites.bed",
-  ctrl_proximal   = /ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed_files/expression_matched/2000/common_DMAi/control_TUTR_proximal_sites.bed",
-  DMAi_distal = /ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed_files/expression_matched/2000/common_DMAi/common_DMAi_sig_up_TUTR_distal_sites.bed",
-  non_DMAi_distal = /ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed_files/expression_matched/2000/non_DMAi/non_DMAi_sig_up_TUTR_distal_sites.bed",
-  ctrl_distal   = /ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed_files/expression_matched/2000/common_DMAi/control_TUTR_distal_sites.bed"
+  DMAi_proximal = /ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed_files/expression_matched/2000nt_window/common_DMAi/common_DMAi_sig_down_TUTR_proximal_sites.bed",
+  non_DMAi_proximal = /ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed_files/expression_matched/2000nt_window/non_DMAi/non_DMAi_sig_down_TUTR_proximal_sites.bed",
+  ctrl_proximal   = /ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed_files/expression_matched/2000nt_window/common_DMAi/control_TUTR_proximal_sites.bed",
+  DMAi_distal = /ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed_files/expression_matched/2000nt_window/common_DMAi/common_DMAi_sig_up_TUTR_distal_sites.bed",
+  non_DMAi_distal = /ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed_files/expression_matched/2000nt_window/non_DMAi/non_DMAi_sig_up_TUTR_distal_sites.bed",
+  ctrl_distal   = /ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed_files/expression_matched/2000nt_window/common_DMAi/control_TUTR_distal_sites.bed"
 )
 
 # Read and prepare GRanges objects (change bed_file_path variable name to analyse different files, i.e siCFIM25 files or DMAi vs non-DMAi files)
