@@ -6,7 +6,7 @@ library(data.table)
 # Set the working directory to the directory containing the CSV files
 # (Adjust the path according to your specific directory structure)
 setwd("/path/to/your/directory")
-setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig2/panel_of_cancer_lines/positional_info")
+setwd("/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig2/panel_of_cancer_lines/positional_info")
 
 # List top2 files in the directory
 csv_files <- list.files(directory, pattern = "*top2*")  # This regex matches files that have top2 in their name
@@ -304,7 +304,7 @@ ggplot(all_APA_events_in_both_organoid_and_DMAi_average, aes(x = avg_lung_line_c
 
 ### DMAi vs non-DMAi datasets analysis
 #setwd for non DMAi
-setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig4/non_DMAi_datasets")
+setwd("/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig4/non_DMAi_datasets")
 
 # List top2 files in the directory
 csv_files <- list.files(directory, pattern = "*top2*")  # This regex matches files that have top2 in their name
@@ -685,7 +685,7 @@ ggplot(df_corr, aes(x = dataset, y = "DMAi", fill = r_value, size = abs(r_value)
 
 ###murine T cell analysis
 #setwd for murine T cells
-setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig2/murine_T_cells")
+setwd("/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig2/murine_T_cells")
 
 # List top2 files in the directory
 csv_files <- list.files(directory, pattern = "*top2*")  # This regex matches files that have top2 in their name
