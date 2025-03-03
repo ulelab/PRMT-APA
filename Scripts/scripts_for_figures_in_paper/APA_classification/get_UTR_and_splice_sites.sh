@@ -1,5 +1,5 @@
 # Description:
-# This script uses the GTFtools package to generate bed files containing locations of splice sites and 3' UTR regions
+# This script uses the GTFtools package to generate bed files containing locations of splice sites and UTR regions
 
 python GTFtools/gtftools.py -q splice_regions.bed gencode.v45.annotation.gtf
 
