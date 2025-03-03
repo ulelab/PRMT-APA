@@ -2,7 +2,7 @@ library(ggplot2)
 library(tidyverse)
 
 #setwd
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/quantseq_96hrs/Nobby_APA_analysis/dedup/github/TUTR_vs_ALE/CSV")
+setwd("/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig1/ADMAi_vs_SDMAi_vs_double/APA_classified/")
 
 #Read in pA site files and only retain TUTR genes
 TUTR_ADMAi = read.csv('all_ADMAi_sites_with_UTR_type_info.csv') %>% filter(UTR_type == 'TUTR')
@@ -21,7 +21,7 @@ TUTR_list = lapply(TUTR_list,function(df){
 
 ##read in whole gene DESeq2 files
 #setwd
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/quantseq_96hrs/DESeq2_github")
+setwd("/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/DESeq2_tables/ADMAi_vs_SDMAi_vs_double/")
 
 DE_table_ADMAi = read.csv('3_end_seq_DMSO_vs_ADMAi_96hrs_LFC_DE_all_genes.csv')
 DE_table_SDMAi = read.csv('3_end_seq_DMSO_vs_SDMAi_96hrs_LFC_DE_all_genes.csv')
@@ -134,9 +134,6 @@ up_not_lengthened = df_SDMAi_ADMAi %>% filter(APA_and_gene_class == "no 3' UTR l
 down_not_lengthened = df_SDMAi_ADMAi %>% filter(APA_and_gene_class == "no 3' UTR lengthening + gene downregulated")
 
 #write to file
-#setwd
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/quantseq_96hrs/Nobby_APA_analysis/dedup/github/APA_vs_DE/gene_groups_for_metascape/SDMAi_ADMAi/jernej_method")
-
 write_csv(up_not_lengthened,'up_not_lengthened.csv')
 write_csv(down_not_lengthened,'down_not_lengthened.csv')
 write_csv(up_and_lengthened,'up_and_lengthened.csv')
