@@ -15,7 +15,7 @@ library(pheatmap)        # For figures
 setwd('../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/')
 
 # Read in sample metadata e.g
-timecourse_sample_info <- read_csv('deseq2_timecourse_sample_info.csv') %>%
+timecourse_sample_info <- read_csv('DESeq2_tables/deseq2_timecourse_sample_info.csv') %>%
   mutate(Treatment = factor(Treatment))
 
 # Create vector of Salmon quant.sf file paths and assign sample names
@@ -134,7 +134,7 @@ for (tp in time_points) {
   results_list[[tp]] <- resLFC_df_anno
   
   # Write full results to file
-  write_csv(resLFC_df_anno, paste0('DESeq2_github/DESeq2_results_', tp, '_all_genes.csv'))
+  write_csv(resLFC_df_anno, paste0('DESeq2_tables/DESeq2_results_', tp, '_all_genes.csv'))
   
   # Filter significant genes (padj <= 0.05 and abs(log2FoldChange) > 1)
   res_sig <- resLFC_df_anno %>%
@@ -154,7 +154,7 @@ for (tp in time_points) {
 setwd('../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/')
 
 # Read in sample metadata
-sample_info <- read_csv('deseq2_CDK11i_sample_info.csv') %>%
+sample_info <- read_csv('CDK11i_deseq_sample_info.csv') %>%
   mutate(Treatment = factor(Treatment))
 
 # Create vector of Salmon quant.sf file paths and assign sample names
@@ -236,7 +236,7 @@ resLFC_df_anno_cdk11i <- resLFC_df_anno_cdk11i %>%
   ungroup()
 
 # Save all results
-write_csv(resLFC_df_anno_cdk11i, 'DESeq2_github/DESeq2_results_CDK11i_all_genes.csv')
+write_csv(resLFC_df_anno_cdk11i, 'DESeq2_tables/DESeq2_results_CDK11i_all_genes.csv')
 
 # Filter significant genes (padj <= 0.05 and abs(log2FoldChange) > 1)
 res_sig_cdk11i <- resLFC_df_anno_cdk11i %>%
@@ -302,9 +302,11 @@ all_genes_list <- lapply(all_genes_list, function(df) {
 })
 
 # Merge all gene data frames on 'gene_symbol'
-all_gene_data <- purrr::reduce(all_genes_list, function(x, y) {
-  left_join(x, y, by = "gene_symbol")
-})
+all_gene_data <- purrr::reduce(
+  all_genes_list,
+  full_join,
+  by = "gene_symbol"
+)
 
 # Collect significant gene symbols from all conditions
 sig_gene_symbols <- unique(unlist(lapply(sig_genes_list, function(df) df$gene_symbol)))
@@ -354,7 +356,7 @@ dist_rows <- dist(sig_gene_data, method = "manhattan")
 # Perform hierarchical clustering
 hc_rows <- hclust(dist_rows, method = "complete")
 
-# Cut the tree into 8 clusters
+# Cut the tree into 3 clusters
 clusters <- cutree(hc_rows, k = 3)
 
 # Create a data frame with gene symbols and cluster assignments
