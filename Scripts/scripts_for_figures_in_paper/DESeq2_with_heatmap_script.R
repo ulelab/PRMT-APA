@@ -12,7 +12,7 @@ library(pheatmap)        # For figures
 
 #### DMAi timecourse DESeq2
 # Set working directory - e.g DMAi timecourse
-setwd('../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/')
+setwd('/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/')
 
 # Read in sample metadata e.g
 timecourse_sample_info <- read_csv('DESeq2_tables/deseq2_timecourse_sample_info.csv') %>%
@@ -151,7 +151,7 @@ for (tp in time_points) {
 }
 
 #### CDK11i/TOPKi DESeq2
-setwd('../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/')
+setwd('ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/')
 
 # Read in sample metadata
 sample_info <- read_csv('CDK11i_deseq_sample_info.csv') %>%
