@@ -18,8 +18,8 @@ output_dir <- "/path/to/your/output_directory"
 
 # For demonstration purposes, replace the above paths with your actual paths
 # For example:
-polyA_csv_dir <- "../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig1/ADMAi_vs_SDMAi_vs_double"
-anno_bed_dir <- "../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/APA_classification"
+polyA_csv_dir <- "../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig1/DMAi_timecourse"
+anno_bed_dir <- "../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/APA_classification"  # bed files need to be generated from annotate_pA_sites.sh script
 UTR_info_path <- "../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/APA_classification/UTR_regions_gencode_v45.bed"
 splice_site_info_path <- "../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/APA_classification/splice_regions_gencode_v45.bed"
 output_dir <- "../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/APA_classification"
@@ -30,7 +30,7 @@ if(!dir.exists(output_dir)) {
 }
 
 # Define the experimental conditions
-conditions <- c("ADMAi", "SDMAi","SDMAiADMAi")  # Update this vector as per your conditions
+conditions <- c("DMAi_24hrs", "DMAi_48hrs","DMAi_72hrs","DMAi_96hrs")  # Update this vector as per your conditions
 
 # ----------------------------
 # Read and Prepare PolyA Site Data
@@ -57,7 +57,7 @@ polyA_data_list <- lapply(polyA_data_list, function(df){
   return(df)
 })
 
-# Function to process PolyA site data and select top 2 sites per gene
+# Function to process PolyA site data and select top 2 sites per gene (i.e 2 most used sites for non-significant genes and 2 most significantly changing for significant genes)
 process_gene_groups <- function(df) {
   # Add a flag for significant PolyA sites based on adjusted p-value and change in usage
   df <- df %>%
@@ -124,7 +124,7 @@ anno_data_list <- lapply(anno_data_list, function(df) {
     )
 })
 
-# Ensure that 'polyA_top2_list' and 'anno_data_list' are in the same order
+# Ensure that 'polyA_top2_list' and 'anno_data_list' are in the same order before running this function
 # Join the processed PolyA data with the annotated sites
 anno_data_list <- Map(function(df1, df2) {
   dplyr::left_join(df1, df2, by = c('chr', 'start', 'end', 'strand', 'gene_name', 'ensembl_ID')) 
@@ -383,7 +383,7 @@ TUTR_sites_list <- lapply(sites_with_UTR_type_list, function(df) {
   df %>% dplyr::filter(UTR_type == 'TUTR')
 })
 
-# Identify 'single_sig_pA' genes from the 'TUTR' sites
+# Look for genes within 'TUTR gene' category that in fact only have one polyA site (as other polyA site is either non-annotated or was annotated to a different gene)
 TUTR_sites_list <- lapply(TUTR_sites_list, function(df) {
   df %>%
     group_by(ensembl_ID) %>%
@@ -500,7 +500,7 @@ all_sites_with_UTR_type <- lapply(all_sites_with_UTR_type, function(df) {
 })
 
 # ----------------------------
-# Filter Significant and Control Genes
+# Filter Significant and Control Genes for Barchart
 # ----------------------------
 
 # Filter to isolate significant genes (genes with at least two significant PAS)
@@ -569,9 +569,10 @@ combined_tallies$UTR_type <- factor(combined_tallies$UTR_type, levels = c('TUTR'
 
 # Define custom labels for the strip titles
 strip_labels <- c(
-  "ADMAi"      = "ADMAi",
-  "SDMAi"      = "SDMAi",
-  "SDMAiADMAi" = "SDMAi+ADMAi"
+  "DMAi_24hrs" = "24hrs",
+  "DMAi_48hrs" = "48hrs",
+  "DMAi_72hrs" = "72hrs",
+  "DMAi_96hrs" = "96hrs"
   # Add more mappings as needed
 )
 
@@ -587,10 +588,10 @@ sig_UTR_class_barchart <- ggplot(combined_tallies, aes(x = UTR_type, y = total, 
   scale_fill_brewer(palette = 'Set2') +
   theme(
     legend.position = 'none',
-    plot.title = element_text(hjust = 0.5, size = 28),
     axis.title = element_text(size = 24),
-    axis.text = element_text(size = 16),
-    strip.text = element_text(size = 22),
+    axis.text.y =  element_text(size = 22),
+    axis.text.x =  element_text(size = 20),
+    strip.text = element_text(size = 32),
     panel.border = element_rect(color = "black", fill = NA, size = 1),
     strip.background = element_rect(fill = "lightgrey", color = "black", size = 1)
   )
@@ -631,7 +632,7 @@ combined_tallies_ctrl$UTR_type <- factor(combined_tallies_ctrl$UTR_type, levels 
 
 # Plot the bar chart for control genes
 ctrl_UTR_class_barchart <- ggplot(combined_tallies_ctrl, aes(x = UTR_type, y = total, fill = UTR_type)) +
-  geom_bar(stat = 'identity', color = 'black', width = 0.7) +
+  geom_bar(stat = 'identity', color = 'black', width = 0.7)+
   facet_wrap(~condition, scales = "free_x", labeller = labeller(condition = strip_labels)) +
   labs(
     x = 'UTR Type',
@@ -654,7 +655,7 @@ ggsave(filename = file.path(output_dir, "ctrl_UTR_class_barchart.jpg"),
        plot = ctrl_UTR_class_barchart, width = 10, height = 8, dpi = 300)
 
 # ----------------------------
-# Jitter Plot for Proximal to Distal Usage Shift
+# Jitter Plot for Proximal to Distal Usage Shift and write CSVs to file
 # ----------------------------
 
 # Define functions to identify positive and negative strands
@@ -679,43 +680,62 @@ identify_proximal_pAs <- function(pos_df, neg_df) {
   bind_rows(pos_proximal, neg_proximal)
 }
 
-# **Step 1:** Identify positive and negative strand transcripts for significant genes
-sig_pos_sites_with_UTR_type_anno_list <- lapply(sig_sites_with_UTR_type, identify_positive_strands)
-sig_neg_sites_with_UTR_type_anno_list <- lapply(sig_sites_with_UTR_type, identify_negative_strands)
-ctrl_pos_sites_with_UTR_type_anno_list <- lapply(ctrl_sites_with_UTR_type, identify_positive_strands)
-ctrl_neg_sites_with_UTR_type_anno_list <- lapply(ctrl_sites_with_UTR_type, identify_negative_strands)
+# **Step 1:** Identify positive and negative strand transcripts for all genes
+pos_sites_with_UTR_type_anno_list <- lapply(all_sites_with_UTR_type, identify_positive_strands)
+neg_sites_with_UTR_type_anno_list <- lapply(all_sites_with_UTR_type, identify_negative_strands)
 
 # **Step 2:** Identify distal and proximal PolyA sites
-sig_anno_distal_pAs_list <- Map(identify_distal_pAs, sig_pos_sites_with_UTR_type_anno_list, sig_neg_sites_with_UTR_type_anno_list)
-sig_anno_proximal_pAs_list <- Map(identify_proximal_pAs, sig_pos_sites_with_UTR_type_anno_list, sig_neg_sites_with_UTR_type_anno_list)
-ctrl_anno_distal_pAs_list <- Map(identify_distal_pAs, ctrl_pos_sites_with_UTR_type_anno_list, ctrl_neg_sites_with_UTR_type_anno_list)
-ctrl_anno_proximal_pAs_list <- Map(identify_proximal_pAs, ctrl_pos_sites_with_UTR_type_anno_list, ctrl_neg_sites_with_UTR_type_anno_list)
-
-# **Step 2:** Identify distal and proximal PolyA sites
-sig_anno_distal_pAs_list <- Map(identify_distal_pAs, sig_pos_sites_with_UTR_type_anno_list, sig_neg_sites_with_UTR_type_anno_list)
-sig_anno_proximal_pAs_list <- Map(identify_proximal_pAs, sig_pos_sites_with_UTR_type_anno_list, sig_neg_sites_with_UTR_type_anno_list)
-ctrl_anno_distal_pAs_list <- Map(identify_distal_pAs, ctrl_pos_sites_with_UTR_type_anno_list, ctrl_neg_sites_with_UTR_type_anno_list)
-ctrl_anno_proximal_pAs_list <- Map(identify_proximal_pAs, ctrl_pos_sites_with_UTR_type_anno_list, ctrl_neg_sites_with_UTR_type_anno_list)
+anno_distal_pAs_list <- Map(identify_distal_pAs, pos_sites_with_UTR_type_anno_list, neg_sites_with_UTR_type_anno_list)
+anno_proximal_pAs_list <- Map(identify_proximal_pAs, pos_sites_with_UTR_type_anno_list, neg_sites_with_UTR_type_anno_list)
 
 # **Step 3:** Combine distal and proximal PolyA sites with 'pA_type' column
-sig_sites_with_UTR_type_anno_with_position_list <- Map(function(dist_df, prox_df) {
+all_sites_with_UTR_type_anno_with_position_list <- Map(function(dist_df, prox_df) {
   dist_df$pA_type <- "distal pA"
   prox_df$pA_type <- "proximal pA"
   bind_rows(dist_df, prox_df)
-}, sig_anno_distal_pAs_list, sig_anno_proximal_pAs_list)
+}, anno_distal_pAs_list, anno_proximal_pAs_list)
 
-#write sig genes with positional info to file
-# **Step 4:** Add 'condition' information to each dataframe
-for (i in seq_along(sig_sites_with_UTR_type_anno_with_position_list)) {
-  sig_sites_with_UTR_type_anno_with_position_list[[i]]$condition <- conditions[i]
+# **Step 4:** Add 'condition' and information to each dataframe and write CSV files 
+for (i in seq_along(all_sites_with_UTR_type_anno_with_position_list)) {
+  all_sites_with_UTR_type_anno_with_position_list[[i]]$condition <- conditions[i]
 }
 
-for (df in sig_sites_with_UTR_type_anno_with_position_list) {
+for (df in all_sites_with_UTR_type_anno_with_position_list) {
   # Extract the condition value from the 'condition' column
   condition_value <- unique(df$condition)
   
   # Construct the filename
-  filename <- paste0("sig_", condition_value, "_sites_with_positional_info.csv")
+  filename <- paste0("all_", condition_value, "_sites_with_UTR_type_info.csv")
+  
+  # Full file path
+  filepath <- file.path(anno_bed_dir, filename)
+  
+  # Write the data frame to CSV
+  write_csv(df, filepath)
+}
+
+# ----------------------------
+# Filter Significant and Control Genes for CSV files and Jitter plot
+# ----------------------------
+
+# Filter to isolate significant genes (genes with at least two significant PAS)
+sig_sites_with_UTR_type_anno_with_position_list <- lapply(all_sites_with_UTR_type_anno_with_position_list, function(df) {
+  df %>% dplyr::filter(sig_PAS_count >= 2)
+})
+
+# Filter to isolate control genes (genes with stable PAS usage)
+ctrl_sites_with_UTR_type_anno_with_position_list <- lapply(all_sites_with_UTR_type_anno_with_position_list, function(df) {
+  df %>%
+    dplyr::filter(mean_usage > 0.075 & abs(change_in_usage) < 0.075) %>%
+    group_by(gene_name) %>%
+    dplyr::filter(n() >= 2) %>%
+    ungroup()
+})
+
+for (df in sig_sites_with_UTR_type_anno_with_position_list) {
+  
+  # Construct the filename
+  filename <- paste0("sig_", condition_value, "_sites_with_positional.info.csv")
   
   # Full file path
   filepath <- file.path(polyA_csv_dir,'positional_info', filename)
@@ -723,12 +743,6 @@ for (df in sig_sites_with_UTR_type_anno_with_position_list) {
   # Write the data frame to CSV
   write_csv(df, filepath)
 }
-
-ctrl_sites_with_UTR_type_anno_with_position_list <- Map(function(dist_df, prox_df) {
-  dist_df$pA_type <- "distal pA"
-  prox_df$pA_type <- "proximal pA"
-  bind_rows(dist_df, prox_df)
-}, ctrl_anno_distal_pAs_list, ctrl_anno_proximal_pAs_list)
 
 # **Step 5:** Extract specific UTR types for significant genes 
 sig_TUTR_genes_list <- lapply(sig_sites_with_UTR_type_anno_with_position_list, function(df) {
@@ -808,17 +822,21 @@ combined_prox_dist_shift <- bind_rows(combined_prox_dist_shift, all_utr_df)
 # **Step 8:** Ensure 'UTR_type' and 'pA_type' are factors with specified levels
 combined_prox_dist_shift$UTR_type <- factor(combined_prox_dist_shift$UTR_type, levels = c('all','TUTR', 'ALE', 'MIXED', 'iAPA'))
 
+
 # Get the first four colors from the Set2 palette
 set2_colors <- brewer.pal(8, "Set2")[1:4]
 
 # Construct the color vector
 color_vector <- c(
-  '#ED6262',          # First color
+  '#f68f60',         # First color
   set2_colors,        # First four elements from Set2
-  '#F3ADAD',          # Middle color
+  "#ff2d2d",          # second color
+  set2_colors,        # Repeat first four elements from Set2
+  "#da372a",          # third colour
   set2_colors,        # Repeat first four elements from Set2
   '#9C2A2A',          # Last color
   set2_colors         # Repeat first four elements from Set2 again
+  #add more colours as needed
 )
 
 # Create a unique identifier for each combination of UTR_type and condition
@@ -830,14 +848,13 @@ color_mapping <- setNames(color_vector, unique_combinations)
 # Map the colors to your dataframe
 combined_prox_dist_shift$colors <- color_mapping[combined_prox_dist_shift$group_id]
 
-#jitter plot
 jitter_plot = ggplot(combined_prox_dist_shift, aes(x = UTR_type, y = prox_to_dist_shift, fill = colors)) +
   geom_violin(trim = FALSE, alpha = 0.4) + # Add violin plot to show density
   geom_jitter(position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.3), 
-              size = 1.5, aes(color = colors), alpha = 0.6) + # Add jitter points for visibility
+              size = 1.25, aes(color = colors), alpha = 0.6) + # Add jitter points for visibility
   stat_summary(fun = median, geom = "point", 
                position = position_dodge(width = 0.3), 
-               size = 6, shape = 22, fill = "white") +
+               size = 5, shape = 22, fill = "white") +
   geom_hline(yintercept = 0, linetype = "dotted", color = "black", size = 0.8) +
   facet_wrap(~condition, scales = "free_x", labeller = labeller(condition = strip_labels)) +
   scale_fill_identity() + # Use the actual fill colors provided in the 'colors' attribute
@@ -850,15 +867,14 @@ jitter_plot = ggplot(combined_prox_dist_shift, aes(x = UTR_type, y = prox_to_dis
   ) +
   theme_classic() +
   theme(
-    legend.title = element_text(size = 25),
-    legend.text = element_text(size = 22),
-    axis.title = element_text(size = 20),
-    axis.text = element_text(size = 18),
-    strip.text = element_text(size = 28),
+    axis.title = element_text(size = 24),
+    axis.text.y =  element_text(size = 22),
+    axis.text.x =  element_text(size = 18),
+    strip.text = element_text(size = 32),
     panel.border = element_rect(color = "black", fill = NA, size = 1),
     strip.background = element_rect(fill = "lightgrey", color = "black", size = 1)
   ) +
-  ylim(-1.5, 1.5)
+  ylim(-1.9, 1.9)
 
 # Save the jitter plot to a file
 ggsave(filename = file.path(output_dir, "proximal_to_distal_usage_shift_TUTR_vs_ALE_jitter_plot.jpg"), 
@@ -867,6 +883,29 @@ ggsave(filename = file.path(output_dir, "proximal_to_distal_usage_shift_TUTR_vs_
 # ----------------------------
 # Write Significant and Control Data Frames to CSV Files
 # ----------------------------
+
+# Function to write data frames to CSV files
+write_df_list_to_files <- function(df_list, prefix) {
+  # Categories corresponding to each dataframe in the list
+  categories <- c("all", "TUTR", "ALE", "MIXED", "iAPA")
+  
+  # Check if the list has exactly five dataframes
+  if(length(df_list) != length(categories)) {
+    stop(paste("Expected", length(categories), "dataframes in the list, but got", length(df_list)))
+  }
+  
+  # Iterate through the list and write each dataframe to a CSV file
+  for(i in seq_along(df_list)) {
+    # Construct the filename based on the category and condition
+    filename <- paste0(prefix, "_", categories[i], ".csv")
+    
+    # Write the dataframe to a CSV file without row names
+    write.csv(df_list[[i]], file = file.path(output_dir, filename), row.names = FALSE)
+    
+    # Optional: Print a message indicating successful write
+    message(paste("Written:", filename))
+  }
+}
 
 # Prepare significant data frames for writing
 for (i in seq_along(sig_sites_with_UTR_type)) {
