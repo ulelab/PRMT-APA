@@ -12,7 +12,7 @@ library(stageR)         # For stage-wise analysis in high-dimensional data
 # Make sure all input files are located in this directory or provide full paths
 setwd("/path/to/your/working/directory")
 # Example:
-setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/")
+setwd("/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/")
 
 # Step 1: Read in the PolyA Site (PAS) atlas file
 # Input: PAS atlas file in BED format (e.g., 'merged_polya.filteredunique.annotated.bed')
