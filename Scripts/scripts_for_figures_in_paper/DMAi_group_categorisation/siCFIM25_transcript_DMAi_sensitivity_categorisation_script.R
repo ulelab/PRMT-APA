@@ -2,15 +2,13 @@ library(tidyverse)
 library(ggplot2)
 library(RColorBrewer)
 library(pheatmap)
-library(reshape2)
 library(rtracklayer)
 library(GenomicRanges)
 library(Biostrings)
-library(ggpattern)
 library(GenomicFeatures)
 
 #setwd
-setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig3/siCFIM25_DMSO_vs_DMAi/positional_info")
+setwd("/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig3/siCFIM25_DMSO_vs_DMAi/positional_info")
 
 # List all CSV files in the directory
 csv_files <- list.files(pattern = "\\.csv$")  # This regex matches files that end with .csv
@@ -93,7 +91,7 @@ data_categorized <- filtered_pairs %>%
   )
 
 #add UTR_type information so that we can focus solely on TUTR genes
-directory <- "../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig3/siCFIM25_DMSO_vs_DMAi/APA_classified/"
+directory <- "/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig3/siCFIM25_DMSO_vs_DMAi/APA_classified/"
 siCFIM25_UTR_type_files <- list.files(directory, pattern = ".*sig.*all.*", full.names = TRUE)
 siCFIM25_UTR_type_list <- lapply(siCFIM25_UTR_type_files, read.csv)
 
@@ -101,7 +99,7 @@ siCFIM25_UTR_type_list <- lapply(siCFIM25_UTR_type_files, read.csv)
 siCFIM25_sig_UTR_type_table = do.call(rbind, siCFIM25_UTR_type_list)
 
 #do same with control pairs
-directory <- "../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig3/siCFIM25_DMSO_vs_DMAi/APA_classified/"
+directory <- "/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig3/siCFIM25_DMSO_vs_DMAi/APA_classified/"
 siCFIM25_UTR_type_files <- list.files(directory, pattern = ".*ctrl.*all.*", full.names = TRUE)
 siCFIM25_UTR_type_table_list <- lapply(siCFIM25_UTR_type_files, read.csv)
 
@@ -238,7 +236,7 @@ write.table(all_APA_sites_with_window_list[[11]], file = 'siCFIM25_up_proximal_s
 
 ##create expression matched groups
 #read in deseq2 file
-CFIM25_whole_gene_DE = read.csv("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/DESeq2_tables/siCFIM25_DMSO_whole_gene_deseq_results.csv")
+CFIM25_whole_gene_DE = read.csv("/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/DESeq2_tables/siCFIM25_DMSO_whole_gene_deseq_results.csv")
 
 #add basemean to gene group tables 
 # Loop over each data frame in the list and perform left_join with CFIM25_whole_gene_DE
