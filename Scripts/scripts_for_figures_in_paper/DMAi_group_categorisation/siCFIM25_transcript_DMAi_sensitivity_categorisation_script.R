@@ -211,6 +211,9 @@ all_APA_sites_with_window_list = lapply(all_APA_sites_with_window_list,function(
   return(df)
 })
 
+#setwd 
+setwd('bed_files/')
+
 #write bed
 write.table(all_APA_sites_with_window_list[[1]], file = 'no_mit_distal_sites.bed', 
             sep = "\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
