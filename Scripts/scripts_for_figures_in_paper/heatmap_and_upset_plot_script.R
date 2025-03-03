@@ -117,86 +117,124 @@ RdBu=colorRampPalette(rev(brewer.pal(9,'RdBu')))(40)  #extrapolate 9 colours pal
 breaks = seq(-40, 40, length.out = 41)
 
 #make heatmap
-pheatmap(TUTR_heatmap,clustering_distance_rows = "manhattan",
+pheatmap(non_TUTR_heatmap,clustering_distance_rows = "manhattan",
          clustering_distance_cols = "canberra",color=RdBu,breaks=breaks,show_rownames = FALSE,fontsize_col=14,angle_col='45',legend_breaks = c(-50, -25, 0, 25, 50),   # where numeric labels appear
          legend_labels = c("-50%", "-25%", "0%", "25%", "50%"),cutree_rows = 2,labels_col=c("ADMAi","SDMAi","SDMAi + ADMAi"))
+
 
 ####Upset plot
 ###setwd
 setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig1/ADMAi_vs_SDMAi_vs_double/")
 
-#### read in files
-# List all CSV files
+# List all CSV files that have 'sig' in their name
 csv_files <- list.files(pattern = "sig")
+
 # Read each CSV file into a list
 sig_sites_list <- lapply(csv_files, read_csv)
 
-#add direction
-sig_sites_list_with_direction = lapply(sig_sites_list,function(df){
-  df = df %>% mutate(direction = if_else(
-    change_in_usage > 0,
-    'increased',
-    'decreased'
-  ))
-  return(df)
+# Here we assume:
+#   sig_sites_list[[1]] == ADMAi
+#   sig_sites_list[[2]] == SDMAi_ADMAi
+#   sig_sites_list[[3]] == SDMAi
+
+# ------------------------------------------------------------------------------
+# 2) Add a 'direction' column to each data frame
+# ------------------------------------------------------------------------------
+sig_sites_list_with_direction <- lapply(sig_sites_list, function(df) {
+  df %>%
+    mutate(direction = if_else(
+      change_in_usage > 0, 
+      "increased", 
+      "decreased"
+    ))
 })
 
-#combine feature_id and direction data for upset
-sig_sites_list_with_direction = lapply(sig_sites_list_with_direction,function(df){
-  df = df %>%
+# ------------------------------------------------------------------------------
+# 3) Combine feature_id & direction into a single column 'feature_direction'
+# ------------------------------------------------------------------------------
+sig_sites_list_with_direction <- lapply(sig_sites_list_with_direction, function(df) {
+  df %>%
     mutate(feature_direction = paste(feature_id, direction, sep = "_"))
-  return(df)
 })
 
-# Merge SDMA and ADMA
-merge_SDMAi_and_ADMAi <- merge(sig_sites_list_with_direction[[1]], sig_sites_list_with_direction[[2]], by = "feature_direction", suffixes = c(".SDMAi", ".ADMAi"))
+# ------------------------------------------------------------------------------
+# 4) Name each data frame for clarity & add binary flags
+# ------------------------------------------------------------------------------
+df_ADMAi <- sig_sites_list_with_direction[[1]] %>%
+  mutate(in_ADMAi = TRUE)
 
-# Merge SDMA and ADMA+SDMA 
-merge_SDMAi_and_ADMAi_SDMAi <- merge(sig_sites_list_with_direction[[1]], sig_sites_list_with_direction[[3]], by = "feature_direction", suffixes = c(".SDMAi", ".SDMAi_ADMAi"))
+df_SDMAi_ADMAi <- sig_sites_list_with_direction[[2]] %>%
+  mutate(in_SDMAi_ADMAi = TRUE)
 
-# Merge SDMA and ADMA+SDMA 
-merge_ADMAi_and_ADMAi_SDMAi <- merge(sig_sites_list_with_direction[[2]], sig_sites_list_with_direction[[3]], by = "feature_direction", suffixes = c(".ADMAi", ".SDMAi_ADMAi"))
+df_SDMAi <- sig_sites_list_with_direction[[3]] %>%
+  mutate(in_SDMAi = TRUE)
 
+# ------------------------------------------------------------------------------
+# 5) Merge data to identify common 'feature_direction' rows among pairs
+#    (Only needed if you want to see which events are in all three.)
+# ------------------------------------------------------------------------------
+# Merge ADMAi & SDMAi
+merge_ADMAi_SDMAi <- merge(df_ADMAi, df_SDMAi, by = "feature_direction")
 
-# Identify genes that are in all datasets with specified direction criteria
-common_all <- merge(merge_SDMAi_and_ADMAi,
-                    merge_SDMAi_and_ADMAi_SDMAi, by = "feature_direction")
-common_all <- merge(common_all,
-                    merge_ADMAi_and_ADMAi_SDMAi, by = "feature_direction")
+# Merge ADMAi & SDMAi+ADMAi
+merge_ADMAi_SDMAi_ADMAi <- merge(df_ADMAi, df_SDMAi_ADMAi, by = "feature_direction")
+
+# Merge SDMAi & SDMAi+ADMAi
+merge_SDMAi_SDMAi_ADMAi <- merge(df_SDMAi, df_SDMAi_ADMAi, by = "feature_direction")
+
+# ------------------------------------------------------------------------------
+# 6) Identify genes in all three (common intersection) & label them
+# ------------------------------------------------------------------------------
+common_all <- merge(merge_ADMAi_SDMAi, merge_ADMAi_SDMAi_ADMAi, by = "feature_direction")
+common_all <- merge(common_all, merge_SDMAi_SDMAi_ADMAi, by = "feature_direction")
 common_all$in_all_three <- TRUE
 
-# Create binary flags for presence in the datasets according to the criteria
-sig_sites_list_with_direction[[1]]$in_SDMAi <- TRUE
-sig_sites_list_with_direction[[2]]$in_ADMAi <- TRUE
-sig_sites_list_with_direction[[3]]$in_SDMAi_ADMAi <- TRUE
+# ------------------------------------------------------------------------------
+# 7) Create a single master table (all_data) that contains all
+#    'feature_direction' plus the presence/absence flags
+# ------------------------------------------------------------------------------
+all_data <- Reduce(
+  f = function(x, y) merge(x, y, by = "feature_direction", all = TRUE),
+  x = list(
+    df_ADMAi[,       c("feature_direction", "in_ADMAi")],
+    df_SDMAi_ADMAi[, c("feature_direction", "in_SDMAi_ADMAi")],
+    df_SDMAi[,       c("feature_direction", "in_SDMAi")],
+    common_all[,     c("feature_direction", "in_all_three")]
+  )
+)
 
-# Combine all information
-all_data <- Reduce(function(x, y) merge(x, y, by = "feature_direction", all = TRUE), 
-                   list(sig_sites_list_with_direction[[1]][, c("feature_direction", "in_SDMAi")], 
-                        sig_sites_list_with_direction[[2]][, c("feature_direction", "in_ADMAi")], 
-                        sig_sites_list_with_direction[[3]][, c("feature_direction", "in_SDMAi_ADMAi")],
-                        common_all[, c("feature_direction", "in_all_three")]))
+# Replace NA with FALSE to indicate absence
 all_data[is.na(all_data)] <- FALSE
 
-# Convert data to appropriate format for UpSetR
+# ------------------------------------------------------------------------------
+# 8) Prepare the data frame for UpSetR
+#    - Convert TRUE/FALSE to 1/0
+#    - Select columns in the order: ADMAi, SDMAi+ADMAi, SDMAi
+# ------------------------------------------------------------------------------
 upset_data <- all_data %>%
-  mutate(SDMAi = as.integer(in_SDMAi),
-         ADMAi = as.integer(in_ADMAi),
-         SDMAi_ADMAi = as.integer(in_SDMAi_ADMAi)) %>%
-  select(SDMAi, ADMAi, SDMAi_ADMAi)
+  mutate(ADMAi         = as.integer(in_ADMAi),
+         SDMAi_ADMAi   = as.integer(in_SDMAi_ADMAi),
+         SDMAi         = as.integer(in_SDMAi)) %>%
+  select(ADMAi, SDMAi_ADMAi, SDMAi)
 
-# Renaming columns to more descriptive names
-names(upset_data) <- c("SDMAi", "ADMAi", "SDMAi+ADMAi")
+# (Optional) Rename columns if you want slightly nicer labels
+# but it's simplest if these match the sets argument exactly
+names(upset_data) <- c("ADMAi", "SDMAi+ADMAi", "SDMAi")
 
-# Generate the UpSet plot
-upset(upset_data, 
-      sets = c("SDMAi", "ADMAi", "SDMAi+ADMAi"),
-      order.by = "freq",
-      keep.order = TRUE,
-      sets.bar.color = c("#F3ADAD","#ED6262","#9C2A2A"),
-      main.bar.color = "black",
-      sets.x.label = "APA events",
-      text.scale = c(3, 3, 3, 3, 2, 3))
+# ------------------------------------------------------------------------------
+# 9) Generate the UpSet plot
+#    sets = c("ADMAi","SDMAi+ADMAi","SDMAi") must match the column names
+# ------------------------------------------------------------------------------
+upset(
+  upset_data,
+  sets = c("SDMAi", "ADMAi", "SDMAi+ADMAi"),
+  order.by = "freq",
+  keep.order = TRUE,
+  sets.bar.color = c("#F3ADAD","#ED6262", "#9C2A2A"),
+  main.bar.color = "black",
+  sets.x.label = "APA events",
+  text.scale = c(3, 3, 3, 3, 2, 3)
+)
 
 
 
