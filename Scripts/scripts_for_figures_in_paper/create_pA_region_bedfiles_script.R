@@ -3,7 +3,7 @@ library(data.table)
 
 ##read in significant TUTR site files
 #read in sig DMAi cell lines TUTR sites - change directory to the location of your TUTR significant site csv files are (generated from classification_of_APA_event_script.R script)
-setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig2/panel_of_cancer_lines/APA_classified")
+setwd("/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig2/panel_of_cancer_lines/APA_classified")
 DMAi_data_frames = list.files(pattern = "^sig.*\\.csv")
 
 # List to store data frames
@@ -16,7 +16,7 @@ for (file in DMAi_data_frames) {
 }
 
 #read in non-DMAi condition TUTR sites
-setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig4/non_DMAi_datasets/APA_classified")
+setwd("/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig4/non_DMAi_datasets/APA_classified")
 non_DMAi_data_frames = list.files(pattern = "^sig.*\\.csv")
 
 # List to store data frames
@@ -32,8 +32,8 @@ for (file in non_DMAi_data_frames) {
 sig_TUTR_dfs = c(sig_DMAi_TUTR_csv_files,sig_non_DMAi_TUTR_csv_files)
 
 ## read in ctrl TUTR files
-#read in ctrl DMAi cell lines TUTR sites - - change directory to the location of your TUTR ctrl site csv files are (generated from TUTR_vs_ALE_and_jitterplot_script.R script)
-setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig2/panel_of_cancer_lines/APA_classified")
+#read in ctrl DMAi cell lines TUTR sites - - change directory to the location of your TUTR ctrl site csv files are (generated from classification_of_APA_event_script.R script)
+setwd("/ulelab/repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig2/panel_of_cancer_lines/APA_classified")
 DMAi_data_frames = list.files(pattern = "^ctrl.*\\.csv")
 
 # List to store data frames
@@ -46,7 +46,7 @@ for (file in DMAi_data_frames) {
 }
 
 #read in non-DMAi condition TUTR sites
-setwd(">./../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig4/non_DMAi_datasets/APA_classified")
+setwd("/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig4/non_DMAi_datasets/APA_classified")
 non_DMAi_data_frames = list.files(pattern = "^ctrl.*\\.csv")
 
 # List to store data frames
