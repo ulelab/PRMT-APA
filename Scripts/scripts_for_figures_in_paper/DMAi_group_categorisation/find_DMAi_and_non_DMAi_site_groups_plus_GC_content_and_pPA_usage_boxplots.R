@@ -10,7 +10,7 @@ library(GenomicFeatures)
 
 ##read in DMAi pA site CSVs and merge with DESEQ2 tables to obtain transcript expression data (BaseMean)
 #setwd 
-setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig2/panel_of_cancer_lines/positional_info")
+setwd("/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig2/panel_of_cancer_lines/positional_info")
 
 #read in mulit_sig_pAs file
 csv_files = list.files(pattern = "^top2")
@@ -25,7 +25,7 @@ for (file in csv_files) {
 }
 
 #read in DE tables
-setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/DESeq2_tables/DMAi_cancer_line_panel")
+setwd("/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/DESeq2_tables/DMAi_cancer_line_panel")
 
 #read in DE file
 DE_csv_files = list.files(pattern = "csv")
@@ -52,7 +52,7 @@ DMAi_data_frames_with_basemean <- Map(function(x, y) {
 
 ##read in non-DMAi pA site CSVs and merge with DESEQ2 tables to obtain transcript expression data (BaseMean)
 #setwd
-setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig4/positional_info/")
+setwd("/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig4/positional_info/")
 
 #read in mulit_sig_pAs file
 csv_files = list.files(pattern = "^top2")
@@ -67,7 +67,7 @@ for (file in csv_files) {
 }
 
 #read in DE file
-setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/DESeq2_tables/non_DMAi")
+setwd("/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/DESeq2_tables/non_DMAi")
 non_DMAi_DE_csv_files = list.files(pattern = "csv")
 
 # List to store data frames
@@ -161,7 +161,7 @@ common_DMAi_pairs_no_non_DMAi_filter = common_DMAi_pairs_no_non_DMAi_filter %>%
   ungroup()
 
 #write to file 
-write_csv(common_DMAi_pairs_no_non_DMAi_filter,"common_DMAi_sites.csv")
+write_csv(common_DMAi_pairs_no_non_DMAi_filter,"/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig4/common_DMAi_sites.csv")
 
 ## function to add additional filter - remove sites that are altered more in non-DMAi, i.e max dmai effect is at least 33% the effect of max non-DMAi
 filter_with_non_dmai <- function(dmai_results, non_dmai_data_frames, columns_of_interest) {
@@ -402,19 +402,19 @@ common_control_pairs = common_control_pairs %>%
 #read in significant and control csv files containing UTR_type annotation
 #read in TUTR and ALE info
 # Read each file into a list of dataframes
-directory <- "../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig2/panel_of_cancer_lines/APA_classified/"
+directory <- "/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig2/panel_of_cancer_lines/APA_classified/"
 DMAi_file_list <- list.files(directory, pattern = ".*sig.*all.*", full.names = TRUE)
 DMAi_UTR_type_table_list <- lapply(DMAi_file_list, read.csv)
 
-directory <- "../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig4/non_DMAi_datasets/APA_classified/"
+directory <- "/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig4/non_DMAi_datasets/APA_classified/"
 non_DMAi_file_list <- list.files(directory, pattern = ".*sig.*all.*", full.names = TRUE)
 non_DMAi_UTR_type_table_list <- lapply(non_DMAi_file_list, read.csv)
 
-directory <- "../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig2/panel_of_cancer_lines/APA_classified/"
+directory <- "/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig2/panel_of_cancer_lines/APA_classified/"
 DMAi_ctrl_file_list <- list.files(directory, pattern = ".*ctrl.*all.*", full.names = TRUE)
 DMAi_ctrl_UTR_type_table_list <- lapply(DMAi_ctrl_file_list, read.csv)
 
-directory <- "../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig4/non_DMAi_datasets/APA_classified/"
+directory <- "/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig4/non_DMAi_datasets/APA_classified/"
 non_DMAi_ctrl_file_list <- list.files(directory, pattern = ".*ctrl.*all.*", full.names = TRUE)
 non_DMAi_ctrl_UTR_type_table_list <- lapply(non_DMAi_ctrl_file_list, read.csv)
 
