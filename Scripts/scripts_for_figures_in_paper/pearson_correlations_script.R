@@ -205,12 +205,12 @@ ggplot(all_APA_events_in_both_HCT116_p53plus_and_U2OS, aes(x = HCT116_p53plus_ch
 
 ### lung cell line vs organoid comparison
 #setwd for organoids
-setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig2/patient_derived_organoids/positional_info")
+setwd("/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig2/patient_derived_organoids/positional_info")
 
 # List top2 files in the directory
 csv_files <- list.files(directory, pattern = "*top2*")  # This regex matches files that have top2 in their name
 
-# Read each CSV file and store them in a list called 'DMAi_files'
+# Read each CSV file and store them in a list called 'organoid_files'
 organoid_files <- lapply(csv_files, function(file) {
   df <- read.csv(file)  # Or use read_csv(file) for faster loading with readr
   
@@ -279,7 +279,6 @@ ggscatter(all_APA_events_in_both_organoid_and_DMAi_average, x = "avg_lung_line_c
   ) +
   ylim(c(-0.6,0.6))+
   xlim(c(-0.56,0.57))
-
 
 # Create the base plot with hexagonal binning
 ggplot(all_APA_events_in_both_organoid_and_DMAi_average, aes(x = avg_lung_line_change_in_usage, y = avg_organoid_change_in_usage)) +
@@ -427,7 +426,6 @@ ggscatter(all_APA_events_in_both_CLKi_HepG2_and_DMAi_average, x = "CLKi_N_change
   ) +
   ylim(c(-0.71,0.71))+
   xlim(c(-0.71,0.71))
-
 
 #JTE607 vs DMAi (calculated r = 0.47)
 all_APA_events_in_both_JTE_HepG2_and_DMAi_average=inner_join(non_DMAi_files[[5]],merged_df,by=c('gene_name','feature_id'))
