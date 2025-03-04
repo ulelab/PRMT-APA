@@ -174,7 +174,7 @@ final_to_plot_K562_KHSRP_input = final_to_plot %>% dplyr::filter(sample == 'K562
 final_to_plot_K562_CPSF6 = final_to_plot %>% dplyr::filter(sample == 'K562-CPSF6-merged')
 final_to_plot_K562_CPSF6_input = final_to_plot %>% dplyr::filter(sample == 'K562-CPSF6_mock-1')
 
-# Plotting
+# Plotting e.g 
 ggplot(final_to_plot_HepG2_KHSRP_input, aes(x = position, y = mean, color = category)) +
   stat_smooth(
     aes(y = mean, x = position),
@@ -217,7 +217,7 @@ ggplot(final_to_plot_HepG2_KHSRP_input, aes(x = position, y = mean, color = cate
     strip.text = element_text(size = 20)
   )
 
-#DMAi vs non-DMAi plot
+#DMAi vs non-DMAi plot e.g
 ggplot(final_to_plot_HepG2_CSTF2, aes(x = position, y = mean, color = category)) +
   stat_smooth(
     aes(y = mean, x = position),
@@ -274,6 +274,7 @@ final_to_plot_K562_KHSRP_input_no_ctrl = final_to_plot_K562_KHSRP_input %>% filt
 final_to_plot_K562_CPSF6_no_ctrl = final_to_plot_K562_CPSF6 %>% filter(category != 'ctrl')
 final_to_plot_K562_CPSF6_input_no_ctrl = final_to_plot_K562_CPSF6_input %>% filter(category != 'ctrl')
 
+#plot e.g.
 ggplot(final_to_plot_HepG2_KHSRP_input_no_ctrl, aes(x = position, y = mean, color = category)) +
   stat_smooth(
     aes(y = mean, x = position),
