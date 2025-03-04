@@ -5,7 +5,7 @@ library(stringr)
 library(ggh4x)
 
 #setwd to location of fasta files directory, e.g
-setwd("siCFIM25_DMSO_vs_DMAi_fasta_files")
+setwd("path/to/fasta_files/")
 
 #function for reading in fasta files
 process_directory <- function(directory_name) {
