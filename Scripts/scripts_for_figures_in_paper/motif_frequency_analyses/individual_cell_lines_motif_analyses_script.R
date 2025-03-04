@@ -13,13 +13,13 @@ library(stringr)
 # Set Working Directory to where your fasta files are located
 ########################################################################
 
-setwd("fasta_files")
+setwd("path/to/fasta_files")
 
 ########################################################################
 # Define Motifs
 ########################################################################
 
-motifs <- c('TGTA')
+motifs <- c('TGTA') #change depending on your motif(s) of interest
 
 ########################################################################
 # Function: Calculate Motif Running Average
@@ -44,7 +44,7 @@ calculate_motif_running_average <- function(sequences, motifs, short_name, windo
   running_average <- presence / window_size / num_sequences
   
   data.frame(
-    Position = positions - 500,
+    Position = positions - 500,  # this is determined by the length of your fasta sequences, for 1kb sequences, use -500
     Presence = presence,
     RunningAverage = running_average,
     site = short_name
