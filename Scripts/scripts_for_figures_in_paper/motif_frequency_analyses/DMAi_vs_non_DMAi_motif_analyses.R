@@ -14,7 +14,7 @@ library(stringr)
 ########################################################################
 
 # Update this path to where your .fasta files are located
-setwd("fasta_files/")
+setwd("path/to/fasta_files/")
 
 ########################################################################
 # Define Motifs
