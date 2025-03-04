@@ -10,7 +10,7 @@ library(data.table)
 library(tidyverse)
 library(ggthemes)
 library(GenomicRanges)
-library(genomation) #use version ‘1.19.1’, later version cause an error
+library(genomation) #use version ‘1.19.1’, later version causes an error
 
 # Function for reading in files and creating GRanges objects
 read_and_prepare_bed <- function(file_path) {
