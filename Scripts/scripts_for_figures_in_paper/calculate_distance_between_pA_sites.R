@@ -5,7 +5,7 @@ library(dunn.test)
 
 ##DMAi vs non-DMAi sites
 #read in gene group bed files
-setwd('/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/bed/test_triple_removal/1000/')
+setwd('/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed_files/200nt_window/')
 
 DMAi_lengthened_distal_sites = fread('common_DMAi/common_DMAi_sig_up_TUTR_distal_sites.bed') %>%
   dplyr::rename(
@@ -75,7 +75,7 @@ ctrl_genes = rbind(ctrl_distal_sites,ctrl_proximal_sites)
 #make list of genes
 all_genes = list(DMAi_lengthened_genes,non_DMAi_lengthened_genes,ctrl_genes)
 
-#make columns calculating pA distance - do this by substracting the highest start value - lowest start value (even though these 1000 nt window files, this cancels itself out during the calculation, i.e (distal pA - 500) - (proximal pA - 500) = distal pA - proximal pA 
+#make columns calculating pA distance - do this by substracting the highest start value - lowest start value (even though these 200 nt window files, this cancels itself out during the calculation, i.e (distal pA - 100) - (proximal pA - 100) = distal pA - proximal pA 
 all_genes_distance_list = lapply(all_genes,function(df){
   df = df %>%
     group_by(gene_name) %>%
@@ -147,7 +147,7 @@ dunn_test_result <- dunn.test(all_genes_with_distance_table$pA_distance, all_gen
 
 #####perform same analysis on siCFIM25 category groups
 #read in gene group bed files
-setwd('/Users/llywelyngriffith/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/common_atlas/dedup/github/siCFIM25_DMSO_vs_DMAi/bed/200/')
+setwd('/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed_files/200nt_window/siCFIM25_DMAi_categories/')
 
 no_mit_distal_sites = fread('no_mit_distal_sites.bed') %>%
   dplyr::rename(
