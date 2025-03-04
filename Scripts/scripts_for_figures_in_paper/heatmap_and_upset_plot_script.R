@@ -6,7 +6,7 @@ library(pheatmap)
 library(UpSetR)
 
 ###setwd - change to location of directory containing the polyA sites with positional info CSVs (generated from the drimseq.R and classification_of_APA_events.R R scripts)
-setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig1/ADMAi_vs_SDMAi_vs_double/positional_info")
+setwd("/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig1/ADMAi_vs_SDMAi_vs_double/positional_info")
 
 #### read in files
 # List all CSV files
@@ -124,7 +124,7 @@ pheatmap(non_TUTR_heatmap,clustering_distance_rows = "manhattan",
 
 ####Upset plot
 ###setwd
-setwd("../../../repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig1/ADMAi_vs_SDMAi_vs_double/")
+setwd("ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig1/ADMAi_vs_SDMAi_vs_double/")
 
 # List all CSV files that have 'sig' in their name
 csv_files <- list.files(pattern = "sig")
