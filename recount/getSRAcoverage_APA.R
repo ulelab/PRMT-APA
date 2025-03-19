@@ -32,7 +32,7 @@ suppressPackageStartupMessages({
 project_value <- "SRP017305"            # Example project
 sample_ids <- c("SRR1238549", "SRR1238550", "SRR1238551", 
                 "SRR1238552")  # Vector of sample IDs
-output_dir <- "SRA_coverage_results/SRP017305/siCFIM25_SRP017305_results_whole_gene_approach/"  # Output folder
+output_dir <- "SRA_coverage_results/SRP017305/siCFIM25_SRP017305_results_whole_gene_approach/"  # Output folder example
 
 #######################################################
 # 2) Coverage Calculation Function (returns full vector)
@@ -137,18 +137,16 @@ calculate_median_proximal_use <- function(
 # 3) Condition -> BED Mappings
 #######################################################
 conditions <- list(
-  DMAi = c("bed/SRA/first_exon_to_pPA/DMAi_sites_first_exon_to_pPA_sorted.bed", 
-           "bed/SRA/UTR_regions/DMAi_sites_UTRregions_sorted.bed"),
-  non_DMAi = c("bed/SRA/first_exon_to_pPA/non_DMAi_sites_first_exon_to_pPA_sorted.bed", 
-               "bed/SRA/UTR_regions/non_DMAi_sites_UTRregions_sorted.bed"),
-  control = c("bed/SRA/first_exon_to_pPA/control_sites_first_exon_to_pPA_sorted.bed", 
-              "bed/SRA/UTR_regions/control_sites_UTRregions_sorted.bed"),
-  siCFIM25 = c("bed/SRA/first_exon_to_pPA/siCFIM25_sites_first_exon_to_pPA_sorted.bed", 
-               "bed/SRA/UTR_regions/siCFIM25_sites_UTRregions_sorted.bed"),
-  JTE607 = c("bed/SRA/first_exon_to_pPA/JTE607_sites_first_exon_to_pPA_sorted.bed", 
-             "bed/SRA/UTR_regions/JTE607_sites_UTRregions_sorted.bed"),
-  JTE607_ctrl = c("bed/SRA/first_exon_to_pPA/JTE607_control_sites_first_exon_to_pPA_sorted.bed", 
-                  "bed/SRA/UTR_regions/JTE607_control_sites_UTRregions_sorted.bed")
+  DMAi = c("bed/first_exon_to_pPA/DMAi_sites_first_exon_to_pPA_sorted.bed", 
+           "bed/UTR_regions/DMAi_sites_UTRregions_sorted.bed"),
+  non_DMAi = c("bed/first_exon_to_pPA/non_DMAi_sites_first_exon_to_pPA_sorted.bed", 
+               "bed/UTR_regions/non_DMAi_sites_UTRregions_sorted.bed"),
+  control = c("bed/first_exon_to_pPA/control_sites_first_exon_to_pPA_sorted.bed", 
+              "bed/UTR_regions/control_sites_UTRregions_sorted.bed"),
+  siCFIM25 = c("bed/first_exon_to_pPA/siCFIM25_sites_first_exon_to_pPA_sorted.bed", 
+               "bed/UTR_regions/siCFIM25_sites_UTRregions_sorted.bed"),
+  JTE607 = c("bed/first_exon_to_pPA/JTE607_sites_first_exon_to_pPA_sorted.bed", 
+             "bed/SRA/UTR_regions/JTE607_sites_UTRregions_sorted.bed")
 )
 
 #######################################################
