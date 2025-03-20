@@ -132,14 +132,14 @@ calculate_median_proximal_use <- function(
 #######################################################
 
 conditions <- list(
-  DMAi = c("bed/SRA/first_exon_to_pPA/DMAi_sites_first_exon_to_pPA_sorted.bed", 
-           "bed/SRA/UTR_regions/DMAi_sites_UTRregions_sorted.bed"),
-  non_DMAi = c("bed/SRA/first_exon_to_pPA/non_DMAi_sites_first_exon_to_pPA_sorted.bed", 
-               "bed/SRA/UTR_regions/non_DMAi_sites_UTRregions_sorted.bed"),
-  control = c("bed/SRA/first_exon_to_pPA/control_sites_first_exon_to_pPA_sorted.bed", 
-              "bed/SRA/UTR_regions/control_sites_UTRregions_sorted.bed"),
-  siCFIM25 = c("bed/SRA/first_exon_to_pPA/siCFIM25_sites_first_exon_to_pPA_sorted.bed", 
-               "bed/SRA/UTR_regions/siCFIM25_sites_UTRregions_sorted.bed")
+  DMAi = c("bed/first_exon_to_pPA/DMAi_sites_first_exon_to_pPA_sorted.bed", 
+           "bed/UTR_regions/DMAi_sites_UTRregions_sorted.bed"),
+  non_DMAi = c("bed/first_exon_to_pPA/non_DMAi_sites_first_exon_to_pPA_sorted.bed", 
+               "bed/UTR_regions/non_DMAi_sites_UTRregions_sorted.bed"),
+  control = c("bed/first_exon_to_pPA/control_sites_first_exon_to_pPA_sorted.bed", 
+              "bed/UTR_regions/control_sites_UTRregions_sorted.bed"),
+  siCFIM25 = c("bed/first_exon_to_pPA/siCFIM25_sites_first_exon_to_pPA_sorted.bed", 
+               "bed/UTR_regions/siCFIM25_sites_UTRregions_sorted.bed")
 )
 
 #######################################################
