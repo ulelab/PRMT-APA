@@ -22,7 +22,7 @@ full_pas_data <- fread(pas_atlas_file,
                   col.names = c("seqnames", "start", "end", "id", "score", "strand", "ensg", "hgnc", "region"))
 
 # Keep only PAS in 3' UTR regions
-pas_data <- full_pas_data[region == "UTR3"]
+pas_data <- full_pas_data[region == "UTR3"] # this is optional, can remove if also interested in intronic APA
 
 # Calculate total score per gene (ensg)
 pas_data[, total_score := sum(score), by = ensg]
