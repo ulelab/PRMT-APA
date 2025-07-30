@@ -10,65 +10,57 @@ library(tidyverse)
 library(stringr)
 
 ########################################################################
-# Set Working Directory to where your fasta files are located
+# Set Working Directory
 ########################################################################
 
-setwd("path/to/fasta_files")
+setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/fasta/non_removal/1000/")
 
 ########################################################################
-# Define Motifs
+# Function: Calculate GC running average
 ########################################################################
 
-motifs <- c('GGTT','GTGT','TGTG','TTGG','TGGT','GTTG')
-
-########################################################################
-# Function: Calculate Motif Running Average
-########################################################################
-
-calculate_motif_running_average <- function(sequences,
-                                            motifs,
-                                            short_name,
-                                            window_size = 15) {
+calculate_GC_running_average <- function(sequences,
+                                         motifs,        
+                                         short_name,
+                                         window_size = 40) {
   
-  n_seqs        <- length(sequences)
-  L             <- Biostrings::width(sequences)[1]           # 1000 nt
-  motif_patterns <- lapply(motifs, Biostrings::DNAString)
-  motif_len <- nchar(motifs[[1]])   # 4 for UGUA-like 4-mers
+  n_seqs <- length(sequences)          
+  L      <- Biostrings::width(sequences)[1]   
   
-  ## ------------------------------------------------------------------
-  ## 1. presence/absence vector (how many sequences hit each position)
-  ## ------------------------------------------------------------------
-  presence_counts <- integer(L)                              # initialise to 0
+  ## ------------------------------------------------------------------------
+  ## 1.  per-window GC count for every sequence
+  ## ------------------------------------------------------------------------
+  nwin   <- L - window_size + 1         # 1000-40+1 = 961 windows
+  gc_mat <- matrix(0L, nrow = nwin, ncol = n_seqs)
   
-  for (s in seq_len(n_seqs)) {
-    hit_pos <- logical(L)                                    # FALSE everywhere
-    for (pat in motif_patterns) {
-      starts <- Biostrings::start(
-        Biostrings::matchPattern(pat, sequences[[s]], fixed = TRUE))
-      hit_pos[starts] <- TRUE                                # flag each start only once
-    }
-    presence_counts <- presence_counts + hit_pos             # add this sequence’s hits
+  for (j in seq_len(n_seqs)) {
+    lf <- Biostrings::letterFrequencyInSlidingView(
+      sequences[[j]],
+      view.width = window_size,
+      letters    = c("G", "C"))
+    gc_mat[ , j] <- rowSums(lf)         # G+C per window for this sequence
   }
   
-  ## keep only positions where a motif can start
-  valid_L <- L - motif_len + 1
-  presence_counts <- presence_counts[1:valid_L]
-  
-  ## ------------------------------------------------------------------
-  ## 2. 30-nt running sum (left-aligned, step = 1 nt)
-  ## ------------------------------------------------------------------
-  kernel       <- rep(1L, window_size)
-  running_sum  <- stats::filter(presence_counts, kernel, sides = 1)
-  running_sum  <- running_sum[!is.na(running_sum)]           # drop leading NAs
-  
+  ## ------------------------------------------------------------------------
+  ## 2.  average GC fraction across all sequences
+  ## ------------------------------------------------------------------------
+  # mean(GC fraction) for window i =  (Σ_i GC) / (window_size * n_seqs)
+  running_sum  <- rowSums(gc_mat)                   # Σ_i GC per window
   running_avg  <- running_sum / (window_size * n_seqs)
   
-  positions <- seq_len(valid_L - window_size + 1) - 500      # –500 … +500
+  ## ------------------------------------------------------------------------
+  ## 3.  positions: centre each 40-nt window on –500…+500 axis
+  ##     (your sequences are 1000 nt: –500 .. +499)
+  ##     First window is nt 1-40 → centre at –480, but you have always
+  ##     plotted *window start* (not centre) so keep the old convention:
+  ##     Position = window start – 500
+  ## ------------------------------------------------------------------------
+  positions <- seq_len(nwin) - 500     
   
   data.frame(
     Position       = positions,
-    motif_hits     = as.integer(running_sum),   # raw window hits
-    RunningAverage = running_avg,
+    GC_raw         = running_sum,       # total #GC in that window (optional)
+    RunningAverage = running_avg,       # what you plot
     site           = short_name,
     stringsAsFactors = FALSE
   )
@@ -88,7 +80,7 @@ process_fasta_files <- function(fasta_files, short_names, motifs) {
     file_name <- basename(fasta_files[i])
     short_name <- short_names[i]
     
-    result <- calculate_motif_running_average(fasta_sequences, motifs, short_name)
+    result <- calculate_GC_running_average(fasta_sequences, motifs, short_name)
     # Tag each row with the 'site' name and pA_type
     result$site <- short_name
     result$pA_type <- ifelse(grepl("proximal", short_name), "proximal", "distal")
@@ -270,10 +262,10 @@ GP2D = ggplot(processed_DMAi_list[[1]]$df, aes(x = Position, y = RunningAverage)
   labs(
     title = "GP2D",
     x = "Position Relative to Poly(A) Sites",
-    y = "GU-rich Motif Occurence",
+    y = "Average GC content",
     color = "Category"  # Legend title
   ) +
-  lims(x = c(-40, 40), y = c(0,0.1)) +
+  lims(x = c(-270, 270), y = c(0.23, 0.5)) +
   theme_bw() +
   scale_color_manual(
     values = c(
@@ -285,11 +277,11 @@ GP2D = ggplot(processed_DMAi_list[[1]]$df, aes(x = Position, y = RunningAverage)
   facet_grid(~pA_type, space = "free_y") +
   theme(
     plot.title   = element_text(hjust = 0.5, size = 14),
-    axis.title   = element_text(size = 12),
-    axis.text    = element_text(size = 10),
-    legend.title = element_text(size = 13),
-    legend.text  = element_text(size = 11),
-    strip.text   = element_text(size = 12.5)
+    axis.title   = element_text(size = 13),
+    axis.text    = element_text(size = 13),
+    legend.title = element_text(size = 15),
+    legend.text  = element_text(size = 12),
+    strip.text   = element_text(size = 15)
   )
 
 H838 = ggplot(processed_DMAi_list[[2]]$df, aes(x = Position, y = RunningAverage)) +
@@ -297,10 +289,10 @@ H838 = ggplot(processed_DMAi_list[[2]]$df, aes(x = Position, y = RunningAverage)
   labs(
     title = "H838",
     x = "Position Relative to Poly(A) Sites",
-    y = "GU-rich Motif Occurence",
+    y = "Average GC content",
     color = "Category"  # Legend title
   ) +
-  lims(x = c(-40, 40), y = c(0,0.1)) +
+  lims(x = c(-270, 270), y = c(0.23, 0.5)) +
   theme_bw() +
   scale_color_manual(
     values = c(
@@ -312,11 +304,11 @@ H838 = ggplot(processed_DMAi_list[[2]]$df, aes(x = Position, y = RunningAverage)
   facet_grid(~pA_type, space = "free_y") +
   theme(
     plot.title   = element_text(hjust = 0.5, size = 14),
-    axis.title   = element_text(size = 12),
-    axis.text    = element_text(size = 10),
-    legend.title = element_text(size = 13),
-    legend.text  = element_text(size = 11),
-    strip.text   = element_text(size = 12.5)
+    axis.title   = element_text(size = 13),
+    axis.text    = element_text(size = 13),
+    legend.title = element_text(size = 15),
+    legend.text  = element_text(size = 12),
+    strip.text   = element_text(size = 15)
   )
 
 
@@ -325,10 +317,10 @@ HCTp53minus = ggplot(processed_DMAi_list[[3]]$df, aes(x = Position, y = RunningA
   labs(
     title = "HCT116 p53 -/-",
     x = "Position Relative to Poly(A) Sites",
-    y = "GU-rich Motif Occurence",
+    y = "Average GC content",
     color = "Category"  # Legend title
   ) +
-  lims(x = c(-40, 40), y = c(0,0.1)) +
+  lims(x = c(-270, 270), y = c(0.23, 0.5)) +
   theme_bw() +
   scale_color_manual(
     values = c(
@@ -340,11 +332,11 @@ HCTp53minus = ggplot(processed_DMAi_list[[3]]$df, aes(x = Position, y = RunningA
   facet_grid(~pA_type, space = "free_y") +
   theme(
     plot.title   = element_text(hjust = 0.5, size = 14),
-    axis.title   = element_text(size = 12),
-    axis.text    = element_text(size = 10),
-    legend.title = element_text(size = 13),
-    legend.text  = element_text(size = 11),
-    strip.text   = element_text(size = 12.5)
+    axis.title   = element_text(size = 13),
+    axis.text    = element_text(size = 13),
+    legend.title = element_text(size = 15),
+    legend.text  = element_text(size = 12),
+    strip.text   = element_text(size = 15)
   )
 
 
@@ -353,10 +345,10 @@ HCTp53plus = ggplot(processed_DMAi_list[[4]]$df, aes(x = Position, y = RunningAv
   labs(
     title = "HCT116 p53 +/+",
     x = "Position Relative to Poly(A) Sites",
-    y = "GU-rich Motif Occurence",
+    y = "Average GC content",
     color = "Category"  # Legend title
   ) +
-  lims(x = c(-40, 40), y = c(0,0.1)) +
+  lims(x = c(-270, 270), y = c(0.23, 0.5)) +
   theme_bw() +
   scale_color_manual(
     values = c(
@@ -368,11 +360,11 @@ HCTp53plus = ggplot(processed_DMAi_list[[4]]$df, aes(x = Position, y = RunningAv
   facet_grid(~pA_type, space = "free_y") +
   theme(
     plot.title   = element_text(hjust = 0.5, size = 14),
-    axis.title   = element_text(size = 12),
-    axis.text    = element_text(size = 10),
-    legend.title = element_text(size = 13),
-    legend.text  = element_text(size = 11),
-    strip.text   = element_text(size = 12.5)
+    axis.title   = element_text(size = 13),
+    axis.text    = element_text(size = 13),
+    legend.title = element_text(size = 15),
+    legend.text  = element_text(size = 12),
+    strip.text   = element_text(size = 15)
   )
 
 
@@ -381,10 +373,10 @@ LU99 = ggplot(processed_DMAi_list[[5]]$df, aes(x = Position, y = RunningAverage)
   labs(
     title = "LU99",
     x = "Position Relative to Poly(A) Sites",
-    y = "GU-rich Motif Occurence",
+    y = "Average GC content",
     color = "Category"  # Legend title
   ) +
-  lims(x = c(-40, 40), y = c(0,0.1)) +
+  lims(x = c(-270, 270), y = c(0.23, 0.5)) +
   theme_bw() +
   scale_color_manual(
     values = c(
@@ -396,11 +388,11 @@ LU99 = ggplot(processed_DMAi_list[[5]]$df, aes(x = Position, y = RunningAverage)
   facet_grid(~pA_type, space = "free_y") +
   theme(
     plot.title   = element_text(hjust = 0.5, size = 14),
-    axis.title   = element_text(size = 12),
-    axis.text    = element_text(size = 10),
-    legend.title = element_text(size = 13),
-    legend.text  = element_text(size = 11),
-    strip.text   = element_text(size = 12.5)
+    axis.title   = element_text(size = 13),
+    axis.text    = element_text(size = 13),
+    legend.title = element_text(size = 15),
+    legend.text  = element_text(size = 12),
+    strip.text   = element_text(size = 15)
   )
 
 
@@ -409,10 +401,10 @@ MCF7 = ggplot(processed_DMAi_list[[6]]$df, aes(x = Position, y = RunningAverage)
   labs(
     title = "MCF7",
     x = "Position Relative to Poly(A) Sites",
-    y = "GU-rich Motif Occurence",
+    y = "Average GC content",
     color = "Category"  # Legend title
   ) +
-  lims(x = c(-40, 40), y = c(0,0.1)) +
+  lims(x = c(-270, 270), y = c(0.23, 0.5)) +
   theme_bw() +
   scale_color_manual(
     values = c(
@@ -424,11 +416,11 @@ MCF7 = ggplot(processed_DMAi_list[[6]]$df, aes(x = Position, y = RunningAverage)
   facet_grid(~pA_type, space = "free_y") +
   theme(
     plot.title   = element_text(hjust = 0.5, size = 14),
-    axis.title   = element_text(size = 12),
-    axis.text    = element_text(size = 10),
-    legend.title = element_text(size = 13),
-    legend.text  = element_text(size = 11),
-    strip.text   = element_text(size = 12.5)
+    axis.title   = element_text(size = 13),
+    axis.text    = element_text(size = 13),
+    legend.title = element_text(size = 15),
+    legend.text  = element_text(size = 12),
+    strip.text   = element_text(size = 15)
   )
 
 
@@ -437,10 +429,10 @@ PANC0403 = ggplot(processed_DMAi_list[[7]]$df, aes(x = Position, y = RunningAver
   labs(
     title = "PANC0403",
     x = "Position Relative to Poly(A) Sites",
-    y = "GU-rich Motif Occurence",
+    y = "Average GC content",
     color = "Category"  # Legend title
   ) +
-  lims(x = c(-40, 40), y = c(0,0.1)) +
+  lims(x = c(-270, 270), y = c(0.23, 0.5)) +
   theme_bw() +
   scale_color_manual(
     values = c(
@@ -452,11 +444,11 @@ PANC0403 = ggplot(processed_DMAi_list[[7]]$df, aes(x = Position, y = RunningAver
   facet_grid(~pA_type, space = "free_y") +
   theme(
     plot.title   = element_text(hjust = 0.5, size = 14),
-    axis.title   = element_text(size = 12),
-    axis.text    = element_text(size = 10),
-    legend.title = element_text(size = 13),
-    legend.text  = element_text(size = 11),
-    strip.text   = element_text(size = 12.5)
+    axis.title   = element_text(size = 13),
+    axis.text    = element_text(size = 13),
+    legend.title = element_text(size = 15),
+    legend.text  = element_text(size = 12),
+    strip.text   = element_text(size = 15)
   )
 
 
@@ -465,10 +457,10 @@ SUM149PT = ggplot(processed_DMAi_list[[8]]$df, aes(x = Position, y = RunningAver
   labs(
     title = "SUM149PT",
     x = "Position Relative to Poly(A) Sites",
-    y = "GU-rich Motif Occurence",
+    y = "Average GC content",
     color = "Category"  # Legend title
   ) +
-  lims(x = c(-40, 40), y = c(0,0.1)) +
+  lims(x = c(-270, 270), y = c(0.23, 0.5)) +
   theme_bw() +
   scale_color_manual(
     values = c(
@@ -480,11 +472,11 @@ SUM149PT = ggplot(processed_DMAi_list[[8]]$df, aes(x = Position, y = RunningAver
   facet_grid(~pA_type, space = "free_y") +
   theme(
     plot.title   = element_text(hjust = 0.5, size = 14),
-    axis.title   = element_text(size = 12),
-    axis.text    = element_text(size = 10),
-    legend.title = element_text(size = 13),
-    legend.text  = element_text(size = 11),
-    strip.text   = element_text(size = 12.5)
+    axis.title   = element_text(size = 13),
+    axis.text    = element_text(size = 13),
+    legend.title = element_text(size = 15),
+    legend.text  = element_text(size = 12),
+    strip.text   = element_text(size = 15)
   )
 
 SKMEL2 = ggplot(processed_DMAi_list[[9]]$df, aes(x = Position, y = RunningAverage)) +
@@ -492,10 +484,10 @@ SKMEL2 = ggplot(processed_DMAi_list[[9]]$df, aes(x = Position, y = RunningAverag
   labs(
     title = "SK-MEL2",
     x = "Position Relative to Poly(A) Sites",
-    y = "GU-rich Motif Occurence",
+    y = "Average GC content",
     color = "Category"  # Legend title
   ) +
-  lims(x = c(-40, 40), y = c(0,0.1)) +
+  lims(x = c(-270, 270), y = c(0.23, 0.5)) +
   theme_bw() +
   scale_color_manual(
     values = c(
@@ -507,11 +499,11 @@ SKMEL2 = ggplot(processed_DMAi_list[[9]]$df, aes(x = Position, y = RunningAverag
   facet_grid(~pA_type, space = "free_y") +
   theme(
     plot.title   = element_text(hjust = 0.5, size = 14),
-    axis.title   = element_text(size = 12),
-    axis.text    = element_text(size = 10),
-    legend.title = element_text(size = 13),
-    legend.text  = element_text(size = 11),
-    strip.text   = element_text(size = 12.5)
+    axis.title   = element_text(size = 13),
+    axis.text    = element_text(size = 13),
+    legend.title = element_text(size = 15),
+    legend.text  = element_text(size = 12),
+    strip.text   = element_text(size = 15)
   )
 
 
@@ -520,10 +512,10 @@ U2OS = ggplot(processed_DMAi_list[[10]]$df, aes(x = Position, y = RunningAverage
   labs(
     title = "U2OS",
     x = "Position Relative to Poly(A) Sites",
-    y = "GU-rich Motif Occurence",
+    y = "Average GC content",
     color = "Category"  # Legend title
   ) +
-  lims(x = c(-40, 40), y = c(0,0.1)) +
+  lims(x = c(-270, 270), y = c(0.23, 0.5)) +
   theme_bw() +
   scale_color_manual(
     values = c(
@@ -535,11 +527,11 @@ U2OS = ggplot(processed_DMAi_list[[10]]$df, aes(x = Position, y = RunningAverage
   facet_grid(~pA_type, space = "free_y") +
   theme(
     plot.title   = element_text(hjust = 0.5, size = 14),
-    axis.title   = element_text(size = 12),
-    axis.text    = element_text(size = 10),
-    legend.title = element_text(size = 13),
-    legend.text  = element_text(size = 11),
-    strip.text   = element_text(size = 12.5)
+    axis.title   = element_text(size = 13),
+    axis.text    = element_text(size = 13),
+    legend.title = element_text(size = 15),
+    legend.text  = element_text(size = 12),
+    strip.text   = element_text(size = 15)
   )
 
 grid.arrange(GP2D,H838,HCTp53minus,HCTp53plus,LU99,MCF7,PANC0403,SKMEL2,SUM149PT,U2OS)
@@ -592,10 +584,10 @@ siCFIM25_plot <- ggplot(siCFIM25_df, aes(x = Position, y = RunningAverage, color
   labs(
     title = "siCFIM25",
     x = "Position Relative to Poly(A) Sites",
-    y = "GU-rich Motif Occurence",
+    y = "Average GC content",
     color = "Category"   # Legend title
   ) +
-  lims(x = c(-40, 40), y = c(0.002, 0.1)) +
+  lims(x = c(-270, 270), y = c(0.23, 0.5)) +
   theme_bw() +
   # Supply only 3 possible colors
   scale_color_manual(
@@ -664,10 +656,10 @@ siPCF11_plot <- ggplot(siPCF11_df, aes(x = Position, y = RunningAverage, color =
   labs(
     title = "siPCF11",
     x = "Position Relative to Poly(A) Sites",
-    y = "GU-rich Motif Occurence",
+    y = "Average GC content",
     color = "Category"   # Legend title
   ) +
-  lims(x = c(-40, 40), y = c(0.002, 0.1)) +
+  lims(x = c(-270, 270), y = c(0.23, 0.5)) +
   theme_bw() +
   # Supply only 3 possible colors
   scale_color_manual(
@@ -736,10 +728,10 @@ CPSF73i_plot <- ggplot(CPSF73i_df, aes(x = Position, y = RunningAverage, color =
   labs(
     title = "CPSF73i",
     x = "Position Relative to Poly(A) Sites",
-    y = "GU-rich Motif Occurence",
+    y = "Average GC content",
     color = "Category"   # Legend title
   ) +
-  lims(x = c(-40, 40), y = c(0.002, 0.1)) +
+  lims(x = c(-270, 270), y = c(0.23, 0.5)) +
   theme_bw() +
   # Supply only 3 possible colors
   scale_color_manual(
