@@ -50,10 +50,10 @@ So I need to get the PolyA sites we're interested in into the same format as the
 folder_path <- "../../recount/bed/sites"
 
 # Get the list of files in the folder
-files <- list.files(path = folder_path, pattern = "\\.bed$", full.names = TRUE,recursive=TRUE)
+files <- list.files(path = folder_path, pattern = "\\.bed$", full.names = TRUE,recursive=FALSE)
 
 # Filter for *not* the upstream bed regions
-files <- files[!grepl("upstream|CFIM25",files)]
+files <- files[!grepl("JTE|CFIM",files)]
 
 df_list <- list()
 
@@ -106,7 +106,7 @@ for (file in files) {
                 condition = df$condition,
                 site_type = df$site_type)
   # These are single nucleotide ranges, lets make them 20nt ranges with 10nt either side for matching with the other dataset ( i tried 4nt range and 10nt range - 4->10 gives you more, 10->20 is a couple more but not that many)
-  gr <- resize(gr, width = 100, fix = "center")
+  gr <- resize(gr, width = 50, fix = "center")
   df_list[[file_name]] <- gr
 }
 
@@ -152,6 +152,7 @@ original_site_count = data.frame(
   number_original_sites = sapply(df_list, length)
 ) %>% filter(grepl("proximal",name))
 
+original_site_count
 original_site_count$condition <- sapply(original_site_count$name, function(file_name) {
     if (grepl("non_DMAi", file_name)) {
       case <- "non_DMAi"
@@ -177,43 +178,48 @@ original_site_count$condition <- sapply(original_site_count$name, function(file_
     )
   })
 
-original_site_count
+
 
 genes_with_both <- as.data.frame(matched_sites) %>%
   group_by(name) %>% arrange(name) %>%
-  filter(n() != 2) & any(site_type == "proximal") & any(site_type == "distal")) %>%
+  filter(n() == 2 & any(site_type == "proximal") & any(site_type == "distal")) %>%
+  ungroup()
+
+genes_with_both_summary <- as.data.frame(matched_sites) %>%
+  group_by(name) %>% arrange(name) %>%
+  filter(n() == 2 & any(site_type == "proximal") & any(site_type == "distal")) %>%
   ungroup() %>%
   group_by(condition, site_type) %>%
   summarise(count_found_in_CPAperturb = n()) %>%
   ungroup() %>%
   filter(grepl("proximal",site_type))
 
-left_join(original_site_count, genes_with_both, by=("condition"="condition")) %>%
+
+left_join(original_site_count, genes_with_both_summary, by=("condition"="condition")) %>%
   mutate(percent_found_in_CPAperturb=(count_found_in_CPAperturb/number_original_sites)*100) %>%
   select(condition, percent_found_in_CPAperturb, count_found_in_CPAperturb) %>%
-  fwrite(.,file="percent-found-in-cpa-perturb-hek-100nt-window.csv")
+  fwrite(.,file="percent-found-in-cpa-perturb-hek-DMAi-50nt-window.csv")
 ```
 Ought to do the differential polyA analysis first, then filter for our sites, as I realise the outputs of this aren't provided with the original paper/in the seurat object I think.
 
 ```{r}
 # WARNING this takes ages
-hek = CalcPolyAResiduals(hek, assay="polyA", background = "NT", gene.names = "Ensemble_ID")
+# hek = CalcPolyAResiduals(hek, assay="polyA", background = "NT", gene.names = "Ensemble_ID")
 ```
 ```{r}
-# WARNING this also takes ages
 kd_list = Idents(hek) %>% unique() %>% as.character(.) 
 kd_list = kd_list[kd_list != "NT"]
 
-all_res = list()
-for (protein in kd_list){
-  print(paste0("doing ",protein))
-  all_res[[protein]] = FindDifferentialPolyA(hek, ident.1 = protein, ident.2 = "NT",gene.names="Ensemble_ID")
-}
-saveRDS(all_res,file="../Outputs/CPA-Perturb-Seq-Differential.RData")
+# all_res = list()
+# for (protein in kd_list){
+#   print(paste0("doing ",protein))
+#   all_res[[protein]] = FindDifferentialPolyA(hek, ident.1 = protein, ident.2 = "NT",gene.names="Ensemble_ID")
+# }
+# saveRDS(all_res,file="../Outputs/CPA-Perturb-Seq-Differential.RData")
 ```
 
 ```{r}
-all_res = readRDS("../Outputs/CPA-Perturb-Seq-Differential.RData")
+all_res = readRDS("../../Outputs/CPA-Perturb-Seq-Differential.RData")
 ```
 
 
@@ -233,7 +239,7 @@ merged_ref_df
 for (protein in kd_list){
   left_join(all_res[[protein]] %>% rownames_to_column("pseq_ID"),merged_ref_df, by=c("pseq_ID"="pseq_ID")) %>% filter(!is.na(seqnames)) %>%
     ggplot(.,aes(x=condition,y=Estimate)) + facet_wrap(~site_type) + geom_boxplot() + theme_few() + ggtitle(protein)
-  ggsave(paste0("../Outputs/cpa-perturb-seq-",protein,".png"))
+  ggsave(paste0("../../Outputs/cpa-perturb-seq-",protein,".png"))
 }
   
 ```
@@ -255,7 +261,7 @@ res_dist = res %>% filter(site_type=="distal")
 conditions <- unique(res_dist$condition)
 
 # Define a color palette for the conditions
-condition_colors <- c("darkseagreen4","darkslategray3","grey","darkgoldenrod2")
+condition_colors <- c("darkseagreen4","darkslategray3","grey")
 names(condition_colors) <- conditions
 
 # Cap the Estimate values at 1 and -1
@@ -297,12 +303,70 @@ ht <- Heatmap(
   )
 )
 
-pdf("cpa-perturbseq-heatmap.pdf")
+pdf("../../Outputs/cpa-perturbseq-DMAI-heatmap.pdf")
 # Draw the heatmap
 draw(ht, heatmap_legend_side = "bottom", annotation_legend_side = "right")
 dev.off()
 
 ```
+```{r}
+
+# 1. Build and combine your results, then filter to distal sites
+reslist <- lapply(kd_list, function(protein) {
+  all_res[[protein]] %>%
+    rownames_to_column("pseq_ID") %>%
+    left_join(merged_ref_df, by = "pseq_ID") %>%
+    filter(!is.na(seqnames)) %>%
+    mutate(kd = protein)
+})
+res <- bind_rows(reslist)
+res_dist <- res %>% filter(site_type == "distal")
+
+# 2. Define color palette (same as before)
+conditions <- unique(res_dist$condition)
+condition_colors <- setNames(
+  c("darkseagreen4","darkslategray3","grey"),
+  conditions
+)
+
+# 3. Cap Estimate values between –0.5 and +0.5
+res_dist <- res_dist %>%
+  mutate(Estimate = pmax(pmin(Estimate, 0.5), -0.5))
+
+# 4. Order proteins by median Estimate in the “cfim full” condition
+order_levels <- res_dist %>%
+  filter(condition == "DMAi") %>%
+  group_by(kd) %>%
+  summarise(median_est = median(Estimate, na.rm = TRUE)) %>%
+  arrange(median_est) %>%
+  pull(kd)
+
+res_dist <- res_dist %>%
+  mutate(kd = factor(kd, levels = order_levels),
+         condition = factor(condition, levels = c("DMAi","nonDMAi","control")))
+
+# 5. Make grouped boxplots with proteins ordered by cfim full median
+p <- ggplot(res_dist, aes(x = kd, y = Estimate, fill = condition)) +
+  geom_boxplot(position = position_dodge(width = 0.8), outlier.size = 0.7) +
+  scale_fill_manual(values = condition_colors) +
+  labs(
+    x = "CPA-PerturbSeq Knockdown",
+    y = "Estimate",
+    fill = "Condition"
+  ) +
+  theme_bw(base_size = 12) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.major.x = element_blank()
+  )
+
+# 6. Save to PDF
+pdf("../../Outputs/dmai-cpa-perturbseq-boxplots-ordered-distal.pdf", width = 8, height = 5)
+print(p)
+dev.off()
+```
+
+
 Filtered by significant differences
 ```{r}
 
@@ -315,7 +379,7 @@ res_dist = res_dist %>% mutate(Estimate= ifelse(p_val_adj < 0.05,Estimate,0))
 conditions <- unique(res_dist$condition)
 
 # Define a color palette for the conditions
-condition_colors <- c("darkseagreen4","darkslategray3","grey","darkgoldenrod2")
+condition_colors <- c("darkseagreen4","darkslategray3","grey")
 names(condition_colors) <- conditions
 
 # Cap the Estimate values at 1 and -1
