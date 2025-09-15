@@ -2,11 +2,9 @@
 library(tidyverse)
 library(ggplot2)
 
-#setwd
-setwd('/Users/llywelyngriffith/Documents/AZ_postdoc/3_end_seq_timecourse_LU99/Nobby_APA_analysis/common_atlas/dedup/github/metascape/drimseq_filter_background')
-
 #read in file
-sig_24hrs = read.csv('sig_24hrs_metascape_with_drimseq_background/sig_24hr_result_for_bubble_plot.csv')
+sig_24hrs = read.csv('../../Data/Figure_1_S1_S2_S3/metascape_gene_lists
+/drimseq_timecourse/sig_24hr_result_for_bubble_plot.csv')
 
 #unite category column
 sig_24hrs = sig_24hrs %>%  unite("GO Category", GO, Description, sep = ":")
