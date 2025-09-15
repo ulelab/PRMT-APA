@@ -12,12 +12,12 @@ library(stageR)         # For stage-wise analysis in high-dimensional data
 # Make sure all input files are located in this directory or provide full paths
 setwd("/path/to/your/working/directory")
 # Example:
-setwd("/ulelab/PRMT-APA/Scripts/Figure_1/")
+setwd("/ulelab/PRMT-APA/Scripts/Figure_1_S1_S2_S3/")
 
 # Step 1: Read in the PolyA Site (PAS) atlas file
 # Input: PAS atlas file in BED format (e.g., 'merged_polya.filteredunique.annotated.bed')
 # Ensure that this file contains the necessary columns as specified below
-pas_atlas_file <- 'merged_polya.filteredunique.annotated.bed'
+pas_atlas_file <- '../../Data/Figure_1_S1_S2_S3/pA_atlas/merged_polya.filteredunique.annotated.bed'
 pas_data <- fread(pas_atlas_file, 
                        col.names = c("seqnames", "start", "end", "id", "score", "strand", "ensg", "hgnc", "region"))
 
@@ -35,7 +35,7 @@ pas_data[, num_pas := .N, by = ensg]
 # Inputs:
 # - Directory containing count files (e.g., 'counts/')
 # - Pattern to match count files (e.g., '.bed')
-counts_dir <- "counts"  # Directory containing count files
+counts_dir <- "../../Data/Figure_1_S1_S2_S3/counts/96hrs/"  # Directory containing count files
 counts_pattern <- ".bed"  # Pattern to match count files (adjust if necessary)
 
 # List all count files in the counts directory
@@ -73,7 +73,7 @@ counts_df <- as.data.frame(count_data[, -c(1:3)])
 # Step 3: Read in sample metadata
 # Input: Metadata file containing sample IDs and their corresponding conditions/groups
 # Ensure the metadata file has columns 'SampleName' and 'Condition'
-metadata_file <- "tso_seq_metadata.txt"
+metadata_file <- "../../Data/Figure_1_S1_S2_S3/tso_seq_metadata.txt"
 metadata <- read.table(metadata_file, header = TRUE, stringsAsFactors = FALSE)
 
 # Create a data frame with sample IDs and their corresponding groups (conditions)
@@ -223,15 +223,15 @@ for (i in seq_along(condition_results)) {
 # Output: CSV files containing all polyA sites and significant polyA sites with change in usage
 # The files are saved in 'CSV_files/' directory
 # Create output directories if they don't exist
-dir.create("github/with_intronic/CSV_files", showWarnings = FALSE)
-dir.create("github/with_intronic/CSV_files/positional_info", showWarnings = FALSE)
+dir.create("../../Data/Figure_1_S1_S2_S3/APA_CSV_files/96hrs/", showWarnings = FALSE)
+dir.create("../../Data/Figure_1_S1_S2_S3/APA_CSV_files/96hrs/positional_info", showWarnings = FALSE)
 
 for (i in seq_along(condition_results)) {
   cond_name <- condition_results[[i]]$condition_name
   
   # Define output file paths
-  all_sites_file <- paste0("github/with_intronic/CSV_files/all_polyA_sites_", cond_name, "_with_change_in_usage.csv")
-  sig_sites_file <- paste0("github/with_intronic/CSV_files/sig_polyA_sites_", cond_name, "_with_change_in_usage.csv")
+  all_sites_file <- paste0("../../Data/Figure_1_S1_S2_S3/APA_CSV_files/96hrs/all_polyA_sites_", cond_name, "_with_change_in_usage.csv")
+  sig_sites_file <- paste0("../../Data/Figure_1_S1_S2_S3/APA_CSV_files/96hrs/sig_polyA_sites_", cond_name, "_with_change_in_usage.csv")
   
   # Write to CSV
   write_csv(condition_results[[i]]$two_stage_results_merged, all_sites_file)
@@ -328,7 +328,7 @@ for (i in seq_along(condition_results)) {
 # Output: CSV files containing top two PAS with positional information
 for (i in seq_along(condition_results)) {
   cond_name <- condition_results[[i]]$condition_name
-  output_file <- paste0("github/with_intronic/CSV_files/positional_info/top2_", cond_name, "_sites_with_positional_info.csv")
+  output_file <- paste0("../../Data/Figure_1_S1_S2_S3/APA_CSV_files/96hrs/positional_info/top2_", cond_name, "_sites_with_positional_info.csv")
   write_csv(condition_results[[i]]$shifted_pAs, output_file)
 }
 
