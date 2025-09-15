@@ -18,11 +18,11 @@ output_dir <- "/path/to/your/output_directory"
 
 # For demonstration purposes, replace the above paths with your actual paths
 # For example:
-polyA_csv_dir <- "/Users/llywelyngriffith/Documents/AZ_postdoc/3_end_seq_timecourse_LU99/Nobby_APA_analysis/common_atlas/dedup/github/CSV_files"
-anno_bed_dir <- "/Users/llywelyngriffith/Documents/AZ_postdoc/3_end_seq_timecourse_LU99/Nobby_APA_analysis/common_atlas/dedup/github/TUTR_vs_ALE"
-UTR_info_path <- "/Users/llywelyngriffith/Documents/AZ_postdoc/quantseq_96hrs/Nobby_APA_analysis/no_dedup/two_step_test/TUTR_vs_ALE/UTR_regions_gencode_v45.bed"
-splice_site_info_path <- "/Users/llywelyngriffith/Documents/AZ_postdoc/quantseq_96hrs/Nobby_APA_analysis/no_dedup/two_step_test/TUTR_vs_ALE/splice_regions_gencode_v45.bed"
-output_dir <- "/Users/llywelyngriffith/Documents/AZ_postdoc/3_end_seq_timecourse_LU99/Nobby_APA_analysis/common_atlas/dedup/github/TUTR_vs_ALE"
+polyA_csv_dir <- "../../Data/Figure_1_S1_S2_S3/APA_CSV_files/timecourse/"
+anno_bed_dir <- "../../Data/Figure_1_S1_S2_S3/classification_of_APA_bed_files/timecourse/"
+UTR_info_path <- "../../Data/Figure_1_S1_S2_S3/classification_of_APA_bed_files/UTR_regions_gencode_v45.bed"
+splice_site_info_path <- "../../Data/Figure_1_S1_S2_S3/classification_of_APA_bed_files/splice_regions_gencode_v45.bed"
+output_dir <- "../../Data/Figure_1_S1_S2_S3/APA_CSV_files/timecourse/APA_classified/"
 
 # Ensure the output directory exists
 if(!dir.exists(output_dir)) {
@@ -879,6 +879,8 @@ ggsave(filename = file.path(output_dir, "proximal_to_distal_usage_shift_TUTR_vs_
 # ----------------------------
 # Write Significant and Control Data Frames to CSV Files
 # ----------------------------
+
+setwd('../../Data/Figure_1_S1_S2_S3/APA_CSV_files/timecourse/APA_classified/')
 
 # Function to write data frames to CSV files
 write_df_list_to_files <- function(df_list, prefix) {
