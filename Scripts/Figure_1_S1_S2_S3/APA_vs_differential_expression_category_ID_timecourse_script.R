@@ -146,7 +146,7 @@ down_not_lengthened = merged_df_list_with_APA_and_gene_class[[4]] %>% filter(APA
 
 #write to file
 #setwd
-setwd("../../Data/Figure_1_S1_S2_S3/metascape_gene_lists/")
+setwd("../../Data/Figure_1_S1_S2_S3/metascape_gene_lists/APA_vs_DE_timecourse/")
 
 write_csv(up_not_lengthened,'up_not_lengthened.csv')
 write_csv(down_not_lengthened,'down_not_lengthened.csv')
