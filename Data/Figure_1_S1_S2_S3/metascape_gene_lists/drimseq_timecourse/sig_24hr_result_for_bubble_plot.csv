@@ -1,0 +1,11 @@
+GO,Category,Description,Count,Log10(P)
+GO:1903432,GO Biological Processes,regulation of TORC1 signaling,17,-4.04
+R-HSA-5658623,Reactome Gene Sets,FGFRL1 modulation of FGFR1 signaling,4,-3.49
+GO:0070646,GO Biological Processes,protein modification by small protein removal,19,-3.3
+GO:0060395,GO Biological Processes,SMAD protein signal transduction,6,-3.13
+GO:0043201,GO Biological Processes,response to L-leucine,5,-2.77
+GO:0043255,GO Biological Processes,regulation of carbohydrate biosynthetic process,12,-2.75
+GO:0046839,GO Biological Processes,phospholipid dephosphorylation,7,-2.73
+CORUM:6928,CORUM,ARHGEF7-GIT2-PAK1 complex,3,-2.62
+WP299,WikiPathways,Nuclear receptors in lipid metabolism and toxicity,3,-2.62
+GO:1900408,GO Biological Processes,negative regulation of cellular response to oxidative stress,3,-2.62
