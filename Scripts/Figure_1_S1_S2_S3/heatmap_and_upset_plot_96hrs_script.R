@@ -6,7 +6,7 @@ library(pheatmap)
 library(UpSetR)
 
 ###setwd
-setwd("/Users/k2362866/Documents/AZ_postdoc/quantseq_96hrs/Nobby_APA_analysis/dedup/github/with_intronic/CSV_files/positional_info")
+setwd("../../Data/Figure_1_S1_S2_S3/APA_CSV_files/96hrs/positional_info/")
 
 #### read in files
 # List all CSV files
@@ -125,7 +125,7 @@ pheatmap(non_TUTR_heatmap,clustering_distance_rows = "manhattan",
 # ------------------------------------------------------------------------------
 # 1) Set working directory and read in files
 # ------------------------------------------------------------------------------
-setwd("/Users/k2362866/Documents/AZ_postdoc/quantseq_96hrs/Nobby_APA_analysis/dedup/github/with_intronic/CSV_files/")
+setwd("../../Data/Figure_1_S1_S2_S3/APA_CSV_files/96hrs/")
 
 # List all CSV files that have 'sig' in their name
 csv_files <- list.files(pattern = "sig")
