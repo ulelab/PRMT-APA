@@ -6,7 +6,7 @@ library(pheatmap)
 library(UpSetR)
 
 ###setwd
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/3_end_seq_timecourse_LU99/Nobby_APA_analysis/common_atlas/dedup/github/CSV_files/positional_info")
+setwd("../../Data/Figure_1_S1_S2_S3/APA_CSV_files/timecourse/positional_info")
 
 #### read in files
 # List all CSV files
