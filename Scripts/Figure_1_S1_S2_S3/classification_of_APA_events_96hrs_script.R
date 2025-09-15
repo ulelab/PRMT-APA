@@ -18,11 +18,11 @@ output_dir <- "/path/to/your/output_directory"
 
 # For demonstration purposes, replace the above paths with your actual paths
 # For example:
-polyA_csv_dir <- "/Users/llywelyngriffith/Documents/AZ_postdoc/quantseq_96hrs/Nobby_APA_analysis/dedup/github/with_intronic/CSV_files"
-anno_bed_dir <- "/Users/llywelyngriffith/Documents/AZ_postdoc/quantseq_96hrs/Nobby_APA_analysis/dedup/github/with_intronic/TUTR_vs_ALE"
-UTR_info_path <- "/Users/llywelyngriffith/Documents/AZ_postdoc/quantseq_96hrs/Nobby_APA_analysis/no_dedup/two_step_test/TUTR_vs_ALE/UTR_regions_gencode_v45.bed"
-splice_site_info_path <- "/Users/llywelyngriffith/Documents/AZ_postdoc/quantseq_96hrs/Nobby_APA_analysis/no_dedup/two_step_test/TUTR_vs_ALE/splice_regions_gencode_v45.bed"
-output_dir <- "/Users/llywelyngriffith/Documents/AZ_postdoc/quantseq_96hrs/Nobby_APA_analysis/dedup/github/with_intronic/TUTR_vs_ALE"
+polyA_csv_dir <- "../../Data/Figure_1_S1_S2_S3/APA_CSV_files/96hrs/"
+anno_bed_dir <- "../../Data/Figure_1_S1_S2_S3/classification_of_APA_bed_files/96hrs/"
+UTR_info_path <- "../../Data/Figure_1_S1_S2_S3/classification_of_APA_bed_files/UTR_regions_gencode_v45.bed"
+splice_site_info_path <- "../../Data/Figure_1_S1_S2_S3/classification_of_APA_bed_files/splice_regions_gencode_v45.bed"
+output_dir <- "../../Data/Figure_1_S1_S2_S3/APA_CSV_files/96hrs/APA_classified/"
 
 # Ensure the output directory exists
 if(!dir.exists(output_dir)) {
@@ -211,7 +211,7 @@ anno_data_neg <- lapply(anno_data_with_UTR, function(df) {
 })
 
 #read in gtf annotation file
-gencode_v45 = read.delim('/Users/llywelyngriffith/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/own_atlas/TUTR_vs_ALE/gencode.v45.annotation.gtf', stringsAsFactors = FALSE,
+gencode_v45 = read.delim('/path/to/gencode.v45.annotation.gtf', stringsAsFactors = FALSE,
                          col.names = c("chr", "database", "region", "gtf_start", "gtf_end", "col6",
                                        "strand", "col8", "gtf_annotation"))
 
@@ -1109,8 +1109,6 @@ for (i in seq_along(all_sites_with_UTR_type_anno_with_position_list)) {
   all_sites_with_UTR_type_anno_with_position_list[[i]]$condition <- conditions[i]
 }
 
-setwd('/Users/llywelyngriffith/Documents/AZ_postdoc/quantseq_96hrs/Nobby_APA_analysis/dedup/github/with_intronic/TUTR_vs_ALE/CSV')
-
 for (df in all_sites_with_UTR_type_anno_with_position_list) {
   # Extract the condition value from the 'condition' column
   condition_value <- unique(df$condition)
@@ -1358,6 +1356,8 @@ ggsave(filename = file.path(output_dir, "proximal_to_distal_usage_shift_TUTR_vs_
 # ----------------------------
 # Write Significant and Control Data Frames to CSV Files
 # ----------------------------
+
+setwd('../../Data/Figure_1_S1_S2_S3/APA_CSV_files/96hrs/APA_classified/')
 
 # Function to write data frames to CSV files
 write_df_list_to_files <- function(df_list, prefix) {
