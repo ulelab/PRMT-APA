@@ -12,12 +12,12 @@ library(stageR)         # For stage-wise analysis in high-dimensional data
 # Make sure all input files are located in this directory or provide full paths
 setwd("/path/to/your/working/directory")
 # Example:
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/3_end_seq_timecourse_LU99/Nobby_APA_analysis/common_atlas/dedup")
+setwd("/ulelab/PRMT-APA/Scripts/Figure_1_S1_S2_S3/")
 
 # Step 1: Read in the PolyA Site (PAS) atlas file
 # Input: PAS atlas file in BED format (e.g., 'merged_polya.filteredunique.annotated.bed')
 # Ensure that this file contains the necessary columns as specified below
-pas_atlas_file <- 'merged_polya.filteredunique.annotated.bed'
+pas_atlas_file <- '../../Data/Figure_1_S1_S2_S3/pA_atlas/merged_polya.filteredunique.annotated.bed'
 full_pas_data <- fread(pas_atlas_file, 
                   col.names = c("seqnames", "start", "end", "id", "score", "strand", "ensg", "hgnc", "region"))
 
@@ -38,7 +38,7 @@ pas_data[, num_pas := .N, by = ensg]
 # Inputs:
 # - Directory containing count files (e.g., 'counts/')
 # - Pattern to match count files (e.g., '.bed')
-counts_dir <- "counts"  # Directory containing count files
+counts_dir <- "../../Data/Figure_1_S1_S2_S3/counts/timecourse/"  # Directory containing count files
 counts_pattern <- ".bed"  # Pattern to match count files (adjust if necessary)
 
 # List all count files in the counts directory
@@ -76,7 +76,7 @@ counts_df <- as.data.frame(count_data[, -c(1:3)])
 # Step 3: Read in sample metadata
 # Input: Metadata file containing sample IDs and their corresponding conditions/groups
 # Ensure the metadata file has columns 'SampleName' and 'Condition'
-metadata_file <- "tso_seq_metadata.txt"
+metadata_file <- "../../Data/Figure_1_S1_S2_S3/drimseq_timecourse_metadata.txt"
 metadata <- read.table(metadata_file, header = TRUE, stringsAsFactors = FALSE)
 
 # Create a data frame with sample IDs and their corresponding groups (conditions)
@@ -225,18 +225,12 @@ for (i in seq_along(condition_results)) {
     separate(gene_id, into = c('gene_name', 'ensembl_ID'), sep = "_")
 }
 
-#metascape background results (i.e no filter for multiple pA's in UTR, just read threshold)
-write_csv(condition_results[[1]]$two_stage_results_merged, "metascape_background_24hrs_data.csv")
-write_csv(condition_results[[2]]$two_stage_results_merged, "metascape_background_48hrs_data.csv")
-write_csv(condition_results[[3]]$two_stage_results_merged, "metascape_background_72hrs_data.csv")
-write_csv(condition_results[[4]]$two_stage_results_merged, "metascape_background_96hrs_data.csv")
-
 # Step 9: Write results to files
 # Output: CSV files containing all polyA sites and significant polyA sites with change in usage
 # The files are saved in 'CSV_files/' directory
 # Create output directories if they don't exist
-dir.create("github/CSV_files", showWarnings = FALSE)
-dir.create("github/CSV_files/positional_info", showWarnings = FALSE)
+dir.create("../../Data/Figure_1_S1_S2_S3/APA_CSV_files/timecourse/", showWarnings = FALSE)
+dir.create("../../Data/Figure_1_S1_S2_S3/APA_CSV_files/timecourse/positional_info", showWarnings = FALSE)
 
 for (i in seq_along(condition_results)) {
   cond_name <- condition_results[[i]]$condition_name
@@ -340,7 +334,7 @@ for (i in seq_along(condition_results)) {
 # Output: CSV files containing top two PAS with positional information
 for (i in seq_along(condition_results)) {
   cond_name <- condition_results[[i]]$condition_name
-  output_file <- paste0("github/CSV_files/positional_info/top2_", cond_name, "_sites_with_positional_info.csv")
+  output_file <- paste0("../../Data/Figure_1_S1_S2_S3/APA_CSV_files/timecourse/positional_info/top2_", cond_name, "_sites_with_positional_info.csv")
   write_csv(condition_results[[i]]$shifted_pAs, output_file)
 }
 
