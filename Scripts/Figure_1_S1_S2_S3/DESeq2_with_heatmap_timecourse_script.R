@@ -10,15 +10,24 @@ library(ggplot2)         # For figures
 library(RColorBrewer)    # For figures
 library(pheatmap)        # For figures
 
-#### DMAi timecourse DESeq2
-# Set working directory - e.g DMAi timecourse
-setwd('/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/')
-
 # Read in sample metadata e.g
-timecourse_sample_info <- read_csv('DESeq2_tables/deseq2_timecourse_sample_info.csv') %>%
+timecourse_sample_info <- read_csv('../../Data/Figure_1_S1_S2_S3/timecourse_deseq_sample_info.csv') %>%
   mutate(Treatment = factor(Treatment))
 
+# Base path relative to the *current working directory*
+base_counts_dir <- "../../Data/Figure_1_S1_S2_S3/counts"
+
 # Create vector of Salmon quant.sf file paths and assign sample names
+timecourse_sample_files <- file.path(
+  base_counts_dir,
+  paste0(timecourse_sample_info$Treatment, timecourse_sample_info$Replicate),
+  "quant.sf"
+)
+
+# Name the vector
+names(timecourse_sample_files) <- paste0(
+  timecourse_sample_info$Treatment, "_", timecourse_sample_info$Replicate
+)
 timecourse_sample_files <- paste0(timecourse_sample_info$Treatment, timecourse_sample_info$Replicate, '/quant.sf')
 names(timecourse_sample_files) <- paste0(timecourse_sample_info$Treatment, '_', timecourse_sample_info$Replicate)
 
@@ -134,7 +143,7 @@ for (tp in time_points) {
   results_list[[tp]] <- resLFC_df_anno
   
   # Write full results to file
-  write_csv(resLFC_df_anno, paste0('DESeq2_tables/DESeq2_results_', tp, '_all_genes.csv'))
+  write_csv(resLFC_df_anno, paste0('../../Data/Figure_1_S1_S2_S3/DESeq2_tables/timecourse/DESeq2_results_', tp, '_all_genes.csv'))
   
   # Filter significant genes (padj <= 0.05 and abs(log2FoldChange) > 1)
   res_sig <- resLFC_df_anno %>%
@@ -145,20 +154,22 @@ for (tp in time_points) {
     filter(log2FoldChange < -1)
   
   # Write significant results to files
-  write_csv(res_sig, paste0('DESeq2_tables/DESeq2_results_', tp, '_significant_genes.csv'))
-  write_csv(res_up, paste0('DESeq2_tables/DESeq2_results_', tp, '_upregulated_genes.csv'))
-  write_csv(res_down, paste0('DESeq2_tables/DESeq2_results_', tp, '_downregulated_genes.csv'))
+  write_csv(res_sig, paste0('../../Data/Figure_1_S1_S2_S3/DESeq2_tables/timecourse/DESeq2_results_', tp, '_significant_genes.csv'))
+  write_csv(res_up, paste0('../../Data/Figure_1_S1_S2_S3/DESeq2_tables/timecourse/DESeq2_results_', tp, '_upregulated_genes.csv'))
+  write_csv(res_down, paste0('../../Data/Figure_1_S1_S2_S3/DESeq2_tables/timecourse/DESeq2_results_', tp, '_downregulated_genes.csv'))
 }
 
 #### CDK11i/TOPKi DESeq2
-setwd('ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/')
-
 # Read in sample metadata
-sample_info <- read_csv('CDK11i_deseq_sample_info.csv') %>%
+sample_info <- read_csv('../../Data/Figure_1_S1_S2_S3/CDK11i_deseq_sample_info.csv') %>%
   mutate(Treatment = factor(Treatment))
 
 # Create vector of Salmon quant.sf file paths and assign sample names
-sample_files <- paste0(sample_info$Treatment, sample_info$Replicate, '/quant.sf')
+sample_files <- file.path(
+  base_counts_dir,
+  paste0(sample_info$Treatment, sample_info$Replicate),
+  "quant.sf"
+)
 names(sample_files) <- paste0(sample_info$Treatment, '_', sample_info$Replicate)
 
 # Import transcript-level estimates and summarize to gene-level counts
@@ -236,7 +247,7 @@ resLFC_df_anno_cdk11i <- resLFC_df_anno_cdk11i %>%
   ungroup()
 
 # Save all results
-write_csv(resLFC_df_anno_cdk11i, 'DESeq2_tables/DESeq2_results_CDK11i_all_genes.csv')
+write_csv(resLFC_df_anno_cdk11i, '../../Data/Figure_1_S1_S2_S3/DESeq2_tables/timecourse/DESeq2_results_CDK11i_all_genes.csv')
 
 # Filter significant genes (padj <= 0.05 and abs(log2FoldChange) > 1)
 res_sig_cdk11i <- resLFC_df_anno_cdk11i %>%
@@ -247,9 +258,9 @@ res_down_cdk11i <- res_sig_cdk11i %>%
   filter(log2FoldChange < -1)
 
 # Write significant results to files
-write_csv(res_sig_cdk11i, 'DESeq2_tables/DESeq2_results_CDK11i_significant_genes.csv')
-write_csv(res_up_cdk11i, 'DESeq2_tables/DESeq2_results_CDK11i_upregulated_genes.csv')
-write_csv(res_down_cdk11i, 'DESeq2_tables/DESeq2_results_CDK11i_downregulated_genes.csv')
+write_csv(res_sig_cdk11i, '../../Data/Figure_1_S1_S2_S3/DESeq2_tables/timecourse/DESeq2_results_CDK11i_significant_genes.csv')
+write_csv(res_up_cdk11i, '../../Data/Figure_1_S1_S2_S3/DESeq2_tables/timecourse//DESeq2_results_CDK11i_upregulated_genes.csv')
+write_csv(res_down_cdk11i, '../../Data/Figure_1_S1_S2_S3/DESeq2_tables/timecourse/DESeq2_results_CDK11i_downregulated_genes.csv')
 
 # Store results in a list for later use
 results_list_cdk11i <- list(
@@ -382,7 +393,7 @@ pheatmap(sig_gene_data,
 #setwd and write to file
 cluster_3_genes = gene_clusters %>% filter(Cluster == 3)
 
-write_csv(cluster_3_genes,'cluster_3_genes.csv')
-write_csv(all_gene_data,'background_genes.csv')
+write_csv(cluster_3_genes,'../../Data/Figure_1_S1_S2_S3/metascape_gene_lists/DESeq2_DMAi_vs_CDK11i/cluster_3_genes.csv')
+write_csv(all_gene_data,'../../Data/Figure_1_S1_S2_S3/metascape_gene_lists/DESeq2_DMAi_vs_CDK11i//background_genes.csv')
 
 
