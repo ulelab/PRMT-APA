@@ -1,3 +1,5 @@
+#Author: Charlotte Capitanchik
+
 library(rtracklayer)
 library(GenomicRanges)
 library(Matrix)
@@ -11,7 +13,7 @@ library(ggrepel)
 
 
 #import bigwigs, for this script they need to end with forward.bigWig or reverse.bigWig
-rnaseq_bw = list.files("/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/Charlotte_metaprofiles/RNA_seq_files/ctrl/",full.names = TRUE, pattern = "\\.bigWig$")
+rnaseq_bw = list.files("../../Data/Figure_4_S7/bigwig/",full.names = TRUE, pattern = "\\.bigWig$")
 experiment_name = "shCtrl_K562"
 
 granges_list <- lapply(rnaseq_bw, function(file_path) {
@@ -69,7 +71,7 @@ normalized_granges_list <- lapply(merged_samples, normalize_scores)
 
 #### read in poly A sites
 #read in files
-DMAi_down_proximal_sites = fread("/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/bed/test_triple_removal/expression_matched/2000/common_DMAi/common_DMAi_sig_down_TUTR_proximal_sites.bed") %>%
+DMAi_down_proximal_sites = fread("../../Data/Figure_3_S5_S6/bed/APA_3seq/expression_matched/2000nt_window/common_DMAi/common_DMAi_sig_down_TUTR_proximal_sites.bed") %>%
   dplyr::rename(
     chr = V1, 
     start = V2,
@@ -78,7 +80,7 @@ DMAi_down_proximal_sites = fread("/Users/k2362866/Documents/AZ_postdoc/Shaun_cel
   unique()
 
 
-non_DMAi_down_proximal_sites = fread("/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/bed/test_triple_removal/expression_matched/2000/non_DMAi/non_DMAi_sig_down_TUTR_proximal_sites.bed") %>%
+non_DMAi_down_proximal_sites = fread("../../Data/Figure_3_S5_S6/bed/APA_3seq/expression_matched/2000nt_window/non_DMAi/non_DMAi_sig_down_TUTR_proximal_sites.bed") %>%
   dplyr::rename(
     chr = V1, 
     start = V2,
@@ -86,7 +88,7 @@ non_DMAi_down_proximal_sites = fread("/Users/k2362866/Documents/AZ_postdoc/Shaun
     strand = V6) %>%
   unique()
 
-ctrl_proximal_sites = fread("/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/bed/test_triple_removal/expression_matched/2000/common_DMAi/control_TUTR_proximal_sites.bed") %>%
+ctrl_proximal_sites = fread("../../Data/Figure_3_S5_S6/bed/APA_3seq/expression_matched/2000nt_window/common_DMAi/control_TUTR_proximal_sites.bed") %>%
   dplyr::rename(
     chr = V1, 
     start = V2,
@@ -94,7 +96,7 @@ ctrl_proximal_sites = fread("/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lin
     strand = V6) %>%
   unique()
 
-DMAi_up_distal_sites = fread("/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/bed/test_triple_removal/expression_matched/2000/common_DMAi/common_DMAi_sig_up_TUTR_distal_sites.bed") %>%
+DMAi_up_distal_sites = fread("../../Data/Figure_3_S5_S6/bed/APA_3seq/expression_matched/2000nt_window/common_DMAi/common_DMAi_sig_up_TUTR_distal_sites.bed") %>%
   dplyr::rename(
     chr = V1, 
     start = V2,
@@ -103,7 +105,7 @@ DMAi_up_distal_sites = fread("/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_li
   unique()
 
 
-non_DMAi_up_distal_sites = fread("/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/bed/test_triple_removal/expression_matched/2000/non_DMAi/non_DMAi_sig_up_TUTR_distal_sites.bed") %>%
+non_DMAi_up_distal_sites = fread("../../Data/Figure_3_S5_S6/bed/APA_3seq/expression_matched/2000nt_window/non_DMAi/non_DMAi_sig_up_TUTR_distal_sites.bed") %>%
   dplyr::rename(
     chr = V1, 
     start = V2,
@@ -111,7 +113,7 @@ non_DMAi_up_distal_sites = fread("/Users/k2362866/Documents/AZ_postdoc/Shaun_cel
     strand = V6) %>%
   unique()
 
-ctrl_distal_sites = fread("/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/bed/test_triple_removal/expression_matched/2000/common_DMAi/control_TUTR_distal_sites.bed") %>%
+ctrl_distal_sites = fread("../../Data/Figure_3_S5_S6/bed/APA_3seq/expression_matched/2000nt_window/common_DMAi/control_TUTR_distal_sites.bed") %>%
   dplyr::rename(
     chr = V1, 
     start = V2,
