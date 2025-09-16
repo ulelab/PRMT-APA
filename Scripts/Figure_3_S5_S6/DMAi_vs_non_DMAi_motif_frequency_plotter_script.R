@@ -13,7 +13,7 @@ library(stringr)
 ########################################################################
 
 # Update this path to where your .fasta files are located
-setwd("/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/fasta/test_triple_removal/1000/")
+setwd("../../Data/Figure_3_S5_S6/fasta/1000nt_window/")
 
 ########################################################################
 # Define Motifs
@@ -303,35 +303,3 @@ ggplot(combined_results, aes(x = Position, y = RunningAverage, color = condition
     legend.text      = element_text(size = 14),
     strip.text       = element_text(size = 18)
   )
-
-############################################################
-##  Significance test 
-############################################################
-
-## ---- 1.  define window & build 2×2 table  ------------------------------
-## ── 1.  Pull the counts for the window that starts at position 4 ─────────
-start_pos   <- 4        # first nt of the 15-nt window
-
-# Presence counts (k) in each condition
-test_df <- combined_results %>%
-  filter(Position == start_pos,                 
-         pA_type == "distal pA",               # distal only
-         condition %in% c("DMAi-lengthened",
-                          "non-DMAi-lengthened"))
-
-# total motif occurrences in that window, per group
-k_full <- test_df$motif_hits[test_df$condition == "DMAi-lengthened"]
-k_none <- test_df$motif_hits[test_df$condition == "non-DMAi-lengthened"]
-
-# number of sequences (i.e. exposures) in each distal FASTA
-n_full <- combined_counts[["DMAi-lengthened distal"]]
-n_none <- combined_counts[["non-DMAi-lengthened distal"]]
-
-## ── 2. Poisson rate test ───────────────────────────────────────────────
-poisson_res <- poisson.test(
-  x       = c(k_full, k_none),    # observed motif counts
-  T       = c(n_full, n_none),    # exposure = # of sequences
-  alternative = "two.sided"
-)
-print(poisson_res) #p-value = 6.191e-06
-
