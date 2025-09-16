@@ -5,7 +5,7 @@ library(data.table)
 
 # ── 1. Load .bed files ─────────────────────────────────────────────────────
 bed_paths <- list.files(
-  path = "../../Data/Figure_4_5_S7/bed/APA_3seq/200nt_window",
+  path = "../../Data/Figure_4_S7/bed/APA_3seq/200nt_window",
   pattern = "\\.bed$",
   full.names = TRUE,
   ignore.case = TRUE
