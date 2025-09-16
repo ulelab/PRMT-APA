@@ -5,7 +5,7 @@ library(rstatix)
 
 ##DMAi vs non-DMAi sites
 #read in gene group bed files
-setwd('/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/bed/test_triple_removal/1000/')
+setwd('../../Data/Figure_3_S5_S6/bed/APA_3seq/1000nt_window')
 
 DMAi_lengthened_distal_sites = fread('common_DMAi/common_DMAi_sig_up_TUTR_distal_sites.bed') %>%
   dplyr::rename(
