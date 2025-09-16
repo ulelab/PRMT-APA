@@ -18,11 +18,11 @@ output_dir <- "/path/to/your/output_directory"
 
 # For demonstration purposes, replace the above paths with your actual paths
 # For example:
-polyA_csv_dir <- "/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/CSV_files"
-anno_bed_dir <- "/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/TUTR_vs_ALE"
-UTR_info_path <- "/Users/llywelyngriffith/Documents/AZ_postdoc/quantseq_96hrs/Nobby_APA_analysis/no_dedup/two_step_test/TUTR_vs_ALE/UTR_regions_gencode_v45.bed"
-splice_site_info_path <- "/Users/llywelyngriffith/Documents/AZ_postdoc/quantseq_96hrs/Nobby_APA_analysis/no_dedup/two_step_test/TUTR_vs_ALE/splice_regions_gencode_v45.bed"
-output_dir <- "/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/TUTR_vs_ALE"
+polyA_csv_dir <- "../../Data/Figure_2_S4/APA_CSV_files/panel_of_cancer_lines/"
+anno_bed_dir <- "../../Data/Figure_2_S4/classification_of_APA_bed_files/"
+UTR_info_path <- "../../Data/Figure_1_S1_S2_S3/classification_of_APA_bed_files/UTR_regions_gencode_v45.bed"
+splice_site_info_path <- "../../Data/Figure_1_S1_S2_S3/classification_of_APA_bed_files/splice_regions_gencode_v45.bed"
+output_dir <- "../../Data/Figure_2_S4/APA_CSV_files/panel_of_cancer_lines/APA_classified/"
 
 # Ensure the output directory exists
 if(!dir.exists(output_dir)) {
@@ -879,7 +879,7 @@ for (i in seq_along(sig_sites_with_UTR_type)) {
   )
   
   # Define the directory name
-  output_dir <- "sig_CSV/"
+  output_dir <- "../../Data/Figure_2_S4/APA_CSV_files/panel_of_cancer_lines/APA_classified/"
   
   # Create the directory if it doesn't exist
   if (!dir.exists(output_dir)) {
@@ -939,14 +939,6 @@ for (i in seq_along(ctrl_sites_with_UTR_type)) {
     ctrl_MIXED_genes_list[[i]],     # MIXED
     ctrl_iAPA_genes_list[[i]]       # iAPA
   )
-  
-  # Define the directory name
-  output_dir <- "ctrl_CSV/"
-  
-  # Create the directory if it doesn't exist
-  if (!dir.exists(output_dir)) {
-    dir.create(output_dir)
-  }
   
   # Define file names as in the previous function
   file_names <- c(
