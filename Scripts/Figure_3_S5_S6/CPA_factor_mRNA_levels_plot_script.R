@@ -1,6 +1,6 @@
 library(tidyverse)        # purrr, dplyr, readr, ggplot2, etc.
 
-dir_path <- "/Users/k2362866/Documents/AZ_postdoc/3_end_seq_timecourse_LU99/DESeq2_github"
+dir_path <- "../../Data/Figure_1_S1_S2_S3/DESeq2_tables/timecourse"
 
 # --------- 2. Find the four result files --------------------------------------
 files <- list.files(
