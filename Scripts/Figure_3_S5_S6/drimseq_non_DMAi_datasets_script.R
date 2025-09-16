@@ -12,17 +12,17 @@ library(stageR)         # For stage-wise analysis in high-dimensional data
 # Make sure all input files are located in this directory or provide full paths
 setwd("/path/to/your/working/directory")
 # Example:
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/PCF11_JTE-607_etc/Nobby_APA_analysis/github")
+setwd("/ulelab/PRMT-APA/Scripts/Figure_3_S5_S6")
 
 # Step 1: Read in the PolyA Site (PAS) atlas file
 # Input: PAS atlas file in BED format (e.g., 'merged_polya.filteredunique.annotated.bed')
 # Ensure that this file contains the necessary columns as specified below
-pas_atlas_file <- 'merged_polya.filteredunique.annotated.bed'
-pas_data <- fread(pas_atlas_file, 
+pas_atlas_file <- '../../Data/Figure_3_S5_S6/pA_atlas/merged_polya.filteredunique.annotated.bed'
+full_pas_data <- fread(pas_atlas_file, 
                   col.names = c("seqnames", "start", "end", "id", "score", "strand", "ensg", "hgnc", "region"))
 
 # Keep only PAS in 3' UTR regions
-pas_data <- pas_data[region == "UTR3"]
+pas_data <- full_pas_data[region == "UTR3"]
 
 # Calculate total score per gene (ensg)
 pas_data[, total_score := sum(score), by = ensg]
@@ -38,7 +38,7 @@ pas_data[, num_pas := .N, by = ensg]
 # Inputs:
 # - Directory containing count files (e.g., 'counts/')
 # - Pattern to match count files (e.g., '.bed')
-counts_dir <- "counts"  # Directory containing count files
+counts_dir <- "../../Data/Figure_3_S5_S6/counts/non_DMAi_datasets"  # Directory containing count files
 counts_pattern <- ".bed"  # Pattern to match count files (adjust if necessary)
 
 # List all count files in the counts directory
@@ -76,7 +76,7 @@ counts_df <- as.data.frame(count_data[, -c(1:3)])
 # Step 3: Read in sample metadata
 # Input: Metadata file containing sample IDs and their corresponding conditions/groups
 # Ensure the metadata file has columns 'SampleName' and 'Condition'
-metadata_file <- "tso_seq_metadata.txt"
+metadata_file <- "../../Data/Figure_3_S5_S6/drimseq_non_DMAi_datasets_metadata.txt"
 metadata <- read.table(metadata_file, header = TRUE, stringsAsFactors = FALSE)
 
 # Create a data frame with sample IDs and their corresponding groups (conditions)
@@ -210,14 +210,10 @@ condition_results <- lapply(names(conditions_list), function(cond_name) {
 })
 names(condition_results) <- names(conditions_list)
 
-# Step 7: Read in PolyA coordinates
-# Input: PolyA coordinates file (e.g., 'merged_polya.filteredunique.annotated.csv')
-# Ensure this file has the necessary columns as specified below
-polyA_coords_file <- "merged_polya.filteredunique.annotated.csv"
-polyA_coords <- read.csv(polyA_coords_file, header = FALSE)
-colnames(polyA_coords)[1:4] <- c("chr", "start", "end", "feature_id")
-colnames(polyA_coords)[6] <- "strand"
-polyA_coords <- polyA_coords[, c(1:4, 6)]
+# Step 7: process atlas file
+colnames(full_pas_data)[1:4] <- c("chr", "start", "end", "feature_id")
+colnames(full_pas_data)[6] <- "strand"
+polyA_coords <- full_pas_data[, c(1:4, 6)]
 
 # Step 8: Merge results with PolyA coordinates and separate gene_id
 for (i in seq_along(condition_results)) {
@@ -240,15 +236,15 @@ for (i in seq_along(condition_results)) {
 # Output: CSV files containing all polyA sites and significant polyA sites with change in usage
 # The files are saved in 'CSV_files/' directory
 # Create output directories if they don't exist
-dir.create("CSV_files", showWarnings = FALSE)
-dir.create("CSV_files/positional_info", showWarnings = FALSE)
+dir.create("../../Data/Figure_3_S5_S6/APA_CSV_files/non_DMAi_datasets", showWarnings = FALSE)
+dir.create("../../Data/Figure_3_S5_S6/APA_CSV_files/non_DMAi_datasets/positional_info", showWarnings = FALSE)
 
 for (i in seq_along(condition_results)) {
   cond_name <- condition_results[[i]]$condition_name
   
   # Define output file paths
-  all_sites_file <- paste0("CSV_files/all_polyA_sites_", cond_name, "_with_change_in_usage.csv")
-  sig_sites_file <- paste0("CSV_files/sig_polyA_sites_", cond_name, "_with_change_in_usage.csv")
+  all_sites_file <- paste0("../../Data/Figure_3_S5_S6/APA_CSV_files/non_DMAi_datasets/all_polyA_sites_", cond_name, "_with_change_in_usage.csv")
+  sig_sites_file <- paste0("../../Data/Figure_3_S5_S6/APA_CSV_files/non_DMAi_datasets/sig_polyA_sites_", cond_name, "_with_change_in_usage.csv")
   
   # Write to CSV
   write_csv(condition_results[[i]]$two_stage_results_merged, all_sites_file)
@@ -345,6 +341,6 @@ for (i in seq_along(condition_results)) {
 # Output: CSV files containing top two PAS with positional information
 for (i in seq_along(condition_results)) {
   cond_name <- condition_results[[i]]$condition_name
-  output_file <- paste0("CSV_files/positional_info/top2_", cond_name, "_sites_with_positional_info.csv")
+  output_file <- paste0("../../Data/Figure_3_S5_S6/APA_CSV_files/non_DMAi_datasets/positional_info/top2_", cond_name, "_sites_with_positional_info.csv")
   write_csv(condition_results[[i]]$shifted_pAs, output_file)
 }
