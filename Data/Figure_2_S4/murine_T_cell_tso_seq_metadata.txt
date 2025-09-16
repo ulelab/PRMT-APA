@@ -1,0 +1,14 @@
+SampleName	Condition
+Unpolarised_1	Unpolarised
+Unpolarised_2	Unpolarised
+Unpolarised_3	Unpolarised
+Unpolarised_4	Unpolarised
+DMSO_1	DMSO
+DMSO_2	DMSO
+DMSO_3	DMSO
+DMSO_4	DMSO
+SDMAi_ADMAi_1	SDMAi_ADMAi
+SDMAi_ADMAi_2	SDMAi_ADMAi
+SDMAi_ADMAi_3	SDMAi_ADMAi
+SDMAi_ADMAi_4	SDMAi_ADMAi
+
