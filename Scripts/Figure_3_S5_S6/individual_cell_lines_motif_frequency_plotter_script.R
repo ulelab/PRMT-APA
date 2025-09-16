@@ -13,7 +13,7 @@ library(stringr)
 # Set Working Directory
 ########################################################################
 
-setwd("/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/fasta/non_removal/1000/")
+setwd("../../Data/Figure_3_S5_S6/fasta/1000nt_window/")
 
 ########################################################################
 # Define Motifs
