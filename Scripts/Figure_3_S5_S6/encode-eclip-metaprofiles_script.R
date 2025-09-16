@@ -22,12 +22,12 @@ read_and_prepare_bed <- function(file_path) {
 
 # List of DMAi vs non-DMAi transcript file paths
 DMAi_vs_non_DMAi_bed_file_paths <- list(
-  DMAi_proximal = "/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/bed/test_triple_removal/expression_matched/2000/common_DMAi/common_DMAi_sig_down_TUTR_proximal_sites.bed",
-  non_DMAi_proximal = "/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/bed/test_triple_removal/expression_matched/2000/non_DMAi/non_DMAi_sig_down_TUTR_proximal_sites.bed",
-  ctrl_proximal   = "/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/bed/test_triple_removal/expression_matched/2000/common_DMAi/control_TUTR_proximal_sites.bed",
-  DMAi_distal = "/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/bed/test_triple_removal/expression_matched/2000/common_DMAi/common_DMAi_sig_up_TUTR_distal_sites.bed",
-  non_DMAi_distal = "/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/bed/test_triple_removal/expression_matched/2000/non_DMAi/non_DMAi_sig_up_TUTR_distal_sites.bed",
-  ctrl_distal   = "/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/bed/test_triple_removal/expression_matched/2000/common_DMAi/control_TUTR_distal_sites.bed"
+  DMAi_proximal = "../../Data/Figure_3_S5_S6/bed/APA_3seq/expression_matched/2000nt_window/common_DMAi/common_DMAi_sig_down_TUTR_proximal_sites.bed",
+  non_DMAi_proximal = "../../Data/Figure_3_S5_S6/bed/APA_3seq/expression_matched/2000nt_window/non_DMAi/non_DMAi_sig_down_TUTR_proximal_sites.bed",
+  ctrl_proximal   = "../../Data/Figure_3_S5_S6/bed/APA_3seq/expression_matched/2000nt_window/common_DMAi/control_TUTR_proximal_sites.bed",
+  DMAi_distal = "../../Data/Figure_3_S5_S6/bed/APA_3seq/expression_matched/2000nt_window/common_DMAi/common_DMAi_sig_up_TUTR_distal_sites.bed",
+  non_DMAi_distal = "../../Data/Figure_3_S5_S6/bed/APA_3seq/expression_matched/2000nt_window/non_DMAi/non_DMAi_sig_up_TUTR_distal_sites.bed",
+  ctrl_distal   = "../../Data/Figure_3_S5_S6/bed/APA_3seq/expression_matched/2000nt_window/common_DMAi/control_TUTR_distal_sites.bed"
 )
 
 # Read and prepare GRanges objects (change bed_file_path variable name to analyse different files)
@@ -41,14 +41,10 @@ resize_gr <- function(gr) {
 gr_resized_list <- lapply(gr_list, resize_gr)
 
 # Load HepG2 or K562 eCLIP data file paths (switch file location and/or pattern to read in the different files)
-eclip_beds <- list.files("/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/Charlotte_metaprofiles/CLIP_files/eclip_bed/important/",
+eclip_beds <- list.files("/path/to/eclip/bed/xlink_files",
                          full.names = TRUE,
                          pattern = "*.bed.gz")
 eclip_names <- basename(eclip_beds) %>% sub("-merged.xl.bed.gz","",.)
-
-# Check lengths
-length(eclip_beds)  
-length(eclip_names)
 
 read_eclip_bed <- function(file) {
   readBed(file)
