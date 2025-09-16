@@ -76,7 +76,7 @@ counts_df <- as.data.frame(count_data[, -c(1:3)])
 # Step 3: Read in sample metadata
 # Input: Metadata file containing sample IDs and their corresponding conditions/groups
 # Ensure the metadata file has columns 'SampleName' and 'Condition'
-metadata_file <- "tso_seq_metadata.txt"
+metadata_file <- "../../Data/Figure_2_S4/tso_seq_metadata.txt"
 metadata <- read.table(metadata_file, header = TRUE, stringsAsFactors = FALSE)
 
 # Create a data frame with sample IDs and their corresponding groups (conditions)
