@@ -5,7 +5,7 @@ library(rstatix)
 #### GC boxplot
 #Define the directory containing the FASTA files
 #setwd
-setwd("/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines//Nobby_APA_analysis/common_atlas/resequenced/dedup/github/fasta/test_triple_removal/")
+setwd("../../Data/Figure_3_S5_S6/fasta")
 fasta_dir <- "boxplot_regions/DMAi_vs_non_DMAi/"
 
 # Get the list of FASTA files
