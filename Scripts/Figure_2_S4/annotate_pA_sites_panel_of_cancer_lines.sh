@@ -10,8 +10,8 @@
 # Set the input folder containing the CSV files
 # Change this to the path where your CSV files are located
 input_folder="/path/to/your/csv/files/"
-input_folder="/ulelab/PRMT-APA/Scripts/scripts_for_figures_in_paper/CSV_files/Fig1
-/DMAi_timecourse/"
+input_folder="../../Data/Figure_2_S4/APA_CSV_files
+/panel_of_cancer_lines/"
 
 # Set the path to the GTF annotation file
 # Change this to the path where your GTF annotation file is located
@@ -19,7 +19,7 @@ gtf_annotation="/path/to/your/gencode.v45.annotation.gtf"
 
 # Set the output folder where the results will be stored
 # Change this to your desired output directory e.g:
-output_folder="/ulelab/repos/PRMT-APA/Scripts/scripts_for_figures_in_paper/bed_files/"
+output_folder="../../Data/Figure_2_S4/classification_of_APA_bed_files/"
 
 # ------------------------------------------------------
 
