@@ -11,7 +11,7 @@ library(rstatix)
 
 ##read in DMAi pA site CSVs and merge with DESEQ2 tables to obtain transcript expression data (BaseMean)
 #setwd 
-setwd("/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/CSV_files/positional_info/")
+setwd("../../Data/Figure_2_S4/APA_CSV_files/panel_of_cancer_lines/positional_info")
 
 #read in mulit_sig_pAs file
 csv_files = list.files(pattern = "^top2")
@@ -26,7 +26,7 @@ for (file in csv_files) {
 }
 
 #read in DE tables
-setwd("/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/DE_tables/")
+setwd("../../Data/Figure_3_S5_S6/DESeq2_datasets")
 
 #read in DE file
 DE_csv_files = list.files(pattern = "csv")
@@ -53,7 +53,7 @@ DMAi_data_frames_with_basemean <- Map(function(x, y) {
 
 ##read in non-DMAi pA site CSVs and merge with DESEQ2 tables to obtain transcript expression data (BaseMean)
 #setwd
-setwd("/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/CSV_files/positional_info/non_DMAi")
+setwd("../../Data/Figure_3_S5_S6/APA_CSV_files/non_DMAi_datasets/positional_info")
 
 #read in mulit_sig_pAs file
 csv_files = list.files(pattern = "^top2")
@@ -68,7 +68,7 @@ for (file in csv_files) {
 }
 
 #read in DE file
-setwd("/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/DE_tables/non_DMAi/with_XRN2/")
+setwd("../../Data/Figure_3_S5_S6/DESeq2_datasets/non_DMAi")
 non_DMAi_DE_csv_files = list.files(pattern = "csv")
 
 # List to store data frames
@@ -160,9 +160,6 @@ common_DMAi_pairs_no_non_DMAi_filter = common_DMAi_pairs_no_non_DMAi_filter %>%
   group_by(gene_name) %>%
   mutate(avg_basemean = mean(avg_basemean, na.rm = TRUE)) %>%
   ungroup()
-
-#write to file 
-write_csv(common_DMAi_pairs_no_non_DMAi_filter,"/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/CSV_files/common_DMAi_pairs_without_non_DMAi_filter.csv")
 
 ## function to add additional filter - remove sites that are altered more in non-DMAi, i.e max dmai effect is at least 33% the effect of max non-DMAi
 filter_with_non_dmai <- function(dmai_results, non_dmai_data_frames, columns_of_interest) {
@@ -403,19 +400,19 @@ common_control_pairs = common_control_pairs %>%
 #read in significant and control csv files containing UTR_type annotation
 #read in TUTR and ALE info
 # Read each file into a list of dataframes
-directory <- "/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/TUTR_vs_ALE/sig_CSV/"
+directory <- "../../Data/Figure_2_S4/APA_CSV_files/panel_of_cancer_lines/APA_classified/"
 DMAi_file_list <- list.files(directory, pattern = ".*sig.*all.*", full.names = TRUE)
 DMAi_UTR_type_table_list <- lapply(DMAi_file_list, read.csv)
 
-directory <- "/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/TUTR_vs_ALE/sig_CSV/non_DMAi/"
+directory <- "../../Data/Figure_3_S5_S6/Figure_3_S5_S6/APA_CSV_files/non_DMAi_datasets/APA_classified/"
 non_DMAi_file_list <- list.files(directory, pattern = ".*sig.*all.*", full.names = TRUE)
 non_DMAi_UTR_type_table_list <- lapply(non_DMAi_file_list, read.csv)
 
-directory <- "/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/TUTR_vs_ALE/ctrl_CSV/"
+directory <- "../../Data/Figure_2_S4/APA_CSV_files/panel_of_cancer_lines/APA_classified/ctrl/"
 DMAi_ctrl_file_list <- list.files(directory, pattern = ".*ctrl.*all.*", full.names = TRUE)
 DMAi_ctrl_UTR_type_table_list <- lapply(DMAi_ctrl_file_list, read.csv)
 
-directory <- "/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/TUTR_vs_ALE/ctrl_CSV/non_DMAi/"
+directory <- "../../Data/Figure_3_S5_S6/Figure_3_S5_S6/APA_CSV_files/non_DMAi_datasets/APA_classified/"
 non_DMAi_ctrl_file_list <- list.files(directory, pattern = ".*ctrl.*all.*", full.names = TRUE)
 non_DMAi_ctrl_UTR_type_table_list <- lapply(non_DMAi_ctrl_file_list, read.csv)
 
@@ -589,7 +586,7 @@ all_TUTR_list_with_pA_regions <- lapply(all_TUTR_list, calculate_PA_regions)
 all_TUTR_bed_files <- lapply(all_TUTR_list_with_pA_regions, prepare_bed_df)
 
 # Function to write data frames to BED files with specified filenames and directories
-setwd('/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/bed/test_triple_removal/400/relaxed_thresholds_for_charlotte/')
+setwd('../../Data/Figure_3_S5_S6/bed/APA_3seq/200nt_window')
 
 write_bed_files <- function(df_list) {
   # Create directories if they don't already exist
@@ -643,7 +640,7 @@ distal_gene_groups = c(up_TUTR_distal_sites_list[1:2],TUTR_distal_sites_list[3])
 gene_groups <- Map(rbind, prox_gene_groups, distal_gene_groups)
 
 #read in gencode file
-gencode_gtf_path='/Users/k2362866/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/own_atlas/TUTR_vs_ALE/gencode.v45.annotation.gtf'
+gencode_gtf_path='/path/to/gencode.v45.annotation.gtf'
 
 # Import the GTF file
 gtf <- import(gencode_gtf_path)
@@ -908,7 +905,7 @@ downstream_of_gene_bed_dfs <- lapply(gene_groups_with_downstream_of_gene_regions
 gene_group_bed_files = c(upstream_of_gene_bed_dfs,pre_tss_bed_dfs,tss_bed_dfs,gene_body_bed_dfs,UTR_bed_dfs,post_dPA_bed_dfs,downstream_of_gene_bed_dfs)
 
 #setwd to write bed files into 
-setwd("/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines//Nobby_APA_analysis/common_atlas/resequenced/dedup/github/bed/test_triple_removal/boxplot_regions/")
+setwd("../../Data/Figure_3_S5_S6/bed/APA_3seq/boxplot_regions/DMAi_vs_non_DMAi")
 
 #write bed
 prefixes <- c('DMAi', 'non_DMAi', 'control')
@@ -1000,7 +997,7 @@ prepare_bed_df <- function(df) {
 all_expression_matched_TUTR_bed_files <- lapply(all_expression_matched_TUTR_with_pA_regions_list, prepare_bed_df)
 
 # Function to write data frames to BED files with specified filenames and directories
-setwd('/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/bed/test_triple_removal/expression_matched/2000')
+setwd('../../Data/Figure_3_S5_S6/bed/APA_3seq/expression_matched/2000nt_window')
 
 write_bed_files <- function(df_list) {
   # Create directories if they don't already exist
