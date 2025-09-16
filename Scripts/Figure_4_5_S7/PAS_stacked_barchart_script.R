@@ -5,7 +5,7 @@ library(data.table)
 
 # ── 1. Load .bed files ─────────────────────────────────────────────────────
 bed_paths <- list.files(
-  path = "/Users/llywelyngriffith/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/common_atlas/dedup/github/siCFIM25_DMSO_vs_DMAi/bed/200",
+  path = "../../Data/Figure_4_S7/bed/APA_3seq/200nt_window",
   pattern = "\\.bed$",
   full.names = TRUE,
   ignore.case = TRUE
@@ -156,4 +156,4 @@ tot_none <- total_counts$`DMAi no mitigation`
 
 prop.test(c(AA_full, AA_none),
           c(tot_full, tot_none),
-          correct = TRUE)            # Yates continuity correction  , result = 81% full mit vs 65 % no mit, p value = 3.2 × 10⁻⁴.
+          correct = TRUE)            
