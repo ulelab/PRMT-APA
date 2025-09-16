@@ -5,7 +5,7 @@ library(data.table)
 
 # ── 1. Load .bed files ─────────────────────────────────────────────────────
 bed_paths <- list.files(
-  path       = "/Users/llywelyngriffith/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/bed/test_triple_removal/200/DMAi_vs_non_vs_control/",                # use explicit path if not working dir
+  path       = "../../Data/Figure_3_S5_S6/bed/APA_3seq/200nt_window/DMAi_vs_non_vs_control/",                # use explicit path if not working dir
   pattern    = "*\\.bed$",
   full.names = TRUE,
   ignore.case = TRUE               # drop if you need case–sensitive
@@ -47,7 +47,7 @@ row_totals <- tibble(
   idx = idx,
   Condition = condition,
   Location = location,
-  total = sapply(cfim_mitigation_bed_files[idx], nrow)
+  total = sapply(bed_files[idx], nrow)
 )
 
 # ── 4. Build PAS count + proportion table ──────────────────────────────────
