@@ -5,7 +5,7 @@ library(ggpubr)
 library(pheatmap)
 
 ###setwd
-setwd("/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/github/CSV_files/positional_info")
+setwd("../../Data/Figure_2_S4/APA_CSV_files/panel_of_cancer_lines/positional_info")
 
 #### read in files
 # List all CSV files
