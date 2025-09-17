@@ -5,11 +5,8 @@ library(recount3)
 library(data.table)
 library(optparse)
 
-#setwd
-setwd("/Users/k2362866/Documents/AZ_postdoc/files_for_charlotte/github/motif_and_clip_analysis/CFIM_mitigation_categories/")
-
 # Bigwig file path
-bigwig_base <- "/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/Charlotte_metaprofiles/RNA_seq_files/ctrl"
+bigwig_base <- "../../Data/Figure_4_S7/bigwig/"
 
 sample_bigwig_map <- list(
   "shCtrl-K562-R1" = c(
@@ -62,12 +59,12 @@ get_combined_coverage <- function(bw_files, annotation_bed, op = "sum") {
 # 3) Condition -> BED Mappings
 #######################################################
 conditions <- list(
-  DMAi_full_mit = c("bed/first_exon_to_pPA/expression_matched/DMAi_full_mitigation_sites_first_exon_to_pPA_sorted.bed", 
-                    "bed/UTR_regions/expression_matched/DMAi_full_mitigation_sites_UTRregions_sorted.bed"),
-  DMAi_part_mit = c("bed/first_exon_to_pPA/expression_matched/DMAi_part_mitigation_sites_first_exon_to_pPA_sorted.bed", 
-                    "bed/UTR_regions/expression_matched/DMAi_part_mitigation_sites_UTRregions_sorted.bed"),
-  DMAi_no_mit = c("bed/first_exon_to_pPA/expression_matched/DMAi_no_mitigation_sites_first_exon_to_pPA_sorted.bed", 
-                  "bed/UTR_regions/expression_matched/DMAi_no_mitigation_sites_UTRregions_sorted.bed"))
+  DMAi_full_mit = c("../../Data/Figure_4_S7/bed/APA_3seq/recount3/first_exon_to_pPA/expression_matched/DMAi_full_mitigation_sites_first_exon_to_pPA_sorted.bed", 
+                    "../../Data/Figure_4_S7/bed/APA_3seq/recount3/UTR_regions/expression_matched/DMAi_full_mitigation_sites_UTRregions_sorted.bed"),
+  DMAi_part_mit = c("../../Data/Figure_4_S7/bed/APA_3seq/recount3/first_exon_to_pPA/expression_matched/DMAi_part_mitigation_sites_first_exon_to_pPA_sorted.bed", 
+                    "../../Data/Figure_4_S7/bed/APA_3seq/recount3/UTR_regions/expression_matched/DMAi_part_mitigation_sites_UTRregions_sorted.bed"),
+  DMAi_no_mit = c("../../Data/Figure_4_S7/bed/APA_3seq/recount3/first_exon_to_pPA/expression_matched/DMAi_no_mitigation_sites_first_exon_to_pPA_sorted.bed", 
+                  "../../Data/Figure_4_S7/bed/APA_3seq/recount3/UTR_regions/expression_matched/DMAi_no_mitigation_sites_UTRregions_sorted.bed"))
 
 #######################################################
 # 4) Main Loop: We'll Collect Results, Then Subset
@@ -164,7 +161,7 @@ calculate_median_proximal_use <- function(
 sample_ids <- c("shCtrl-K562-R1","shCtrl-K562-R2","shCtrl-HepG2-R1","shCtrl-HepG2-R2")
 
 # 2) We already have sample_bigwig_map for them
-output_dir <- "SRA_coverage_results/shCtrl_K562_HepG2_CFIM_mitigation_categories"
+output_dir <- "../../Data/Figure_4_S7/SRA_coverage_results/shCtrl_K562_HepG2_CFIM_mitigation_categories"
 
 # We'll store results for each sample in memory
 all_samples_results <- list()
