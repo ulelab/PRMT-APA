@@ -18,11 +18,11 @@ output_dir <- "/path/to/your/output_directory"
 
 # For demonstration purposes, replace the above paths with your actual paths
 # For example:
-polyA_csv_dir <- "/Users/llywelyngriffith/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/common_atlas/dedup/github/CSV_files"
-anno_bed_dir <- "/Users/llywelyngriffith/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/common_atlas/dedup/github/TUTR_vs_ALE"
-UTR_info_path <- "/Users/llywelyngriffith/Documents/AZ_postdoc/quantseq_96hrs/Nobby_APA_analysis/no_dedup/two_step_test/TUTR_vs_ALE/UTR_regions_gencode_v45.bed"
-splice_site_info_path <- "/Users/llywelyngriffith/Documents/AZ_postdoc/quantseq_96hrs/Nobby_APA_analysis/no_dedup/two_step_test/TUTR_vs_ALE/splice_regions_gencode_v45.bed"
-output_dir <- "/Users/llywelyngriffith/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/common_atlas/dedup/github/TUTR_vs_ALE"
+polyA_csv_dir <- "../../Data/Figure_4_S7/CSV_files"
+anno_bed_dir <- "../../Data/Figure_4_S7/bed/APA_3seq"
+UTR_info_path <- "../../Data/Figure_1_S1_S2_S3/classification_of_APA_bed_files/UTR_regions_gencode_v45.bed"
+splice_site_info_path <- "../../Data/Figure_1_S1_S2_S3/classification_of_APA_bed_files/splice_regions_gencode_v45.bed"
+output_dir <- "../../Data/Figure_4_S7/CSV_files/APA_classified"
 
 # Ensure the output directory exists
 if(!dir.exists(output_dir)) {
@@ -653,7 +653,7 @@ ggsave(filename = file.path(output_dir, "ctrl_UTR_class_barchart.jpg"),
        plot = ctrl_UTR_class_barchart, width = 10, height = 8, dpi = 300)
 
 # ----------------------------
-# Jitter Plot for Proximal to Distal Usage Shift
+# Isolating APA genes by UTR type and adding positional info
 # ----------------------------
 
 # Define functions to identify positive and negative strands
@@ -786,61 +786,6 @@ combined_prox_dist_shift <- bind_rows(combined_prox_dist_shift, all_utr_df)
 # **Step 8:** Ensure 'UTR_type' and 'pA_type' are factors with specified levels
 combined_prox_dist_shift$UTR_type <- factor(combined_prox_dist_shift$UTR_type, levels = c('all','TUTR', 'ALE', 'MIXED', 'iAPA'))
 
-# Get the first four colors from the Set2 palette
-set2_colors <- brewer.pal(8, "Set2")[1:4]
-
-# Construct the color vector
-color_vector <- c(
-  '#ED6262',          # First color
-  set2_colors,        # First four elements from Set2
-  '#F3ADAD',          # Middle color
-  set2_colors,        # Repeat first four elements from Set2
-  '#9C2A2A',          # Last color
-  set2_colors         # Repeat first four elements from Set2 again
-)
-
-# Create a unique identifier for each combination of UTR_type and condition
-combined_prox_dist_shift$group_id <- with(combined_prox_dist_shift, interaction(UTR_type, condition))
-# Check how many unique combinations there are
-unique_combinations <- unique(combined_prox_dist_shift$group_id)
-# Create a mapping from combinations to colors
-color_mapping <- setNames(color_vector, unique_combinations)
-# Map the colors to your dataframe
-combined_prox_dist_shift$colors <- color_mapping[combined_prox_dist_shift$group_id]
-
-#jitter plot
-jitter_plot = ggplot(combined_prox_dist_shift, aes(x = UTR_type, y = prox_to_dist_shift, fill = colors)) +
-  geom_violin(trim = FALSE, alpha = 0.4) + # Add violin plot to show density
-  geom_jitter(position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.3), 
-              size = 1.5, aes(color = colors), alpha = 0.6) + # Add jitter points for visibility
-  stat_summary(fun = median, geom = "point", 
-               position = position_dodge(width = 0.3), 
-               size = 6, shape = 22, fill = "white") +
-  geom_hline(yintercept = 0, linetype = "dotted", color = "black", size = 0.8) +
-  facet_wrap(~condition, scales = "free_x", labeller = labeller(condition = strip_labels)) +
-  scale_fill_identity() + # Use the actual fill colors provided in the 'colors' attribute
-  scale_color_identity() + # Use the actual colors provided in the 'colors' attribute
-  labs(
-    x = 'UTR Type',
-    y = "Proximal to Distal Usage Shift",
-    color = 'UTR Type',
-    fill = 'UTR Type'
-  ) +
-  theme_classic() +
-  theme(
-    legend.title = element_text(size = 25),
-    legend.text = element_text(size = 22),
-    axis.title = element_text(size = 20),
-    axis.text = element_text(size = 18),
-    strip.text = element_text(size = 28),
-    panel.border = element_rect(color = "black", fill = NA, size = 1),
-    strip.background = element_rect(fill = "lightgrey", color = "black", size = 1)
-  ) +
-  ylim(-1.5, 1.5)
-
-# Save the jitter plot to a file
-ggsave(filename = file.path(output_dir, "proximal_to_distal_usage_shift_TUTR_vs_ALE_jitter_plot.jpg"), 
-       plot = jitter_plot, width = 10, height = 8, dpi = 300)
 
 # ----------------------------
 # Write Significant and Control Data Frames to CSV Files
@@ -860,7 +805,7 @@ for (i in seq_along(sig_sites_with_UTR_type)) {
   )
   
   # Define the directory name
-  output_dir <- "sig_CSV/"
+  output_dir <- "../../Data/Figure_4_S7/APA_CSV_files/APA_classified"
   
   # Create the directory if it doesn't exist
   if (!dir.exists(output_dir)) {
@@ -920,15 +865,7 @@ for (i in seq_along(ctrl_sites_with_UTR_type)) {
     ctrl_MIXED_genes_list[[i]],     # MIXED
     ctrl_iAPA_genes_list[[i]]       # iAPA
   )
-  
-  # Define the directory name
-  output_dir <- "ctrl_CSV/"
-  
-  # Create the directory if it doesn't exist
-  if (!dir.exists(output_dir)) {
-    dir.create(output_dir)
-  }
-  
+    
   # Define file names as in the previous function
   file_names <- c(
     paste0("ctrl_", condition, "_all.csv"),
