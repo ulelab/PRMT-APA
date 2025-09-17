@@ -4,7 +4,7 @@ library(gridExtra)
 library(rstatix)
 
 #read in gene group bed files
-setwd('/Users/k2362866/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/common_atlas/dedup/github/siCFIM25_DMSO_vs_DMAi/bed/200/')
+setwd('../../Data/Figure_4_S7/bed/APA_3seq/200nt_window')
 
 no_mit_distal_sites = fread('no_mit_distal_sites.bed') %>%
   dplyr::rename(
