@@ -3,7 +3,7 @@ library(ggplot2)
 library(ggpattern)
 
 # Specify the directory
-results_dir <- "/Users/k2362866/Documents/AZ_postdoc/files_for_charlotte/github/motif_and_clip_analysis/CFIM_mitigation_categories/SRA_coverage_results/shCtrl_K562_HepG2_CFIM_mitigation_categories/"
+results_dir <- "../../Data/Figure_4_S7/SRA_coverage_results/shCtrl_K562_HepG2_CFIM_mitigation_categories/"
 
 # List all files in the directory that end with 'results.csv'
 results_files <- list.files(
