@@ -22,12 +22,12 @@ read_and_prepare_bed <- function(file_path) {
 
 # List of siCFIM25-transcript group (DMAi-sensitivity categorised) file paths, change path file to location of bed files you want to analyse
 siCFIM25_bed_file_paths <- list(
-  full_mit_proximal = "/Users/k2362866/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/common_atlas/dedup/github/siCFIM25_DMSO_vs_DMAi/bed/expression_matched/2000/DMAi_full_mit_proximal_sites.bed",
-  part_mit_proximal = "/Users/k2362866/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/common_atlas/dedup/github/siCFIM25_DMSO_vs_DMAi/bed/expression_matched/2000/DMAi_part_mit_proximal_sites.bed",
-  no_mit_proximal   = "/Users/k2362866/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/common_atlas/dedup/github/siCFIM25_DMSO_vs_DMAi/bed/expression_matched/2000/no_mit_proximal_sites.bed",
-  full_mit_distal   = "/Users/k2362866/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/common_atlas/dedup/github/siCFIM25_DMSO_vs_DMAi/bed/expression_matched/2000/DMAi_full_mit_distal_sites.bed",
-  part_mit_distal   = "/Users/k2362866/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/common_atlas/dedup/github/siCFIM25_DMSO_vs_DMAi/bed/expression_matched/2000/DMAi_part_mit_distal_sites.bed",
-  no_mit_distal     = "/Users/k2362866/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/common_atlas/dedup/github/siCFIM25_DMSO_vs_DMAi/bed/expression_matched/2000/no_mit_distal_sites.bed"
+  full_mit_proximal = "../../Data/Figure_4_S7/bed/APA_3seq/expression_matched/2000/DMAi_full_mit_proximal_sites.bed",
+  part_mit_proximal = "../../Data/Figure_4_S7/bed/APA_3seq/expression_matched/2000/DMAi_part_mit_proximal_sites.bed",
+  no_mit_proximal   = "../../Data/Figure_4_S7/bed/APA_3seq/expression_matched/2000/no_mit_proximal_sites.bed",
+  full_mit_distal   = "../../Data/Figure_4_S7/bed/APA_3seq/expression_matched/2000/DMAi_full_mit_distal_sites.bed",
+  part_mit_distal   = "../../Data/Figure_4_S7/bed/APA_3seq/expression_matched/2000/DMAi_part_mit_distal_sites.bed",
+  no_mit_distal     = "../../Data/Figure_4_S7/bed/APA_3seq/expression_matched/2000/no_mit_distal_sites.bed"
 )
 
 # Read and prepare GRanges objects (change bed_file_path variable name to analyse different files)
@@ -41,7 +41,7 @@ resize_gr <- function(gr) {
 gr_resized_list <- lapply(gr_list, resize_gr)
 
 # Load HepG2 or K562 eCLIP data file paths (switch file location and/or pattern to read in the different files)
-eclip_beds <- list.files("/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/Charlotte_metaprofiles/CLIP_files/eclip_bed/important/",
+eclip_beds <- list.files("/path/to/eclip/bed/xlink_files",
                          full.names = TRUE,
                          pattern = "*.bed.gz")
 eclip_names <- basename(eclip_beds) %>% sub("-merged.xl.bed.gz","",.)
