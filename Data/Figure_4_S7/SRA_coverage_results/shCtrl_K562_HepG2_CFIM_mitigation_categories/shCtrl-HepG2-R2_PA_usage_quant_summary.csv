@@ -1,0 +1,4 @@
+sample,condition,median_proximal_use,sites_quantified
+shCtrl-HepG2-R2,DMAi_full_mit,0.534,158
+shCtrl-HepG2-R2,DMAi_part_mit,0.509,300
+shCtrl-HepG2-R2,DMAi_no_mit,0.527,195
