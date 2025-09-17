@@ -11,7 +11,7 @@ library(GenomicFeatures)
 library(dunn.test)      
 
 #setwd
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/common_atlas/dedup/github/CSV_files/positional_info/siCFIM25")
+setwd("../../Data/Figure_4_S7/APA_CSV_files/positional_info")
 
 # List all CSV files in the directory
 csv_files <- list.files(pattern = "\\.csv$")  # This regex matches files that end with .csv
@@ -94,16 +94,26 @@ data_categorized <- filtered_pairs %>%
   )
 
 #add UTR_type information so that we can focus solely on TUTR genes
-directory <- "/Users/llywelyngriffith/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/common_atlas/dedup/github/TUTR_vs_ALE/sig_CSV/siCFIM25/"
-siCFIM25_UTR_type_files <- list.files(directory, pattern = ".*all*", full.names = TRUE)
+directory <- "../../Data/Figure_4_S7/APA_CSV_files/APA_classified/"
+siCFIM25_UTR_type_files <- list.files(
+  directory,
+  pattern = "^(?=.*sig)(?=.*all).*$",
+  full.names = TRUE,
+  perl = TRUE
+)
 siCFIM25_UTR_type_list <- lapply(siCFIM25_UTR_type_files, read.csv)
 
 #combine all the tables into one table
 siCFIM25_sig_UTR_type_table = do.call(rbind, siCFIM25_UTR_type_list)
 
 #do same with control pairs
-directory <- "/Users/llywelyngriffith/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/common_atlas/dedup/github/TUTR_vs_ALE/ctrl_CSV/siCFIM25/"
-siCFIM25_UTR_type_files <- list.files(directory, pattern = ".*all*", full.names = TRUE)
+directory <- "../../Data/Figure_4_S7/APA_CSV_files/APA_classified/"
+siCFIM25_UTR_type_files <- list.files(
+  directory,
+  pattern = "^(?=.*ctrl)(?=.*all).*$",
+  full.names = TRUE,
+  perl = TRUE
+)
 siCFIM25_UTR_type_table_list <- lapply(siCFIM25_UTR_type_files, read.csv)
 
 #combine all the tables into one table
@@ -239,12 +249,12 @@ all_categories_genes = TUTR_data_categorized %>% dplyr::filter(category != 'unde
 gene_group_list = list(no_mit_genes,DMAi_exac_genes,DMAi_part_mit_genes,
                        DMAi_full_mit_genes,all_categories_genes,TUTR_control_pairs)
 
-#add new columns defining window for fasta file
+#add new columns defining window for fasta file , change numbers here to create bed files of varying region sizes (e.g. 1000nt, 200nt etc)
 APA_sites_with_window_list = lapply(gene_group_list, function(df) {
     df <- df %>%
       mutate(
-        region_start = if_else(strand == "+", end - 200, start - 200),
-        region_end   = if_else(strand == "+", end + 200, start + 200)
+        region_start = if_else(strand == "+", end - 100, start - 100),
+        region_end   = if_else(strand == "+", end + 100, start + 100)
       )
     return(df)
   })
@@ -267,7 +277,7 @@ all_APA_sites_with_window_list = lapply(all_APA_sites_with_window_list,function(
 })
 
 #setwd and write to file
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/common_atlas/dedup/github/siCFIM25_DMSO_vs_DMAi/bed/relaxed_thresholds/400")
+setwd("../../Data/Figure_4_S7/bed/APA_3seq/200nt_window")
 
 #write bed
 write.table(all_APA_sites_with_window_list[[1]], file = 'no_mit_distal_sites.bed', 
@@ -294,7 +304,7 @@ write.table(all_APA_sites_with_window_list[[11]], file = 'siCFIM25_up_proximal_s
 
 ##create expression matched groups
 #read in deseq2 file
-CFIM25_whole_gene_DE = read.csv("/Users/llywelyngriffith/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/DE_tables/siCFIM25_DMSO_whole_gene_deseq_results.csv")
+CFIM25_whole_gene_DE = read.csv("../../Data/Figure_3_S5_S6/DESeq2_datasets/non_DMAi/siCFIM25_DMSO_whole_gene_deseq_results.csv")
 
 #add basemean to gene group tables 
 # Loop over each data frame in the list and perform left_join with CFIM25_whole_gene_DE
@@ -345,7 +355,7 @@ all_APA_sites_with_window_list = lapply(all_APA_sites_with_window_list,function(
 })
 
 #setwd and write to file
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/common_atlas/dedup/github/siCFIM25_DMSO_vs_DMAi/bed/expression_matched/2000/")
+setwd("../../Data/Figure_4_S7/bed/APA_3seq/expression_matched/2000)
 
 #write bed
 write.table(all_APA_sites_with_window_list[[1]], file = 'no_mit_distal_sites.bed', 
@@ -402,7 +412,7 @@ full_mit_mean = mean(proximal_pA_usage_data$siCFIM25_DMSO_pA_usage_control[proxi
 
 ##get gene region bed files
 #read in gencode file
-gencode_gtf_path='/Users/llywelyngriffith/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/own_atlas/TUTR_vs_ALE/gencode.v45.annotation.gtf'
+gencode_gtf_path='/path/to/gencode.v45.annotation.gtf'
 
 # Import the GTF file
 gtf <- import(gencode_gtf_path)
@@ -668,7 +678,7 @@ downstream_of_gene_bed_dfs <- lapply(gene_groups_with_downstream_of_gene_regions
 gene_group_bed_files = c(upstream_of_gene_bed_dfs,pre_tss_bed_dfs,tss_bed_dfs,gene_body_bed_dfs,UTR_bed_dfs,post_dPA_bed_dfs,downstream_of_gene_bed_dfs)
 
 #setwd to write bed files into 
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/common_atlas/dedup/github/siCFIM25_DMSO_vs_DMAi/bed/boxplot_regions/")
+setwd("/../../Data/Figure_4_S7/bed/APA_3seq/boxplot_regions")
 
 #write bed
 prefixes <- c('no_mit', 'part_mit', 'full_mit')
