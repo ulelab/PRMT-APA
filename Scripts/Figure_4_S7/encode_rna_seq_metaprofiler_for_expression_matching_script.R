@@ -1,3 +1,5 @@
+#Author: Charlotte Capitanchik
+
 library(rtracklayer)
 library(GenomicRanges)
 library(Matrix)
@@ -11,7 +13,7 @@ library(ggrepel)
 
 
 #import bigwigs, for this script they need to end with forward.bigWig or reverse.bigWig
-rnaseq_bw = list.files("/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/Charlotte_metaprofiles/RNA_seq_files/ctrl/",full.names = TRUE, pattern = "\\.bigWig$")
+rnaseq_bw = list.files("../../Data/Figure_4_S7/bigwig/",full.names = TRUE, pattern = "\\.bigWig$")
 experiment_name = "shCtrl_K562"
 
 granges_list <- lapply(rnaseq_bw, function(file_path) {
@@ -82,13 +84,13 @@ read_and_prepare_bed <- function(file_path) {
 }
 
 # List of file paths
-bed_file_paths <- list(
-  full_mit_proximal = "/Users/k2362866/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/common_atlas/dedup/github/siCFIM25_DMSO_vs_DMAi/bed/expression_matched/2000/DMAi_full_mit_proximal_sites.bed",
-  part_mit_proximal = "/Users/k2362866/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/common_atlas/dedup/github/siCFIM25_DMSO_vs_DMAi/bed/expression_matched/2000/DMAi_part_mit_proximal_sites.bed",
-  no_mit_proximal   = "/Users/k2362866/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/common_atlas/dedup/github/siCFIM25_DMSO_vs_DMAi/bed/expression_matched/2000/no_mit_proximal_sites.bed",
-  full_mit_distal   = "/Users/k2362866/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/common_atlas/dedup/github/siCFIM25_DMSO_vs_DMAi/bed/expression_matched/2000/DMAi_full_mit_distal_sites.bed",
-  part_mit_distal   = "/Users/k2362866/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/common_atlas/dedup/github/siCFIM25_DMSO_vs_DMAi/bed/expression_matched/2000/DMAi_part_mit_distal_sites.bed",
-  no_mit_distal     = "/Users/k2362866/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/common_atlas/dedup/github/siCFIM25_DMSO_vs_DMAi/bed/expression_matched/2000/no_mit_distal_sites.bed"
+siCFIM25_bed_file_paths <- list(
+  full_mit_proximal = "../../Data/Figure_4_S7/bed/APA_3seq/expression_matched/2000/DMAi_full_mit_proximal_sites.bed",
+  part_mit_proximal = "../../Data/Figure_4_S7/bed/APA_3seq/expression_matched/2000/DMAi_part_mit_proximal_sites.bed",
+  no_mit_proximal   = "../../Data/Figure_4_S7/bed/APA_3seq/expression_matched/2000/no_mit_proximal_sites.bed",
+  full_mit_distal   = "../../Data/Figure_4_S7/bed/APA_3seq/expression_matched/2000/DMAi_full_mit_distal_sites.bed",
+  part_mit_distal   = "../../Data/Figure_4_S7/bed/APA_3seq/expression_matched/2000/DMAi_part_mit_distal_sites.bed",
+  no_mit_distal     = "../../Data/Figure_4_S7/bed/APA_3seq/expression_matched/2000/no_mit_distal_sites.bed"
 )
 
 # Read and prepare GRanges objects
