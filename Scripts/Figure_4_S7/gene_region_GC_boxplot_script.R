@@ -1,7 +1,7 @@
 #### GC boxplot
 #Define the directory containing the FASTA files
 #setwd
-setwd("/Users/llywelyngriffith/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/common_atlas/dedup/github/siCFIM25_DMSO_vs_DMAi/fasta")
+setwd("../../Data/Figure_4_S7/fasta/")
 fasta_dir <- "boxplot_regions/"
 
 # Get the list of FASTA files
