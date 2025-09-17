@@ -3,9 +3,8 @@ library(GenomicRanges)
 library(rtracklayer)
 library(data.table)
 
-#### 1) make the 150nt bed files
 # Specify the directory
-bed_dir <- "/Users/k2362866/Documents/AZ_postdoc/files_for_charlotte/github/motif_and_clip_analysis/CFIM_mitigation_categories/bed/expression_matched"
+bed_dir <- "../../Data/Figure_4_S7/bed/APA_3seq/expression_matched/2000/"
 
 # Get full file paths of all .bed files in that directory
 bed_file_paths <- list.files(
@@ -30,7 +29,7 @@ bed_files <- lapply(bed_file_paths, function(file) {
 #read in whole pA atlas
 atlas_colnames = c('chr','start', 'end','feature_id','score','strand','gene_symbol','gene_name','region')
 
-pA_atlas = read.delim("/Users/k2362866/Documents/AZ_postdoc/Shaun_cell_lines/Nobby_APA_analysis/common_atlas/resequenced/dedup/merged_polya.filteredunique.annotated.bed",header = FALSE,
+pA_atlas = read.delim("../../Data/pA_atlas/merged_polya.filteredunique.annotated.bed",header = FALSE,
                       stringsAsFactors = FALSE,
                       col.names = atlas_colnames)
 
@@ -56,68 +55,6 @@ for(i in seq_along(bed_files_with_original_coordinates)) {
     dplyr::select(-start.x, -end.x, -start.y, -end.y) %>% dplyr::select(chr, start, end, gene_name, feature_id, strand)
 }
 
-#write original coordinate tables to file
-# Get the base names (no path) of the input files
-bed_file_names <- basename(bed_file_paths)           
-bed_file_stems <- sub("\\.bed$", "", bed_file_names) 
-output_dir = "/Users/k2362866/Documents/AZ_postdoc/files_for_charlotte/github/motif_and_clip_analysis/CFIM_mitigation_categories/bed/sites/expression_matched"
-
-#    write each data frame to a new .bed file
-for (i in seq_along(bed_files_with_original_coordinates)) {
-  
-  # Build a new filename 
-  new_bed_name <- paste0(bed_file_stems[i], ".bed")
-  
-  # Choose the output path; here we save alongside the original directory
-  new_bed_path <- file.path(output_dir, new_bed_name)
-  
-  # Write the data frame to a .bed file
-  write.table(
-    bed_files_with_original_coordinates[[i]],
-    file = new_bed_path,
-    sep = "\t",
-    quote = FALSE,
-    row.names = FALSE,
-    col.names = FALSE
-  )
-  
-}
-
-# generate window
-APA_sites_with_window_list = lapply(bed_files_with_original_coordinates, function(df) {
-  df <- df %>%
-    mutate(
-      start = if_else(strand == "+", end - 150, start),
-      end   = if_else(strand == "+", end, start + 150)
-    )
-  return(df)
-})
-
-#output dir
-output_dir = "/Users/k2362866/Documents/AZ_postdoc/files_for_charlotte/github/motif_and_clip_analysis/CFIM_mitigation_categories/bed/150_upstream"
-
-# After generating 'APA_sites_with_window_list',
-#    write each data frame to a new .bed file
-for (i in seq_along(APA_sites_with_window_list)) {
-  
-  # Build a new filename by appending "_150upstream"
-  new_bed_name <- paste0(bed_file_stems[i], "_150upstream.bed")
-  
-  # Choose the output path; here we save alongside the original directory
-  new_bed_path <- file.path(output_dir, new_bed_name)
-  
-  # Write the data frame to a .bed file
-  write.table(
-    APA_sites_with_window_list[[i]],
-    file = new_bed_path,
-    sep = "\t",
-    quote = FALSE,
-    row.names = FALSE,
-    col.names = FALSE
-  )
-  
-}
-
 ###### 2) make proximal to distal region bed files and first exon to pPA bed files
 # create bed files of proximal to distal region
 full_mit_sites = rbind(bed_files_with_original_coordinates[[1]],bed_files_with_original_coordinates[[2]])
@@ -129,7 +66,7 @@ all_sites = list(full_mit_sites,part_mit_sites,no_mit_sites)
 proximal_sites = list(bed_files_with_original_coordinates[[2]],bed_files_with_original_coordinates[[4]],bed_files_with_original_coordinates[[6]]) 
 
 #read in gencode file
-gencode_gtf_path='/Users/k2362866/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/own_atlas/TUTR_vs_ALE/gencode.v45.annotation.gtf'
+gencode_gtf_path='/path/to/gencode.v45.annotation.gtf'
 
 # Import the GTF file
 gtf <- import(gencode_gtf_path)
@@ -250,7 +187,7 @@ prox_to_dist_region_list <- lapply(all_sites, function(df) {
   return(df2)
 })
 
-output_dir = "/Users/k2362866/Documents/AZ_postdoc/files_for_charlotte/github/motif_and_clip_analysis/CFIM_mitigation_categories/bed/UTR_regions/expression_matched"
+output_dir = "../../Data/Figure_4_S7/bed/APA_3seq/recount3/UTR_regions/expression_matched"
 
 # After generating 'prox_to_dist_region_list',
 #    write each data frame to a new .bed file
@@ -341,7 +278,7 @@ prox_to_exon_start_list <- lapply(proximal_sites, function(df) {
   return(df_final)
 })
 
-output_dir = "/Users/k2362866/Documents/AZ_postdoc/files_for_charlotte/github/motif_and_clip_analysis/CFIM_mitigation_categories/bed/first_exon_to_pPA/expression_matched"
+output_dir = "../../Data/Figure_4_S7/bed/APA_3seq/recount3/first_exon_to_pPA/expression_matched"
 
 # 2) After generating 'prox_to_exon_start_list',
 #    write each data frame to a new .bed file
