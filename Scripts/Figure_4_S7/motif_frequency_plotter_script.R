@@ -5,7 +5,7 @@ library(stringr)
 library(ggh4x)
 
 #setwd to location of fasta files directory
-setwd("/Users/k2362866/Documents/AZ_postdoc/CFIM25_SAM68_ELAVL1_siRNA_3_seq/Nobby_APA_analysis/common_atlas/dedup/github/siCFIM25_DMSO_vs_DMAi/")
+setwd("../../Data/Figure_4_S7/")
 
 #function for reading in fasta files
 process_directory <- function(directory_name) {
@@ -19,7 +19,7 @@ process_directory <- function(directory_name) {
 }
 
 #execute fasta reading function
-fasta_files = process_directory("fasta/1000/")
+fasta_files = process_directory("fasta/1000nt_window/")
 
 
 ##############################################################################
