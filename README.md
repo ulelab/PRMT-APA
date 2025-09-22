@@ -21,7 +21,7 @@ The fastq files present in each of these datasets were processed using the nf-qu
 
 **REPRODUCING ANALYSES FROM MANUSCRIPT**
 
-Scripts used to produce the figures from the manuscript are organised in this repository by Figure number. Files required for each script are located in the Data/ directory also found in this repository, organised by figure. Following each initial DRIMSeq analysis, APA events were next classified using the classification_of_APA_events.R script, before all other dataset-specific secondary analyses were peformed. For the more complex scripts located in this repository, script-specific READMEs can be found in the same directories as those scripts.
+Scripts used to produce the figures from the manuscript are located in the Scripts/ directory within this repository, organised by Figure number. Files required for each script are located in the Data/ directory also found in this repository, organised by figure. Following each initial DRIMSeq analysis, APA events were next classified using the classification_of_APA_events.R script, before all other dataset-specific secondary analyses were peformed. For the more complex scripts located in this repository, script-specific READMEs can be found in the same directories as those scripts.
 
 
 
