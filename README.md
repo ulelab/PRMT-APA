@@ -1,7 +1,7 @@
 
 **PRMT-APA README**
 
-This repository contains the scripts and data files necessary to generate the figures from "PRMT activity promotes global 3' UTR shortening in proliferating cells" (Griffith et al., 2025, doi: https://doi.org/10.1101/2025.03.06.641848)
+This repository contains the scripts and data files necessary to generate the figures from "Protein arginine methylation promotes global 3' UTR shortening in proliferating cells" (Griffith et al., 2026, doi: https://doi.org/10.1101/2025.03.06.641848)
 
 
 
@@ -14,6 +14,8 @@ The data generated in this study has been deposited at EBI ArrayExpress under th
 - “E-MTAB-14990” (murine T cells)
 - “E-MTAB-14992” (patient-derived organoids)
 - “E-MTAB-14930” (siCFIm25 +/- DMAi)
+- “E-MTAB-17463” (DMAi in RPE-1 and Palbociclib in LU-99)
+- “E-MTAB-17496” (DMAi +/- FLAG protein overexpression  in LU-99)
 
 The fastq files present in each of these datasets were processed using the nf-quantseq pipeline (v.0.1.0; DOI: 10.5281/zenodo.14417140), which generates Count bed files and a poly(A) site atlas - all of which are located in the Data/ directories in this repository, organised by Figure. These files were used as input for the DRIMseq.R scripts which were the starting point for all APA analyses performed in the manuscript.
 
