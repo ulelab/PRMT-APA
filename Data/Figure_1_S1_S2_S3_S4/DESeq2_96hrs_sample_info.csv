@@ -1,0 +1,13 @@
+Treatment,Replicate
+DMSO_96hrs,_1
+DMSO_96hrs,_2
+DMSO_96hrs,_3
+SDMAi_96hrs,_1
+SDMAi_96hrs,_2
+SDMAi_96hrs,_3
+ADMAi_96hrs,_1
+ADMAi_96hrs,_2
+ADMAi_96hrs,_3
+SDMAi_ADMAi_96hrs,_1
+SDMAi_ADMAi_96hrs,_2
+SDMAi_ADMAi_96hrs,_3

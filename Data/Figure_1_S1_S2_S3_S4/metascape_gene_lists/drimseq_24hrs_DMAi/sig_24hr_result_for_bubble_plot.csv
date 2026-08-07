@@ -1,0 +1,12 @@
+GO,Category,Description,Count,Log10(P)
+GO:0032006,GO Biological Processes,regulation of TOR signaling,27,-3.95
+R-HSA-5658623,Reactome Gene Sets,FGFRL1 modulation of FGFR1 signaling,4,-3.08
+WP5224,WikiPathways,2q37 copy number variation syndrome,19,-3.04
+GO:0046839,GO Biological Processes,phospholipid dephosphorylation,7,-2.85
+GO:0043255,GO Biological Processes,regulation of carbohydrate biosynthetic process,12,-2.64
+hsa04392,KEGG Pathway,Hippo signaling pathway - multiple species,8,-2.62
+GO:0021766,GO Biological Processes,hippocampus development,8,-2.42
+WP3658,WikiPathways,Wnt beta catenin signaling in leukemia,7,-2.35
+CORUM:1474,CORUM,SMAD3/4-E2F4/5-p107-DP1 complex,3,-2.31
+CORUM:6928,CORUM,ARHGEF7-GIT2-PAK1 complex,3,-2.31
+GO:1902202,GO Biological Processes,regulation of hepatocyte growth factor receptor signaling pathway,3,-2.31
