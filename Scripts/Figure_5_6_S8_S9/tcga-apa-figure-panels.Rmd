@@ -1,0 +1,704 @@
+---
+title: "TCGA APA manuscript panels"
+subtitle: "Figure panels A and B and the all-cancer supplementary panel"
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+    self_contained: true
+params:
+  site_results_file: Data/Figure_5_6_S8_S9/250805_dataForTCGADMAiPlot.tsv
+  expression_file: Data/Figure_5_6_S8_S9/tcga_targeted_gene_expression_by_cancer.tsv
+  figure_output_dir: Scripts/Figure_5_6_S8_S9/output/pdf
+  results_output_dir: Data/Figure_5_6_S8_S9/apa_panel_results
+---
+
+## Analysis overview
+
+This notebook produces three standalone manuscript panels:
+
+1. the distribution of significant cancer-versus-normal proximal poly(A)-site
+   usage changes for DMAi and non-DMAi sites (Figure panel A);
+2. the cancer-specific APA and PRMT1/PRMT5 expression panel restricted to the
+   21 cancers containing at least one significantly changed DMAi site (Figure
+   panel B); and
+3. the corresponding supplementary panel retaining all 26 cancers, including
+   cancers without a significantly changed DMAi site.
+
+## Methods
+
+For each proximal poly(A) site and cancer type, usage change was defined as
+mean tumour usage minus mean normal-tissue usage. Panel A displays density
+estimates for sites passing the cancer-specific Benjamini--Hochberg-adjusted
+threshold of P < 0.05. Panel B displays all measured DMAi and non-DMAi sites,
+but its primary version is restricted to cancer types containing at least one
+significantly changed DMAi site. Cancers are ordered by their median usage
+change across all DMAi sites. The adjacent bars show the fraction of the 203
+DMAi or 284 non-DMAi sites significant in each cancer.
+
+The expression heatmap shows unscaled median cancer TPM for PRMT1 and PRMT5.
+Spearman correlations relate median cancer TPM to the median all-site DMAi
+usage change across the displayed cancer set. Two-sided asymptotic P values
+were calculated using `cor.test(..., exact = FALSE)` and adjusted by the
+Benjamini--Hochberg method across the ten prespecified candidate genes. The
+all-cancer supplementary version repeats the complete analysis across all 26
+cancer types and therefore does not condition cancer inclusion on significant
+DMAi-site changes.
+
+## Setup
+
+```{r setup}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.align = "center",
+  dpi = 160
+)
+
+required_packages <- c(
+  "data.table", "ggplot2", "patchwork", "knitr", "scales"
+)
+missing_packages <- required_packages[
+  !vapply(required_packages, requireNamespace, logical(1), quietly = TRUE)
+]
+if (length(missing_packages)) {
+  stop(
+    "Install the missing packages before running this notebook: ",
+    paste(missing_packages, collapse = ", ")
+  )
+}
+
+library(data.table)
+library(ggplot2)
+library(patchwork)
+library(knitr)
+library(scales)
+
+find_repository_root <- function(start = getwd()) {
+  candidate <- normalizePath(start, mustWork = TRUE)
+  repeat {
+    has_git_directory <- dir.exists(file.path(candidate, ".git"))
+    has_repository_directories <-
+      dir.exists(file.path(candidate, "Scripts")) &&
+      (
+        dir.exists(file.path(candidate, "Data")) ||
+          dir.exists(file.path(candidate, "data"))
+      )
+    if (has_git_directory || has_repository_directories) {
+      return(candidate)
+    }
+    parent <- dirname(candidate)
+    if (identical(parent, candidate)) {
+      stop("Could not locate the PRMT-APA repository root.")
+    }
+    candidate <- parent
+  }
+}
+
+resolve_repository_path <- function(path, must_work = FALSE) {
+  expanded_path <- path.expand(path)
+  is_absolute <- grepl("^(/|[A-Za-z]:[/\\\\])", expanded_path)
+  resolved_path <- if (is_absolute) {
+    expanded_path
+  } else {
+    file.path(repository_root, expanded_path)
+  }
+  normalizePath(resolved_path, mustWork = must_work)
+}
+
+repository_root <- find_repository_root()
+site_results_file <- resolve_repository_path(
+  params$site_results_file,
+  must_work = TRUE
+)
+expression_file <- resolve_repository_path(
+  params$expression_file,
+  must_work = TRUE
+)
+figure_output_dir <- resolve_repository_path(params$figure_output_dir)
+results_output_dir <- resolve_repository_path(params$results_output_dir)
+dir.create(figure_output_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(results_output_dir, recursive = TRUE, showWarnings = FALSE)
+figure_output_dir <- normalizePath(figure_output_dir, mustWork = TRUE)
+results_output_dir <- normalizePath(results_output_dir, mustWork = TRUE)
+
+apa_colours <- c(
+  "DMAi" = "#FF594E",
+  "non_DMAi" = "#1A85FF"
+)
+candidate_genes <- c(
+  "PRMT1", "PRMT2", "PRMT3", "CARM1", "PRMT6",
+  "PRMT5", "PRMT9", "MTAP", "PCF11", "CSTF2"
+)
+displayed_genes <- c("PRMT1", "PRMT5")
+
+theme_panel <- theme_bw(base_size = 14) +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(colour = "#E8E8E8", linewidth = 0.35),
+    axis.text = element_text(colour = "#222222"),
+    legend.position = "top"
+  )
+
+format_probability <- function(x) {
+  ifelse(x < 0.001, format.pval(x, digits = 2), sprintf("%.3f", x))
+}
+```
+
+## Read and validate the source data
+
+```{r read-data}
+site_results <- fread(site_results_file)
+expression <- fread(expression_file)
+
+required_site_columns <- c(
+  "tissue", "disease_type", "Identifier", "FileName",
+  "mean_healthy", "mean_disease", "p_adjusted", "significant"
+)
+required_expression_columns <- c(
+  "tissue", "disease_type", "project_id", "gene_name",
+  "median_cancer_tpm"
+)
+missing_site_columns <- setdiff(required_site_columns, names(site_results))
+missing_expression_columns <- setdiff(
+  required_expression_columns,
+  names(expression)
+)
+if (length(missing_site_columns)) {
+  stop(
+    "The site-results file lacks required columns: ",
+    paste(missing_site_columns, collapse = ", ")
+  )
+}
+if (length(missing_expression_columns)) {
+  stop(
+    "The expression file lacks required columns: ",
+    paste(missing_expression_columns, collapse = ", ")
+  )
+}
+
+cancer_key <- unique(
+  expression[, .(tissue, disease_type, project_id)]
+)
+ambiguous_cancer_labels <- cancer_key[
+  , .N,
+  by = .(tissue, disease_type)
+][N != 1L]
+if (nrow(ambiguous_cancer_labels)) {
+  stop("Tissue/disease labels do not map uniquely to TCGA projects.")
+}
+
+site_results <- merge(
+  site_results,
+  cancer_key,
+  by = c("tissue", "disease_type"),
+  all.x = TRUE
+)
+if (anyNA(site_results$project_id)) {
+  stop("At least one APA row could not be mapped to a TCGA project.")
+}
+site_results[, delta_usage := mean_disease - mean_healthy]
+site_results[, project_short := sub("^TCGA-", "", project_id)]
+site_results[, FileName := factor(
+  FileName,
+  levels = c("DMAi", "non_DMAi")
+)]
+
+candidate_expression <- expression[
+  gene_name %chin% candidate_genes &
+    project_id %chin% unique(site_results$project_id),
+  .(project_id, gene_name, median_cancer_tpm)
+]
+candidate_expression[, project_short := sub("^TCGA-", "", project_id)]
+
+stopifnot(
+  uniqueN(site_results$project_id) == 26L,
+  uniqueN(site_results[FileName == "DMAi", Identifier]) == 203L,
+  uniqueN(site_results[FileName == "non_DMAi", Identifier]) == 284L,
+  nrow(candidate_expression) == 26L * length(candidate_genes),
+  all(is.finite(candidate_expression$median_cancer_tpm))
+)
+
+input_inventory <- data.table(
+  input = c("APA site/cancer results", "Candidate-gene expression"),
+  rows = c(nrow(site_results), nrow(candidate_expression)),
+  cancer_projects = c(
+    uniqueN(site_results$project_id),
+    uniqueN(candidate_expression$project_id)
+  )
+)
+kable(input_inventory, caption = "Panel input data")
+```
+
+## Cancer-level summaries
+
+```{r cancer-summaries}
+total_sites <- unique(
+  site_results[, .(FileName, Identifier)]
+)[, .(n_total_sites = .N), by = FileName]
+
+cancer_scores <- site_results[, .(
+  all_median_delta_usage_DMAi = median(
+    delta_usage[FileName == "DMAi"],
+    na.rm = TRUE
+  ),
+  has_significant_DMAi_site = any(
+    FileName == "DMAi" & significant,
+    na.rm = TRUE
+  )
+), by = .(project_id, project_short)]
+
+significant_counts <- site_results[
+  significant == TRUE,
+  .(n_significant = .N),
+  by = .(project_id, project_short, FileName)
+]
+proportion_data <- merge(
+  CJ(
+    project_id = unique(site_results$project_id),
+    FileName = factor(
+      c("DMAi", "non_DMAi"),
+      levels = levels(site_results$FileName)
+    ),
+    unique = TRUE
+  ),
+  unique(site_results[, .(project_id, project_short)]),
+  by = "project_id"
+)
+proportion_data <- merge(
+  proportion_data,
+  significant_counts,
+  by = c("project_id", "project_short", "FileName"),
+  all.x = TRUE
+)
+proportion_data[is.na(n_significant), n_significant := 0L]
+proportion_data <- merge(
+  proportion_data,
+  total_sites,
+  by = "FileName",
+  all.x = TRUE
+)
+proportion_data[, proportion_significant := n_significant / n_total_sites]
+
+significant_dmai_projects <- cancer_scores[
+  has_significant_DMAi_site == TRUE,
+  project_id
+]
+stopifnot(
+  nrow(cancer_scores) == 26L,
+  length(significant_dmai_projects) == 21L
+)
+
+kable(
+  cancer_scores[order(-all_median_delta_usage_DMAi)],
+  digits = 4,
+  caption = "Cancer inclusion and all-site DMAi usage score"
+)
+```
+
+## Panel A: significant-site usage distributions
+
+```{r panel-a, fig.width=4.5, fig.height=4}
+panel_a_data <- site_results[
+  significant == TRUE & is.finite(delta_usage)
+]
+panel_a_data[, display_category := factor(
+  as.character(FileName),
+  levels = c("DMAi", "non_DMAi"),
+  labels = c("DMAi-\nlengthened", "non-DMAi\nlengthened")
+)]
+
+panel_a_plot <- ggplot(
+  panel_a_data,
+  aes(delta_usage, fill = display_category)
+) +
+  geom_density(alpha = 0.70, linewidth = 0.75, colour = "black") +
+  geom_vline(
+    xintercept = 0,
+    linetype = "dashed",
+    colour = "grey55",
+    linewidth = 0.55
+  ) +
+  scale_fill_manual(
+    values = c(
+      "DMAi-\nlengthened" = apa_colours[["DMAi"]],
+      "non-DMAi\nlengthened" = apa_colours[["non_DMAi"]]
+    ),
+    name = NULL
+  ) +
+  scale_x_continuous(
+    limits = c(-0.4, 0.4),
+    breaks = seq(-0.4, 0.4, by = 0.2)
+  ) +
+  labs(
+    title = "Tumours vs normal samples",
+    x = "Change in proximal pA usage",
+    y = "Density"
+  ) +
+  theme_classic(base_size = 15) +
+  theme(
+    aspect.ratio = 1,
+    panel.border = element_rect(fill = NA, colour = "grey55"),
+    plot.title = element_text(hjust = 0.5, size = 16),
+    axis.title = element_text(size = 15),
+    axis.text = element_text(size = 12.5),
+    legend.position = "inside",
+    legend.position.inside = c(0.98, 0.98),
+    legend.justification = c(1, 1),
+    legend.text = element_text(size = 11),
+    legend.key.height = grid::unit(0.55, "lines"),
+    legend.background = element_blank()
+  )
+
+panel_a_plot
+
+panel_a_file <- file.path(
+  figure_output_dir,
+  "tcga_apa_panel_a_significant_site_density.pdf"
+)
+ggsave(
+  panel_a_file,
+  panel_a_plot,
+  width = 4.5,
+  height = 4,
+  units = "in",
+  device = grDevices::pdf,
+  useDingbats = FALSE
+)
+```
+
+## Panel B plotting function
+
+```{r panel-b-functions}
+calculate_candidate_correlations <- function(project_ids, analysis_label) {
+  correlation_data <- merge(
+    candidate_expression[project_id %chin% project_ids],
+    cancer_scores[, .(
+      project_id,
+      all_median_delta_usage_DMAi
+    )],
+    by = "project_id"
+  )
+  correlations <- correlation_data[, .(
+    n_cancer_types = .N,
+    spearman_rho = cor(
+      median_cancer_tpm,
+      all_median_delta_usage_DMAi,
+      method = "spearman"
+    ),
+    p_value = suppressWarnings(cor.test(
+      median_cancer_tpm,
+      all_median_delta_usage_DMAi,
+      method = "spearman",
+      exact = FALSE
+    )$p.value)
+  ), by = gene_name]
+  correlations[, p_adjusted := p.adjust(p_value, method = "BH")]
+  correlations[, analysis := analysis_label]
+  setcolorder(
+    correlations,
+    c(
+      "analysis", "gene_name", "n_cancer_types", "spearman_rho",
+      "p_value", "p_adjusted"
+    )
+  )
+  correlations
+}
+
+make_panel_b <- function(project_ids, analysis_label) {
+  cancer_order <- cancer_scores[
+    project_id %chin% project_ids
+  ][order(all_median_delta_usage_DMAi), project_short]
+
+  plot_sites <- copy(site_results[project_id %chin% project_ids])
+  plot_sites[, project_short := factor(
+    project_short,
+    levels = cancer_order
+  )]
+  plot_proportions <- copy(
+    proportion_data[project_id %chin% project_ids]
+  )
+  plot_proportions[, project_short := factor(
+    project_short,
+    levels = cancer_order
+  )]
+
+  correlations <- calculate_candidate_correlations(
+    project_ids,
+    analysis_label
+  )
+  displayed_correlations <- correlations[
+    gene_name %chin% displayed_genes
+  ][match(displayed_genes, gene_name)]
+  gene_labels <- setNames(
+    sprintf(
+      "%s\nrho=%.2f\nP=%s\nq=%s",
+      displayed_correlations$gene_name,
+      displayed_correlations$spearman_rho,
+      format_probability(displayed_correlations$p_value),
+      format_probability(displayed_correlations$p_adjusted)
+    ),
+    displayed_correlations$gene_name
+  )
+
+  expression_plot_data <- copy(candidate_expression[
+    project_id %chin% project_ids & gene_name %chin% displayed_genes
+  ])
+  expression_plot_data[, project_short := factor(
+    project_short,
+    levels = cancer_order
+  )]
+  expression_plot_data[, gene_name := factor(
+    gene_name,
+    levels = displayed_genes
+  )]
+
+  boxplot <- ggplot(
+    plot_sites,
+    aes(delta_usage, project_short, fill = FileName)
+  ) +
+    geom_vline(
+      xintercept = 0,
+      linetype = "dotted",
+      colour = "#555555"
+    ) +
+    geom_boxplot(
+      position = position_dodge(width = 0.8),
+      width = 0.68,
+      outlier.size = 0.45,
+      linewidth = 0.35
+    ) +
+    scale_fill_manual(
+      values = apa_colours,
+      labels = c(DMAi = "DMAi", non_DMAi = "non-DMAi"),
+      name = "APA category"
+    ) +
+    scale_x_continuous(
+      limits = c(-0.22, 0.24),
+      breaks = c(-0.2, -0.1, 0, 0.1, 0.2)
+    ) +
+    labs(
+      x = paste0(
+        "Tumour – normal change in\n",
+        "proximal poly(A) site usage"
+      ),
+      y = "TCGA project"
+    ) +
+    theme_panel +
+    theme(
+      text = element_text(size = 14),
+      axis.text = element_text(size = 12.5),
+      axis.title = element_text(size = 14.5),
+      legend.title = element_text(size = 13.5),
+      legend.text = element_text(size = 12.5),
+      legend.position = "top"
+    )
+
+  proportion_plot <- ggplot(
+    plot_proportions,
+    aes(proportion_significant, project_short, fill = FileName)
+  ) +
+    geom_col(position = position_dodge(width = 0.8), width = 0.72) +
+    scale_fill_manual(values = apa_colours, guide = "none") +
+    scale_x_continuous(
+      limits = c(0, 1),
+      breaks = c(0, 0.25, 0.5, 0.75, 1),
+      labels = label_number(accuracy = 0.01)
+    ) +
+    labs(
+      x = paste0(
+        "Fraction of sites with significant\n",
+        "tumour-associated APA"
+      ),
+      y = NULL
+    ) +
+    theme_panel +
+    theme(
+      text = element_text(size = 14),
+      axis.text.x = element_text(size = 12.5),
+      axis.text.y = element_blank(),
+      axis.title.x = element_text(size = 14.5),
+      axis.ticks.y = element_blank(),
+      legend.position = "none"
+    )
+
+  tpm_limits <- c(
+    20,
+    ceiling(
+      max(
+        candidate_expression[
+          gene_name %chin% displayed_genes,
+          median_cancer_tpm
+        ]
+      ) / 20
+    ) * 20
+  )
+  expression_heatmap <- ggplot(
+    expression_plot_data,
+    aes(gene_name, project_short, fill = median_cancer_tpm)
+  ) +
+    geom_tile(colour = "white", linewidth = 0.28) +
+    scale_x_discrete(labels = gene_labels) +
+    scale_fill_gradient(
+      low = "white",
+      high = "black",
+      limits = tpm_limits,
+      breaks = seq(tpm_limits[1L], tpm_limits[2L], by = 20),
+      oob = squish,
+      labels = label_number(accuracy = 1),
+      name = "Median\ncancer TPM"
+    ) +
+    labs(x = NULL, y = NULL) +
+    theme_panel +
+    theme(
+      panel.grid = element_blank(),
+      text = element_text(size = 14),
+      axis.text.x = element_text(size = 12, lineheight = 0.94),
+      axis.text.y = element_blank(),
+      axis.ticks.y = element_blank(),
+      legend.position = "right",
+      legend.title = element_text(size = 13),
+      legend.text = element_text(size = 12)
+    )
+
+  combined_plot <- (
+    boxplot + proportion_plot + expression_heatmap
+  ) +
+    plot_layout(widths = c(3.2, 1.2, 1.55))
+
+  list(
+    plot = combined_plot,
+    cancer_order = data.table(
+      analysis = analysis_label,
+      order = seq_along(cancer_order),
+      project_short = cancer_order
+    ),
+    proportions = plot_proportions,
+    correlations = correlations
+  )
+}
+```
+
+## Panel B: cancers with a significant DMAi site
+
+```{r panel-b-main, fig.width=13.5, fig.height=9.5}
+panel_b_main <- make_panel_b(
+  significant_dmai_projects,
+  "Main panel: 21 cancers with a significant DMAi site"
+)
+panel_b_main$plot
+
+panel_b_main_file <- file.path(
+  figure_output_dir,
+  "tcga_apa_panel_b_significant_dmai_cancers.pdf"
+)
+ggsave(
+  panel_b_main_file,
+  panel_b_main$plot,
+  width = 13.5,
+  height = 9.5,
+  units = "in",
+  device = grDevices::pdf,
+  useDingbats = FALSE
+)
+```
+
+## Supplementary panel B: all cancers
+
+```{r panel-b-supplement, fig.width=13.5, fig.height=11}
+panel_b_all_cancers <- make_panel_b(
+  cancer_scores$project_id,
+  "Supplementary panel: all 26 cancers"
+)
+panel_b_all_cancers$plot
+
+panel_b_all_cancers_file <- file.path(
+  figure_output_dir,
+  "tcga_apa_panel_b_all_cancers_supplement.pdf"
+)
+ggsave(
+  panel_b_all_cancers_file,
+  panel_b_all_cancers$plot,
+  width = 13.5,
+  height = 11,
+  units = "in",
+  device = grDevices::pdf,
+  useDingbats = FALSE
+)
+```
+
+## Correlation results
+
+```{r correlation-results}
+panel_correlations <- rbindlist(list(
+  panel_b_main$correlations,
+  panel_b_all_cancers$correlations
+))
+kable(
+  panel_correlations[gene_name %chin% displayed_genes][
+    order(analysis, match(gene_name, displayed_genes))
+  ],
+  digits = 4,
+  caption = paste(
+    "PRMT1 and PRMT5 correlations displayed beneath the expression",
+    "heatmaps; BH correction was across ten candidate genes"
+  )
+)
+```
+
+## Reproducibility outputs
+
+```{r save-results}
+panel_cancer_orders <- rbindlist(list(
+  panel_b_main$cancer_order,
+  panel_b_all_cancers$cancer_order
+))
+panel_proportions <- rbindlist(list(
+  copy(panel_b_main$proportions)[, analysis := panel_b_main$cancer_order$analysis[1L]],
+  copy(panel_b_all_cancers$proportions)[
+    , analysis := panel_b_all_cancers$cancer_order$analysis[1L]
+  ]
+), use.names = TRUE, fill = TRUE)
+
+fwrite(
+  panel_a_data,
+  file.path(results_output_dir, "tcga_apa_panel_a_source_data.tsv"),
+  sep = "\t"
+)
+fwrite(
+  panel_cancer_orders,
+  file.path(results_output_dir, "tcga_apa_panel_b_cancer_order.tsv"),
+  sep = "\t"
+)
+fwrite(
+  panel_proportions,
+  file.path(results_output_dir, "tcga_apa_panel_b_site_proportions.tsv"),
+  sep = "\t"
+)
+fwrite(
+  panel_correlations,
+  file.path(results_output_dir, "tcga_apa_panel_b_expression_correlations.tsv"),
+  sep = "\t"
+)
+
+output_inventory <- data.table(
+  panel = c(
+    "Figure panel A",
+    "Figure panel B",
+    "Supplementary panel B"
+  ),
+  file = c(
+    panel_a_file,
+    panel_b_main_file,
+    panel_b_all_cancers_file
+  )
+)
+kable(output_inventory, caption = "Generated PDF panels")
+```
+
+```{r session-info}
+sessionInfo()
+```
