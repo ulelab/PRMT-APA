@@ -1,0 +1,1627 @@
+---
+title: "TCGA DMAi-site usage and overall survival"
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output:
+  html_document:
+    toc: true
+    df_print: paged
+  html_notebook:
+    toc: true
+    toc_float: true
+    code_folding: hide
+params:
+  score_file: Data/Figure_5_6_S8_S9/tcga_dmai_sample_scores.tsv
+  clinical_file: Data/Figure_5_6_S8_S9/tcga_pancan_patient_clinical.tsv
+  results_output_dir: Data/Figure_5_6_S8_S9/survival_results
+  figure_output_dir: Scripts/Figure_5_6_S8_S9/output/pdf
+  refresh_clinical: false
+  cbioportal_api_url: "https://www.cbioportal.org/api"
+  minimum_site_coverage_fraction: 0.9
+  minimum_project_patients: 100
+  minimum_project_events: 30
+  selected_direct_project: "TCGA-PAAD"
+  selected_selective_project: "TCGA-KIRC"
+  selected_survival_max_months: 60
+  survival_summary_months: 60
+  survival_bootstrap_replicates: 500
+  survival_bootstrap_seed: 20260805
+---
+
+## Analysis overview
+
+This manuscript analysis tests whether patient-level usage of proximal
+poly(A) sites responsive to dual methyltransferase inhibition (DMAi) is
+associated with overall survival in TCGA. The matched non-DMAi site score is
+included as a background APA control.
+
+The analysis comprises:
+
+1. a primary-tumour pan-cancer Cox model adjusted for age and sex and
+   stratified by cancer project;
+2. cancer-specific models testing the DMAi score itself;
+3. parallel models testing selective DMAi usage, defined as the patient-level
+   DMAi-minus-non-DMAi contrast while controlling for overall APA usage; and
+4. adjusted survival predictions for the cancer with the strongest adverse
+   selective-usage association.
+
+## Methods
+
+### Cohort and APA scores
+
+For each RNA sample, the DMAi and non-DMAi scores were defined as the median
+proximal poly(A)-site usage across the corresponding experimentally defined
+site set.
+RNA samples were required to quantify at least
+`r sprintf("%.0f%%", 100 * params$minimum_site_coverage_fraction)` of the
+maximum observed number of sites in both sets. When multiple eligible RNA
+samples were available for one patient, their sample-level scores were
+collapsed using the median.
+
+The survival analysis was restricted to patients represented by a primary
+solid-tumour RNA sample. Overall-survival time and status, age at diagnosis,
+and sex were obtained through the public cBioPortal API for the TCGA PanCancer
+Atlas studies and cached with the analysis inputs. Death was defined by an
+`OS_STATUS` value beginning with `1:`; values beginning with `0:` were
+censored. Patients without valid overall-survival, age, or sex data were
+excluded.
+
+### Pan-cancer survival model
+
+DMAi and non-DMAi scores were centred and scaled separately within each
+cancer project. A Cox proportional-hazards model included both continuous
+scores, age per 10-year increase, and sex. Cancer project was included as a
+stratum, allowing each cancer type to have its own baseline hazard. Hazard
+ratios therefore represent the change in mortality hazard per one
+within-cancer standard-deviation increase in site usage. Ties were handled
+using the Efron method. Proportional hazards were assessed using Schoenfeld
+residuals.
+
+Selective DMAi usage was defined for each patient as DMAi median usage minus
+non-DMAi median usage. Overall APA usage was defined as the mean of these two
+scores. Both quantities were centred and scaled within cancer project. A
+second stratified Cox model included the selective contrast, overall APA
+usage, age, and sex. Adjustment for overall APA usage separates relative
+enrichment of DMAi-site usage from a general shift affecting both site sets.
+
+### Cancer-specific screen
+
+Cancer-specific Cox models were restricted to projects with at least
+`r params$minimum_project_patients` eligible patients and
+`r params$minimum_project_events` deaths. Direct-score models included
+continuous within-cancer standardized DMAi usage and age per 10 years.
+Selective-usage models included the standardized DMAi-minus-non-DMAi contrast,
+standardized overall APA usage, and age. Sex was included when both sexes were
+represented within a cancer; it was omitted for sex-specific cancers because
+an invariant covariate cannot be estimated. Two-sided Wald p-values were
+adjusted separately across eligible cancers for the direct and selective
+screens using the Benjamini--Hochberg false-discovery rate (FDR). All eligible
+cancers are reported in the forest plots.
+
+### Selected-cancer analysis
+
+For visualization, adjusted survival was predicted at the within-cancer 25th
+and 75th percentiles of the continuous DMAi-minus-non-DMAi contrast. For each
+contrast value, counterfactual predictions retained every patient's observed
+overall APA usage, age, and sex and were averaged across the selected-cancer
+cohort. This marginal standardization directly visualizes the fitted Cox
+model without dichotomizing patients or introducing a survival-analysis
+threshold. Pointwise 95% confidence intervals were estimated using
+`r params$survival_bootstrap_replicates` nonparametric patient-level bootstrap
+resamples. In each resample, the Cox model was refitted and survival was
+standardized over the resampled covariate distribution while holding the
+contrast at the original-cohort percentile values. Cancer selection and the
+adjusted survival visualization are considered exploratory. At
+`r params$survival_summary_months` months, the adjusted survival difference
+between the 25th- and 75th-percentile scenarios was calculated within every
+paired bootstrap resample, and its 2.5th and 97.5th percentiles defined the
+95% confidence interval. All tests were two-sided.
+Analyses were performed in R 4.5.1 using the `survival` package (version
+3.8-3).
+
+## Setup
+
+```{r setup}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 8,
+  fig.height = 5.5,
+  dpi = 120
+)
+
+required_packages <- c(
+  "data.table", "ggplot2", "survival", "broom", "knitr", "scales",
+  "httr2"
+)
+missing_packages <- required_packages[
+  !vapply(required_packages, requireNamespace, logical(1), quietly = TRUE)
+]
+if (length(missing_packages)) {
+  stop(
+    "Install the missing packages before running this notebook: ",
+    paste(missing_packages, collapse = ", ")
+  )
+}
+
+library(data.table)
+library(ggplot2)
+library(survival)
+library(broom)
+library(knitr)
+library(scales)
+library(httr2)
+
+find_repository_root <- function(start = getwd()) {
+  candidate <- normalizePath(start, mustWork = TRUE)
+  repeat {
+    has_git_directory <- dir.exists(file.path(candidate, ".git"))
+    has_repository_directories <-
+      dir.exists(file.path(candidate, "Scripts")) &&
+      (
+        dir.exists(file.path(candidate, "Data")) ||
+          dir.exists(file.path(candidate, "data"))
+      )
+    if (has_git_directory || has_repository_directories) {
+      return(candidate)
+    }
+    parent <- dirname(candidate)
+    if (identical(parent, candidate)) {
+      stop("Could not locate the PRMT-APA repository root.")
+    }
+    candidate <- parent
+  }
+}
+
+resolve_repository_path <- function(path, must_work = FALSE) {
+  expanded_path <- path.expand(path)
+  is_absolute <- grepl("^(/|[A-Za-z]:[/\\\\])", expanded_path)
+  resolved_path <- if (is_absolute) {
+    expanded_path
+  } else {
+    file.path(repository_root, expanded_path)
+  }
+  normalizePath(resolved_path, mustWork = must_work)
+}
+
+repository_root <- find_repository_root()
+
+figure_output_dir <- resolve_repository_path(params$figure_output_dir)
+if (!dir.exists(figure_output_dir)) {
+  dir.create(figure_output_dir, recursive = TRUE)
+}
+figure_output_dir <- normalizePath(figure_output_dir, mustWork = TRUE)
+
+results_output_dir <- resolve_repository_path(params$results_output_dir)
+if (!dir.exists(results_output_dir)) {
+  dir.create(results_output_dir, recursive = TRUE)
+}
+results_output_dir <- normalizePath(results_output_dir, mustWork = TRUE)
+
+theme_set(
+  theme_classic(base_size = 12) +
+    theme(
+      plot.title.position = "plot",
+      strip.background = element_blank(),
+      legend.position = "bottom"
+    )
+)
+
+prediction_colours <- c(
+  "Lower relative DMAi-site usage (25th percentile)" = "#1A85FF",
+  "Higher relative DMAi-site usage (75th percentile)" = "#D73027"
+)
+
+standardise_score <- function(x) {
+  score_sd <- sd(x, na.rm = TRUE)
+  if (!is.finite(score_sd) || score_sd == 0) {
+    return(rep(NA_real_, length(x)))
+  }
+  (x - mean(x, na.rm = TRUE)) / score_sd
+}
+
+single_value <- function(x, field, patient) {
+  values <- unique(x[!is.na(x)])
+  if (length(values) != 1L) {
+    stop("Patient ", patient, " has multiple ", field, " values.")
+  }
+  values
+}
+
+tidy_score_term <- function(fit, term, model) {
+  target_term <- term
+  result <- as.data.table(
+    tidy(fit, exponentiate = TRUE, conf.int = TRUE)
+  )[term == target_term]
+  data.table(
+    model = model,
+    hazard_ratio = result$estimate,
+    conf_low = result$conf.low,
+    conf_high = result$conf.high,
+    p_value = result$p.value
+  )
+}
+```
+
+## Construct the patient cohort
+
+```{r load-and-filter-scores}
+score_file <- resolve_repository_path(params$score_file, must_work = TRUE)
+clinical_file <- resolve_repository_path(params$clinical_file)
+
+sample_scores <- fread(score_file)
+required_score_columns <- c(
+  "studyId", "patientId", "project_id", "cancer_type", "sample_type",
+  "dmai_median_usage", "non_dmai_median_usage",
+  "n_dmai_sites_observed", "n_non_dmai_sites_observed"
+)
+missing_score_columns <- setdiff(
+  required_score_columns,
+  names(sample_scores)
+)
+if (length(missing_score_columns)) {
+  stop(
+    "The score file is missing required columns: ",
+    paste(missing_score_columns, collapse = ", ")
+  )
+}
+
+clinical_patient_keys <- unique(
+  sample_scores[, .(studyId, patientId)]
+)
+
+sample_scores <- sample_scores[
+  !is.na(studyId) &
+    !is.na(patientId) &
+    !is.na(project_id) &
+    is.finite(dmai_median_usage) &
+    is.finite(non_dmai_median_usage)
+]
+
+coverage_fraction <- as.numeric(params$minimum_site_coverage_fraction)
+if (
+  !is.finite(coverage_fraction) ||
+    coverage_fraction <= 0 ||
+    coverage_fraction > 1
+) {
+  stop("`minimum_site_coverage_fraction` must be in (0, 1].")
+}
+
+maximum_dmai_sites <- max(sample_scores$n_dmai_sites_observed)
+maximum_non_dmai_sites <- max(sample_scores$n_non_dmai_sites_observed)
+minimum_dmai_sites <- ceiling(coverage_fraction * maximum_dmai_sites)
+minimum_non_dmai_sites <- ceiling(
+  coverage_fraction * maximum_non_dmai_sites
+)
+
+n_samples_before_coverage <- nrow(sample_scores)
+sample_scores <- sample_scores[
+  n_dmai_sites_observed >= minimum_dmai_sites &
+    n_non_dmai_sites_observed >= minimum_non_dmai_sites
+]
+
+coverage_qc <- data.table(
+  site_group = c("DMAi", "non-DMAi"),
+  maximum_observed_sites = c(
+    maximum_dmai_sites,
+    maximum_non_dmai_sites
+  ),
+  minimum_required_sites = c(
+    minimum_dmai_sites,
+    minimum_non_dmai_sites
+  ),
+  samples_before_filter = n_samples_before_coverage,
+  samples_after_filter = nrow(sample_scores),
+  samples_excluded = n_samples_before_coverage - nrow(sample_scores)
+)
+kable(
+  coverage_qc,
+  caption = "APA site-coverage filter"
+)
+```
+
+```{r retrieve-clinical-data}
+required_clinical_attributes <- c(
+  "OS_MONTHS", "OS_STATUS", "AGE", "SEX"
+)
+
+fetch_cbioportal_patient_clinical <- function(
+  study_ids,
+  api_base_url
+) {
+  api_base_url <- sub("/+$", "", api_base_url)
+  clinical_by_study <- lapply(sort(unique(study_ids)), function(study_id) {
+    endpoint <- paste0(
+      api_base_url,
+      "/studies/",
+      utils::URLencode(study_id, reserved = TRUE),
+      "/clinical-data"
+    )
+    response <- request(endpoint) |>
+      req_url_query(
+        clinicalDataType = "PATIENT",
+        projection = "SUMMARY",
+        pageSize = 100000,
+        pageNumber = 0
+      ) |>
+      req_user_agent("PRMT-APA survival analysis") |>
+      req_timeout(seconds = 60) |>
+      req_retry(max_tries = 5) |>
+      req_perform()
+
+    study_clinical <- as.data.table(
+      resp_body_json(response, simplifyVector = TRUE)
+    )
+    required_api_columns <- c(
+      "studyId", "patientId", "clinicalAttributeId", "value"
+    )
+    missing_api_columns <- setdiff(
+      required_api_columns,
+      names(study_clinical)
+    )
+    if (length(missing_api_columns)) {
+      stop(
+        "cBioPortal returned an unexpected clinical-data response for ",
+        study_id,
+        "."
+      )
+    }
+    study_clinical[
+      clinicalAttributeId %chin% required_clinical_attributes,
+      ..required_api_columns
+    ]
+  })
+
+  clinical_long <- rbindlist(clinical_by_study, use.names = TRUE)
+  duplicated_attributes <- clinical_long[
+    , .N,
+    by = .(studyId, patientId, clinicalAttributeId)
+  ][N > 1L]
+  if (nrow(duplicated_attributes)) {
+    stop("cBioPortal returned duplicate patient clinical attributes.")
+  }
+
+  clinical_wide <- dcast(
+    clinical_long,
+    studyId + patientId ~ clinicalAttributeId,
+    value.var = "value"
+  )
+  missing_attributes <- setdiff(
+    required_clinical_attributes,
+    names(clinical_wide)
+  )
+  if (length(missing_attributes)) {
+    stop(
+      "The downloaded clinical data lack required attributes: ",
+      paste(missing_attributes, collapse = ", ")
+    )
+  }
+  setcolorder(
+    clinical_wide,
+    c("studyId", "patientId", required_clinical_attributes)
+  )
+  setorder(clinical_wide, studyId, patientId)
+  clinical_wide[, retrieved_utc := format(
+    Sys.time(),
+    tz = "UTC",
+    usetz = TRUE
+  )]
+  clinical_wide
+}
+
+refresh_clinical <- isTRUE(params$refresh_clinical)
+clinical_was_downloaded <- refresh_clinical || !file.exists(clinical_file)
+if (clinical_was_downloaded) {
+  dir.create(
+    dirname(clinical_file),
+    recursive = TRUE,
+    showWarnings = FALSE
+  )
+  downloaded_clinical <- fetch_cbioportal_patient_clinical(
+    clinical_patient_keys$studyId,
+    params$cbioportal_api_url
+  )
+  downloaded_clinical <- merge(
+    clinical_patient_keys,
+    downloaded_clinical,
+    by = c("studyId", "patientId"),
+    all.x = TRUE
+  )
+  downloaded_clinical[, retrieved_utc := format(
+    Sys.time(),
+    tz = "UTC",
+    usetz = TRUE
+  )]
+  setorder(downloaded_clinical, studyId, patientId)
+  fwrite(downloaded_clinical, clinical_file, sep = "\t")
+}
+clinical_file <- normalizePath(clinical_file, mustWork = TRUE)
+
+clinical_cache_qc <- data.table(
+  source = if (
+    clinical_was_downloaded
+  ) "Downloaded from cBioPortal API" else "Existing committed cache",
+  clinical_file = clinical_file,
+  studies_requested = uniqueN(clinical_patient_keys$studyId),
+  retrieved_utc = paste(
+    unique(fread(
+      clinical_file,
+      select = "retrieved_utc",
+      colClasses = "character"
+    )$retrieved_utc),
+    collapse = "; "
+  )
+)
+kable(clinical_cache_qc, caption = "Clinical-data provenance")
+```
+
+```{r collapse-to-patients}
+patient_usage <- sample_scores[, {
+  current_patient <- patientId[1L]
+  list(
+    project_id = single_value(
+      project_id,
+      "project_id",
+      current_patient
+    ),
+    cancer_type = single_value(
+      cancer_type,
+      "cancer_type",
+      current_patient
+    ),
+    n_apa_samples = .N,
+    sample_types = paste(
+      sort(unique(sample_type[!is.na(sample_type)])),
+      collapse = "; "
+    ),
+    minimum_dmai_sites_observed = min(n_dmai_sites_observed),
+    minimum_non_dmai_sites_observed = min(
+      n_non_dmai_sites_observed
+    ),
+    dmai_median_usage = median(dmai_median_usage),
+    non_dmai_median_usage = median(non_dmai_median_usage)
+  )
+}, by = .(studyId, patientId)]
+
+if (anyDuplicated(patient_usage[, .(studyId, patientId)])) {
+  stop("Patient-level APA data contain duplicate study/patient keys.")
+}
+```
+
+```{r merge-clinical-data}
+clinical_data <- fread(
+  clinical_file,
+  colClasses = "character"
+)
+required_clinical_columns <- c(
+  "studyId", "patientId", "OS_MONTHS", "OS_STATUS", "AGE", "SEX"
+)
+missing_clinical_columns <- setdiff(
+  required_clinical_columns,
+  names(clinical_data)
+)
+if (length(missing_clinical_columns)) {
+  stop(
+    "The clinical file is missing required columns: ",
+    paste(missing_clinical_columns, collapse = ", ")
+  )
+}
+
+analysis_data <- merge(
+  patient_usage,
+  clinical_data[, ..required_clinical_columns],
+  by = c("studyId", "patientId"),
+  all = FALSE
+)
+analysis_data[, os_months := suppressWarnings(as.numeric(OS_MONTHS))]
+analysis_data[
+  !is.na(OS_STATUS) & !nzchar(trimws(OS_STATUS)),
+  OS_STATUS := NA_character_
+]
+analysis_data[, os_event := fcase(
+  grepl("^1:", OS_STATUS), 1L,
+  grepl("^0:", OS_STATUS), 0L,
+  default = NA_integer_
+)]
+analysis_data[, age_years := suppressWarnings(as.numeric(AGE))]
+analysis_data[
+  !is.finite(age_years) | age_years <= 0 | age_years >= 120,
+  age_years := NA_real_
+]
+analysis_data[, sex := factor(
+  fcase(
+    toupper(trimws(SEX)) == "FEMALE", "Female",
+    toupper(trimws(SEX)) == "MALE", "Male",
+    default = NA_character_
+  ),
+  levels = c("Female", "Male")
+)]
+
+primary_sample_types <- c("Primary Tumor", "Primary solid Tumor")
+is_valid_survival <- is.finite(analysis_data$os_months) &
+  analysis_data$os_months >= 0 &
+  !is.na(analysis_data$os_event)
+is_primary <- analysis_data$sample_types %chin% primary_sample_types
+is_clinically_complete <- !is.na(analysis_data$age_years) &
+  !is.na(analysis_data$sex)
+
+cohort_flow <- data.table(
+  analysis_step = c(
+    "Patients with APA and clinical mapping",
+    "Valid overall-survival endpoint",
+    "Primary solid-tumour RNA sample",
+    "Complete age and sex"
+  ),
+  patients = c(
+    nrow(analysis_data),
+    sum(is_valid_survival),
+    sum(is_valid_survival & is_primary),
+    sum(is_valid_survival & is_primary & is_clinically_complete)
+  )
+)
+kable(cohort_flow, caption = "Survival cohort construction")
+
+analysis_data <- analysis_data[
+  is_valid_survival &
+    is_primary &
+    is_clinically_complete
+]
+analysis_data[, age_per_10_years := age_years / 10]
+analysis_data[, dmai_usage_z := standardise_score(
+  dmai_median_usage
+), by = project_id]
+analysis_data[, non_dmai_usage_z := standardise_score(
+  non_dmai_median_usage
+), by = project_id]
+analysis_data[, selective_dmai_usage :=
+  dmai_median_usage - non_dmai_median_usage]
+analysis_data[, overall_apa_usage :=
+  (dmai_median_usage + non_dmai_median_usage) / 2]
+analysis_data[, selective_dmai_usage_z := standardise_score(
+  selective_dmai_usage
+), by = project_id]
+analysis_data[, overall_apa_usage_z := standardise_score(
+  overall_apa_usage
+), by = project_id]
+analysis_data <- analysis_data[
+  is.finite(dmai_usage_z) &
+    is.finite(non_dmai_usage_z) &
+    is.finite(selective_dmai_usage_z) &
+    is.finite(overall_apa_usage_z)
+]
+
+cohort_summary <- analysis_data[, .(
+  patients = .N,
+  deaths = sum(os_event),
+  cancer_projects = uniqueN(project_id),
+  patients_with_multiple_apa_samples = sum(n_apa_samples > 1L)
+)]
+kable(
+  cohort_summary,
+  caption = "Final primary-tumour age/sex analysis cohort"
+)
+```
+
+## Primary pan-cancer Cox model
+
+```{r pan-cancer-cox}
+pan_cancer_fit <- coxph(
+  Surv(os_months, os_event) ~
+    dmai_usage_z +
+    non_dmai_usage_z +
+    age_per_10_years +
+    sex +
+    strata(project_id),
+  data = analysis_data,
+  ties = "efron",
+  x = TRUE
+)
+
+pan_cancer_results <- rbindlist(list(
+  tidy_score_term(
+    pan_cancer_fit,
+    "dmai_usage_z",
+    "DMAi"
+  ),
+  tidy_score_term(
+    pan_cancer_fit,
+    "non_dmai_usage_z",
+    "non-DMAi"
+  )
+))
+kable(
+  pan_cancer_results,
+  digits = 4,
+  caption = paste(
+    "Age- and sex-adjusted pan-cancer overall-survival Cox model"
+  )
+)
+```
+
+```{r pan-cancer-ph}
+pan_cancer_ph <- cox.zph(pan_cancer_fit, transform = "km")
+pan_cancer_ph_results <- as.data.table(
+  as.data.frame(pan_cancer_ph$table),
+  keep.rownames = "term"
+)
+setnames(pan_cancer_ph_results, old = "p", new = "p_value")
+kable(
+  pan_cancer_ph_results,
+  digits = 4,
+  caption = "Schoenfeld residual tests"
+)
+```
+
+```{r selective-pan-cancer-cox}
+selective_pan_cancer_fit <- coxph(
+  Surv(os_months, os_event) ~
+    selective_dmai_usage_z +
+    overall_apa_usage_z +
+    age_per_10_years +
+    sex +
+    strata(project_id),
+  data = analysis_data,
+  ties = "efron",
+  x = TRUE
+)
+
+selective_pan_cancer_results <- rbindlist(list(
+  tidy_score_term(
+    selective_pan_cancer_fit,
+    "selective_dmai_usage_z",
+    "Selective DMAi usage"
+  ),
+  tidy_score_term(
+    selective_pan_cancer_fit,
+    "overall_apa_usage_z",
+    "Overall APA usage"
+  )
+))
+kable(
+  selective_pan_cancer_results,
+  digits = 4,
+  caption = paste(
+    "Pan-cancer selective DMAi model adjusted for overall APA usage,",
+    "age, and sex"
+  )
+)
+```
+
+```{r selective-pan-cancer-ph}
+selective_pan_cancer_ph <- cox.zph(
+  selective_pan_cancer_fit,
+  transform = "km"
+)
+selective_pan_cancer_ph_results <- as.data.table(
+  as.data.frame(selective_pan_cancer_ph$table),
+  keep.rownames = "term"
+)
+setnames(
+  selective_pan_cancer_ph_results,
+  old = "p",
+  new = "p_value"
+)
+kable(
+  selective_pan_cancer_ph_results,
+  digits = 4,
+  caption = "Selective-model Schoenfeld residual tests"
+)
+```
+
+## Cancer-specific direct and selective DMAi screens
+
+```{r cancer-variability}
+cancer_variability <- analysis_data[, .(
+  cancer_type = cancer_type[1L],
+  patients = .N,
+  deaths = sum(os_event),
+  mean_dmai_usage = mean(dmai_median_usage),
+  sd_dmai_usage = sd(dmai_median_usage),
+  iqr_dmai_usage = IQR(dmai_median_usage),
+  dmai_non_dmai_spearman = cor(
+    dmai_median_usage,
+    non_dmai_median_usage,
+    method = "spearman"
+  )
+), by = project_id]
+cancer_variability[
+  ,
+  dmai_sd_rank := frank(-sd_dmai_usage, ties.method = "min")
+]
+cancer_variability[
+  ,
+  dmai_iqr_rank := frank(-iqr_dmai_usage, ties.method = "min")
+]
+```
+
+```{r cancer-screen}
+fit_cancer_score <- function(
+  cancer_data,
+  score_term,
+  analysis_name,
+  additional_terms = character()
+) {
+  n_patients <- nrow(cancer_data)
+  n_events <- sum(cancer_data$os_event)
+  if (
+    n_patients < params$minimum_project_patients ||
+      n_events < params$minimum_project_events
+  ) {
+    return(NULL)
+  }
+
+  cancer_data <- droplevels(as.data.frame(copy(cancer_data)))
+  adjust_for_sex <- nlevels(cancer_data$sex) > 1L
+  model_terms <- c(
+    score_term,
+    additional_terms,
+    "age_per_10_years"
+  )
+  if (adjust_for_sex) {
+    model_terms <- c(model_terms, "sex")
+  }
+  model_formula <- as.formula(paste(
+    "Surv(os_months, os_event) ~",
+    paste(model_terms, collapse = " + ")
+  ))
+
+  fit <- tryCatch(
+    coxph(
+      model_formula,
+      data = cancer_data,
+      ties = "efron",
+      x = TRUE
+    ),
+    error = function(e) {
+      stop(
+        "Cancer-specific model failed for ",
+        cancer_data$project_id[1L],
+        " (", analysis_name, "): ",
+        conditionMessage(e)
+      )
+    }
+  )
+
+  target_term <- score_term
+  score_result <- as.data.table(
+    tidy(fit, exponentiate = TRUE, conf.int = TRUE)
+  )[term == target_term]
+  if (!nrow(score_result)) {
+    stop(
+      "Score term was not estimated for ",
+      cancer_data$project_id[1L],
+      " (", analysis_name, ")."
+    )
+  }
+
+  ph_global_p <- tryCatch(
+    cox.zph(fit, transform = "km")$table["GLOBAL", "p"],
+    error = function(e) NA_real_
+  )
+
+  data.table(
+    analysis = analysis_name,
+    project_id = cancer_data$project_id[1L],
+    cancer_type = cancer_data$cancer_type[1L],
+    patients = n_patients,
+    deaths = n_events,
+    clinical_adjustment = if (
+      adjust_for_sex
+    ) "Age and sex" else "Age; sex invariant",
+    hazard_ratio = score_result$estimate,
+    conf_low = score_result$conf.low,
+    conf_high = score_result$conf.high,
+    p_value = score_result$p.value,
+    ph_global_p = ph_global_p
+  )
+}
+
+direct_cancer_results <- rbindlist(
+  lapply(
+    split(analysis_data, analysis_data$project_id),
+    fit_cancer_score,
+    score_term = "dmai_usage_z",
+    analysis_name = "DMAi score"
+  ),
+  use.names = TRUE,
+  fill = TRUE
+)
+
+selective_cancer_results <- rbindlist(
+  lapply(
+    split(analysis_data, analysis_data$project_id),
+    fit_cancer_score,
+    score_term = "selective_dmai_usage_z",
+    analysis_name = "Selective DMAi contrast",
+    additional_terms = "overall_apa_usage_z"
+  ),
+  use.names = TRUE,
+  fill = TRUE
+)
+
+if (!nrow(direct_cancer_results) || !nrow(selective_cancer_results)) {
+  stop("No cancer project met the patient and event thresholds.")
+}
+if (!identical(
+  sort(direct_cancer_results$project_id),
+  sort(selective_cancer_results$project_id)
+)) {
+  stop("The direct and selective screens contain different cancer projects.")
+}
+
+cancer_screen_results <- rbindlist(list(
+  direct_cancer_results,
+  selective_cancer_results
+))
+cancer_screen_results[, p_adjusted := p.adjust(
+  p_value,
+  method = "BH"
+), by = analysis]
+cancer_screen_results[
+  ,
+  impact_rank := frank(-hazard_ratio, ties.method = "first")
+  ,
+  by = analysis
+]
+cancer_screen_results[
+  ,
+  evidence_rank := frank(p_value, ties.method = "first")
+  ,
+  by = analysis
+]
+setorder(cancer_screen_results, analysis, evidence_rank)
+
+direct_cancer_results <- cancer_screen_results[
+  analysis == "DMAi score"
+]
+selective_cancer_results <- cancer_screen_results[
+  analysis == "Selective DMAi contrast"
+]
+
+kable(
+  direct_cancer_results,
+  digits = 4,
+  caption = paste0(
+    "Cancer-specific direct DMAi-score models; ",
+    "eligibility: n >= ",
+    params$minimum_project_patients,
+    " and deaths >= ",
+    params$minimum_project_events
+  )
+)
+kable(
+  selective_cancer_results,
+  digits = 4,
+  caption = paste0(
+    "Cancer-specific selective DMAi models adjusted for overall APA; ",
+    "eligibility: n >= ",
+    params$minimum_project_patients,
+    " and deaths >= ",
+    params$minimum_project_events
+  )
+)
+```
+
+```{r forest-helper}
+make_cancer_forest <- function(
+  results,
+  selected_project,
+  x_label
+) {
+  plot_data <- copy(results)
+  forest_order <- plot_data[order(hazard_ratio), project_id]
+  ordered_data <- plot_data[match(forest_order, project_id)]
+  ordered_labels <- paste0(
+    ordered_data$project_id,
+    " (n=", ordered_data$patients,
+    ", deaths=", ordered_data$deaths, ")"
+  )
+  plot_data[, project_label := factor(
+    paste0(project_id, " (n=", patients, ", deaths=", deaths, ")"),
+    levels = ordered_labels
+  )]
+  plot_data[, selected := factor(
+    fifelse(
+      project_id == selected_project,
+      selected_project,
+      "Other eligible cancers"
+    ),
+    levels = c("Other eligible cancers", selected_project)
+  )]
+
+  ggplot(
+    plot_data,
+    aes(
+      hazard_ratio,
+      project_label,
+      xmin = conf_low,
+      xmax = conf_high,
+      colour = selected
+    )
+  ) +
+    geom_vline(xintercept = 1, linetype = 2, colour = "#777777") +
+    geom_errorbar(orientation = "y", width = 0.15) +
+    geom_point(size = 2.2) +
+    scale_x_log10() +
+    scale_colour_manual(values = setNames(
+      c("#555555", "#D73027"),
+      c("Other eligible cancers", selected_project)
+    )) +
+    labs(x = x_label, y = NULL, colour = NULL) +
+    theme_classic(base_size = 16) +
+    theme(
+      aspect.ratio = 1,
+      axis.text.x = element_text(size = 13),
+      axis.text.y = element_text(size = 10),
+      axis.title.x = element_text(size = 15),
+      legend.position = "bottom",
+      legend.text = element_text(size = 11.5)
+    )
+}
+```
+
+```{r direct-cancer-forest, fig.width=6, fig.height=6}
+direct_cancer_forest_plot <- make_cancer_forest(
+  direct_cancer_results,
+  params$selected_direct_project,
+  "HR per SD of DMAi usage (log scale)"
+)
+
+direct_cancer_forest_plot
+
+ggsave(
+  file.path(
+    figure_output_dir,
+    "tcga_dmai_survival_forest_panel.pdf"
+  ),
+  plot = direct_cancer_forest_plot,
+  device = pdf,
+  width = 6,
+  height = 6,
+  units = "in"
+)
+```
+
+```{r selective-cancer-forest, fig.width=6, fig.height=6}
+selective_cancer_forest_plot <- make_cancer_forest(
+  selective_cancer_results,
+  params$selected_selective_project,
+  "Selective contrast HR (log scale)"
+)
+
+selective_cancer_forest_plot
+
+ggsave(
+  file.path(
+    figure_output_dir,
+    "tcga_dmai_selective_survival_forest_panel.pdf"
+  ),
+  plot = selective_cancer_forest_plot,
+  device = pdf,
+  width = 6,
+  height = 6,
+  units = "in"
+)
+```
+
+## KIRC selective DMAi survival analysis
+
+```{r prepare-kirc}
+selected_direct_result <- direct_cancer_results[
+  project_id == params$selected_direct_project
+]
+selected_selective_result <- selective_cancer_results[
+  project_id == params$selected_selective_project
+]
+if (!nrow(selected_direct_result) || !nrow(selected_selective_result)) {
+  stop("A selected cancer did not meet the screen eligibility criteria.")
+}
+if (selected_direct_result$evidence_rank != 1L) {
+  warning(params$selected_direct_project, " is not first in the direct screen.")
+}
+if (selected_selective_result$evidence_rank != 1L) {
+  warning(
+    params$selected_selective_project,
+    " is not first in the selective screen."
+  )
+}
+
+selected_data <- copy(
+  analysis_data[project_id == params$selected_selective_project]
+)
+
+prediction_levels <- names(prediction_colours)
+selective_contrast_quantiles_z <- quantile(
+  selected_data$selective_dmai_usage_z,
+  probs = c(0.25, 0.75),
+  names = FALSE
+)
+selective_contrast_quantiles_raw <- quantile(
+  selected_data$selective_dmai_usage,
+  probs = c(0.25, 0.75),
+  names = FALSE
+)
+
+selected_qc <- data.table(
+  project_id = params$selected_selective_project,
+  patients = nrow(selected_data),
+  deaths = sum(selected_data$os_event),
+  dmai_non_dmai_spearman = cor(
+    selected_data$dmai_median_usage,
+    selected_data$non_dmai_median_usage,
+    method = "spearman"
+  ),
+  mean_selective_contrast = mean(selected_data$selective_dmai_usage),
+  sd_selective_contrast = sd(selected_data$selective_dmai_usage),
+  contrast_25th_percentile = selective_contrast_quantiles_raw[1L],
+  contrast_75th_percentile = selective_contrast_quantiles_raw[2L]
+)
+kable(
+  selected_qc,
+  digits = 4,
+  caption = "KIRC selective DMAi contrast summary"
+)
+```
+
+```{r kirc-models}
+kirc_selective_fit <- coxph(
+  Surv(os_months, os_event) ~
+    selective_dmai_usage_z +
+    overall_apa_usage_z +
+    age_per_10_years +
+    sex,
+  data = selected_data,
+  ties = "efron",
+  x = TRUE
+)
+
+kirc_model_results <- tidy_score_term(
+  kirc_selective_fit,
+  "selective_dmai_usage_z",
+  "Selective DMAi contrast, overall APA/age/sex adjusted"
+)
+kable(
+  kirc_model_results,
+  digits = 4,
+  caption = "KIRC selective DMAi overall-survival models"
+)
+```
+
+```{r kirc-adjusted-survival}
+plot_limit <- min(
+  as.numeric(params$selected_survival_max_months),
+  max(selected_data$os_months)
+)
+prediction_times <- seq(0, plot_limit, by = 1)
+
+predict_marginal_survival <- function(
+  fit,
+  patient_data,
+  contrast_value_z,
+  contrast_label,
+  times
+) {
+  counterfactual_data <- copy(patient_data)
+  counterfactual_data[, selective_dmai_usage_z := contrast_value_z]
+  prediction <- survfit(
+    fit,
+    newdata = counterfactual_data,
+    se.fit = FALSE
+  )
+  prediction_at_times <- summary(
+    prediction,
+    times = times,
+    extend = TRUE
+  )
+  predicted_survival <- prediction_at_times$surv
+  if (is.null(dim(predicted_survival))) {
+    predicted_survival <- matrix(
+      predicted_survival,
+      nrow = length(times)
+    )
+  } else {
+    predicted_survival <- as.matrix(predicted_survival)
+  }
+  if (
+    nrow(predicted_survival) != length(times) &&
+      ncol(predicted_survival) == length(times)
+  ) {
+    predicted_survival <- t(predicted_survival)
+  }
+  if (nrow(predicted_survival) != length(times)) {
+    stop("Predicted survival did not match the requested time grid.")
+  }
+  data.table(
+    time = times,
+    survival = rowMeans(predicted_survival),
+    contrast_level = contrast_label
+  )
+}
+
+kirc_adjusted_survival <- rbindlist(list(
+  predict_marginal_survival(
+    kirc_selective_fit,
+    selected_data,
+    selective_contrast_quantiles_z[1L],
+    prediction_levels[1L],
+    prediction_times
+  ),
+  predict_marginal_survival(
+    kirc_selective_fit,
+    selected_data,
+    selective_contrast_quantiles_z[2L],
+    prediction_levels[2L],
+    prediction_times
+  )
+))
+kirc_adjusted_survival[, contrast_level := factor(
+  contrast_level,
+  levels = prediction_levels
+)]
+
+bootstrap_replicates <- as.integer(
+  params$survival_bootstrap_replicates
+)
+bootstrap_seed <- as.integer(params$survival_bootstrap_seed)
+if (!is.finite(bootstrap_replicates) || bootstrap_replicates < 100L) {
+  stop("`survival_bootstrap_replicates` must be at least 100.")
+}
+if (!is.finite(bootstrap_seed)) {
+  stop("`survival_bootstrap_seed` must be a finite integer.")
+}
+
+bootstrap_prediction <- function(iteration) {
+  bootstrap_indices <- sample.int(
+    nrow(selected_data),
+    replace = TRUE
+  )
+  bootstrap_data <- copy(selected_data[bootstrap_indices])
+  bootstrap_fit <- tryCatch(
+    coxph(
+      Surv(os_months, os_event) ~
+        selective_dmai_usage_z +
+        overall_apa_usage_z +
+        age_per_10_years +
+        sex,
+      data = bootstrap_data,
+      ties = "efron",
+      x = TRUE
+    ),
+    error = function(e) NULL
+  )
+  if (is.null(bootstrap_fit)) {
+    return(rep(
+      NA_real_,
+      length(prediction_levels) * length(prediction_times)
+    ))
+  }
+
+  tryCatch(
+    unlist(lapply(seq_along(prediction_levels), function(level_index) {
+      predict_marginal_survival(
+        bootstrap_fit,
+        bootstrap_data,
+        selective_contrast_quantiles_z[level_index],
+        prediction_levels[level_index],
+        prediction_times
+      )$survival
+    }), use.names = FALSE),
+    error = function(e) rep(
+      NA_real_,
+      length(prediction_levels) * length(prediction_times)
+    )
+  )
+}
+
+set.seed(bootstrap_seed)
+bootstrap_survival_matrix <- vapply(
+  seq_len(bootstrap_replicates),
+  bootstrap_prediction,
+  numeric(length(prediction_levels) * length(prediction_times))
+)
+successful_bootstraps <- colSums(
+  is.finite(bootstrap_survival_matrix)
+) == nrow(bootstrap_survival_matrix)
+number_successful_bootstraps <- sum(successful_bootstraps)
+if (number_successful_bootstraps < 0.9 * bootstrap_replicates) {
+  stop(
+    "Fewer than 90% of adjusted-survival bootstrap fits succeeded (",
+    number_successful_bootstraps,
+    "/",
+    bootstrap_replicates,
+    ")."
+  )
+}
+
+bootstrap_intervals <- t(apply(
+  bootstrap_survival_matrix[, successful_bootstraps, drop = FALSE],
+  1L,
+  quantile,
+  probs = c(0.025, 0.975),
+  names = FALSE,
+  type = 6
+))
+kirc_adjusted_survival[, `:=`(
+  conf_low = bootstrap_intervals[, 1L],
+  conf_high = bootstrap_intervals[, 2L]
+)]
+
+bootstrap_diagnostics <- data.table(
+  requested_resamples = bootstrap_replicates,
+  successful_resamples = number_successful_bootstraps,
+  random_seed = bootstrap_seed,
+  interval = "Pointwise 95% percentile bootstrap CI",
+  prediction_time_step_months = 1
+)
+
+survival_summary_months <- as.numeric(params$survival_summary_months)
+if (
+  !is.finite(survival_summary_months) ||
+    survival_summary_months < 0 ||
+    !survival_summary_months %in% prediction_times
+) {
+  stop(
+    "`survival_summary_months` must be a non-negative value on the ",
+    "adjusted-survival prediction grid."
+  )
+}
+summary_row_indices <- vapply(
+  prediction_levels,
+  function(level) {
+    matching_rows <- which(
+      kirc_adjusted_survival$contrast_level == level &
+        kirc_adjusted_survival$time == survival_summary_months
+    )
+    if (length(matching_rows) != 1L) {
+      stop("Could not identify one survival-summary row per scenario.")
+    }
+    matching_rows
+  },
+  integer(1)
+)
+lower_usage_survival <- kirc_adjusted_survival$survival[
+  summary_row_indices[1L]
+]
+higher_usage_survival <- kirc_adjusted_survival$survival[
+  summary_row_indices[2L]
+]
+bootstrap_survival_difference <-
+  bootstrap_survival_matrix[
+    summary_row_indices[1L],
+    successful_bootstraps
+  ] -
+  bootstrap_survival_matrix[
+    summary_row_indices[2L],
+    successful_bootstraps
+  ]
+survival_difference_interval <- quantile(
+  bootstrap_survival_difference,
+  probs = c(0.025, 0.975),
+  names = FALSE,
+  type = 6
+)
+
+adjusted_survival_difference <- data.table(
+  time_months = survival_summary_months,
+  lower_relative_usage_survival = lower_usage_survival,
+  higher_relative_usage_survival = higher_usage_survival,
+  survival_difference_lower_minus_higher =
+    lower_usage_survival - higher_usage_survival,
+  difference_conf_low = survival_difference_interval[1L],
+  difference_conf_high = survival_difference_interval[2L],
+  interpretation = paste0(
+    "Absolute adjusted survival difference; equivalently, excess ",
+    "mortality risk for higher versus lower relative DMAi-site usage"
+  )
+)
+
+prediction_summary <- data.table(
+  contrast_level = prediction_levels,
+  selective_contrast_raw = selective_contrast_quantiles_raw,
+  selective_contrast_z = selective_contrast_quantiles_z
+)
+kable(
+  prediction_summary,
+  digits = 4,
+  caption = "KIRC selective-contrast values used for adjusted survival"
+)
+kable(
+  bootstrap_diagnostics,
+  caption = "Adjusted-survival bootstrap diagnostics"
+)
+kable(
+  adjusted_survival_difference[, .(
+    time_months,
+    lower_relative_usage_survival,
+    higher_relative_usage_survival,
+    survival_difference_lower_minus_higher,
+    difference_conf_low,
+    difference_conf_high
+  )],
+  digits = 4,
+  caption = paste0(
+    "Adjusted survival difference at ",
+    survival_summary_months,
+    " months (paired-bootstrap 95% CI)"
+  )
+)
+```
+
+```{r kirc-adjusted-survival-plot, fig.width=6, fig.height=6}
+kirc_adjusted_survival_plot <- ggplot(
+  kirc_adjusted_survival,
+  aes(
+    time,
+    survival,
+    colour = contrast_level,
+    group = contrast_level
+  )
+) +
+  geom_ribbon(
+    aes(
+      ymin = conf_low,
+      ymax = conf_high,
+      fill = contrast_level
+    ),
+    alpha = 0.18,
+    colour = NA,
+    show.legend = FALSE
+  ) +
+  geom_step(linewidth = 1.1) +
+  scale_colour_manual(values = prediction_colours, drop = FALSE) +
+  scale_fill_manual(values = prediction_colours, drop = FALSE) +
+  scale_x_continuous(
+    limits = c(0, plot_limit),
+    breaks = seq(0, plot_limit, by = 12),
+    expand = expansion(mult = c(0, 0.01))
+  ) +
+  scale_y_continuous(
+    limits = c(0, 1),
+    labels = label_percent(accuracy = 1)
+  ) +
+  annotate(
+    "text",
+    x = 0.97 * plot_limit,
+    y = 0.08,
+    hjust = 1,
+    label = paste0(
+      "Adjusted HR per SD = ",
+      sprintf("%.2f", selected_selective_result$hazard_ratio),
+      "\n95% CI ",
+      sprintf("%.2f", selected_selective_result$conf_low),
+      "-",
+      sprintf("%.2f", selected_selective_result$conf_high),
+      "\nBH FDR = ",
+      format.pval(selected_selective_result$p_adjusted, digits = 2)
+    ),
+    size = 4.7
+  ) +
+  labs(
+    x = "Time from diagnosis (months)",
+    y = "Adjusted overall survival probability",
+    colour = NULL
+  ) +
+  theme_classic(base_size = 16) +
+  guides(
+    colour = guide_legend(nrow = 2, byrow = TRUE)
+  ) +
+  theme(
+    aspect.ratio = 1,
+    axis.text = element_text(size = 13),
+    axis.title = element_text(size = 16),
+    legend.position = "bottom",
+    legend.text = element_text(size = 12)
+  )
+
+kirc_adjusted_survival_plot
+
+ggsave(
+  file.path(
+    figure_output_dir,
+    "tcga_kirc_dmai_selective_adjusted_survival_panel.pdf"
+  ),
+  plot = kirc_adjusted_survival_plot,
+  device = pdf,
+  width = 6,
+  height = 6,
+  units = "in"
+)
+```
+
+## Manuscript results paragraph
+
+```{r manuscript-results, results='asis'}
+pan_dmai <- pan_cancer_results[model == "DMAi"]
+pan_non_dmai <- pan_cancer_results[model == "non-DMAi"]
+pan_selective <- selective_pan_cancer_results[
+  model == "Selective DMAi usage"
+]
+pan_overall_apa <- selective_pan_cancer_results[
+  model == "Overall APA usage"
+]
+kirc_selective <- selected_selective_result
+blca_selective <- selective_cancer_results[
+  project_id == "TCGA-BLCA"
+]
+paad_selective <- selective_cancer_results[
+  project_id == params$selected_direct_project
+]
+kirc_survival_difference <- adjusted_survival_difference[1L]
+
+cat(sprintf(
+  paste0(
+    "Among %s TCGA patients with primary tumours (%s deaths across %s ",
+    "cancer projects), the DMAi score itself was first analysed as a ",
+    "direct, non-contrast metric. Higher DMAi-site usage was associated ",
+    "with poorer overall survival after adjustment for age and sex, ",
+    "stratification by ",
+    "cancer project, and inclusion of non-DMAi usage (HR %.2f per ",
+    "within-cancer SD, 95%% CI %.2f--%.2f; p = %s). Non-DMAi usage was ",
+    "not independently associated with survival (HR %.2f, 95%% CI ",
+    "%.2f--%.2f; p = %s). In an exploratory cancer-specific screen ",
+    "of %s cancer types meeting the prespecified patient and event ",
+    "thresholds, pancreatic adenocarcinoma (PAAD) showed the largest ",
+    "adverse DMAi association (HR %.2f, 95%% CI %.2f--%.2f; nominal ",
+    "p = %s; BH FDR = %s). Selective DMAi usage was then defined as the ",
+    "within-patient DMAi-minus-non-DMAi contrast and analysed while ",
+    "controlling for overall APA usage. This contrast was not associated ",
+    "with survival pan-cancer (HR %.2f, 95%% CI %.2f--%.2f; p = %s), ",
+    "whereas overall APA usage was (HR %.2f, 95%% CI %.2f--%.2f; ",
+    "p = %s). In the cancer-specific selective screen, kidney renal clear ",
+    "cell carcinoma (KIRC) showed the strongest adverse association ",
+    "(HR %.2f, 95%% CI %.2f--%.2f; nominal p = %s; BH FDR = %s), while ",
+    "bladder urothelial carcinoma showed an inverse association (HR %.2f, ",
+    "95%% CI %.2f--%.2f; nominal p = %s; BH FDR = %s). The selective ",
+    "contrast was not significant in PAAD (HR %.2f, 95%% CI %.2f--%.2f; ",
+    "p = %s; BH FDR = %s), indicating that direct and selective DMAi ",
+    "metrics identify different cancer-specific associations. Adjusted ",
+    "survival predictions with pointwise bootstrap 95%% confidence bands ",
+    "at the 25th and 75th percentiles were used to visualize the continuous ",
+    "KIRC association without dichotomizing patients. At %s months, adjusted ",
+    "survival was %.1f%% at the 75th percentile and %.1f%% at the 25th ",
+    "percentile, an absolute difference of %.1f percentage points ",
+    "(paired-bootstrap 95%% CI %.1f--%.1f). These cancer-specific findings ",
+    "are exploratory."
+  ),
+  comma(nrow(analysis_data)),
+  comma(sum(analysis_data$os_event)),
+  uniqueN(analysis_data$project_id),
+  pan_dmai$hazard_ratio,
+  pan_dmai$conf_low,
+  pan_dmai$conf_high,
+  format.pval(pan_dmai$p_value, digits = 2),
+  pan_non_dmai$hazard_ratio,
+  pan_non_dmai$conf_low,
+  pan_non_dmai$conf_high,
+  format.pval(pan_non_dmai$p_value, digits = 2),
+  nrow(direct_cancer_results),
+  selected_direct_result$hazard_ratio,
+  selected_direct_result$conf_low,
+  selected_direct_result$conf_high,
+  format.pval(selected_direct_result$p_value, digits = 2),
+  format.pval(selected_direct_result$p_adjusted, digits = 2),
+  pan_selective$hazard_ratio,
+  pan_selective$conf_low,
+  pan_selective$conf_high,
+  format.pval(pan_selective$p_value, digits = 2),
+  pan_overall_apa$hazard_ratio,
+  pan_overall_apa$conf_low,
+  pan_overall_apa$conf_high,
+  format.pval(pan_overall_apa$p_value, digits = 2),
+  kirc_selective$hazard_ratio,
+  kirc_selective$conf_low,
+  kirc_selective$conf_high,
+  format.pval(kirc_selective$p_value, digits = 2),
+  format.pval(kirc_selective$p_adjusted, digits = 2),
+  blca_selective$hazard_ratio,
+  blca_selective$conf_low,
+  blca_selective$conf_high,
+  format.pval(blca_selective$p_value, digits = 2),
+  format.pval(blca_selective$p_adjusted, digits = 2),
+  paad_selective$hazard_ratio,
+  paad_selective$conf_low,
+  paad_selective$conf_high,
+  format.pval(paad_selective$p_value, digits = 2),
+  format.pval(paad_selective$p_adjusted, digits = 2),
+  format(kirc_survival_difference$time_months, trim = TRUE),
+  100 * kirc_survival_difference$higher_relative_usage_survival,
+  100 * kirc_survival_difference$lower_relative_usage_survival,
+  100 * kirc_survival_difference$survival_difference_lower_minus_higher,
+  100 * kirc_survival_difference$difference_conf_low,
+  100 * kirc_survival_difference$difference_conf_high
+))
+```
+
+## Reproducibility outputs
+
+```{r save-results}
+output_dir <- results_output_dir
+
+fwrite(
+  analysis_data,
+  file.path(output_dir, "tcga_dmai_os_manuscript_cohort.tsv"),
+  sep = "\t"
+)
+fwrite(
+  pan_cancer_results,
+  file.path(output_dir, "tcga_dmai_os_manuscript_pan_cancer_cox.tsv"),
+  sep = "\t"
+)
+fwrite(
+  pan_cancer_ph_results,
+  file.path(output_dir, "tcga_dmai_os_manuscript_ph_tests.tsv"),
+  sep = "\t"
+)
+fwrite(
+  selective_pan_cancer_results,
+  file.path(output_dir, "tcga_dmai_os_selective_pan_cancer_cox.tsv"),
+  sep = "\t"
+)
+fwrite(
+  selective_pan_cancer_ph_results,
+  file.path(output_dir, "tcga_dmai_os_selective_ph_tests.tsv"),
+  sep = "\t"
+)
+fwrite(
+  direct_cancer_results,
+  file.path(output_dir, "tcga_dmai_os_direct_cancer_screen.tsv"),
+  sep = "\t"
+)
+fwrite(
+  direct_cancer_results,
+  file.path(output_dir, "tcga_dmai_os_manuscript_cancer_screen.tsv"),
+  sep = "\t"
+)
+fwrite(
+  selective_cancer_results,
+  file.path(output_dir, "tcga_dmai_os_selective_cancer_screen.tsv"),
+  sep = "\t"
+)
+fwrite(
+  cancer_screen_results,
+  file.path(output_dir, "tcga_dmai_os_combined_cancer_screen.tsv"),
+  sep = "\t"
+)
+fwrite(
+  cancer_variability,
+  file.path(output_dir, "tcga_dmai_os_manuscript_variability.tsv"),
+  sep = "\t"
+)
+fwrite(
+  selected_data,
+  file.path(output_dir, "tcga_dmai_os_kirc_selective_data.tsv"),
+  sep = "\t"
+)
+fwrite(
+  kirc_model_results,
+  file.path(output_dir, "tcga_dmai_os_kirc_selective_models.tsv"),
+  sep = "\t"
+)
+fwrite(
+  prediction_summary,
+  file.path(output_dir, "tcga_dmai_os_kirc_prediction_values.tsv"),
+  sep = "\t"
+)
+fwrite(
+  kirc_adjusted_survival,
+  file.path(output_dir, "tcga_dmai_os_kirc_adjusted_survival.tsv"),
+  sep = "\t"
+)
+fwrite(
+  bootstrap_diagnostics,
+  file.path(output_dir, "tcga_dmai_os_kirc_bootstrap_diagnostics.tsv"),
+  sep = "\t"
+)
+fwrite(
+  adjusted_survival_difference,
+  file.path(
+    output_dir,
+    "tcga_dmai_os_kirc_adjusted_survival_difference.tsv"
+  ),
+  sep = "\t"
+)
+```
+
+```{r session-info}
+sessionInfo()
+```
