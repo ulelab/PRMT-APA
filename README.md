@@ -1,7 +1,7 @@
 
 **PRMT-APA README**
 
-This repository contains the scripts and data files necessary to generate the figures from "Protein arginine methylation promotes global 3' UTR shortening in proliferating cells" (Griffith et al., 2026, doi: https://doi.org/10.1101/2025.03.06.641848)
+This repository contains the scripts and data files necessary to generate the figures from "Protein arginine methylation promotes global 3' UTR shortening in proliferating cells" (Griffith et al., 2026, doi: https://doi.org/10.1016/j.molcel.2026.10.003)
 
 
 
